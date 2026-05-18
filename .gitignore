@@ -2,8 +2,11 @@
 
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
+instance/
+.pytest_cache/
 
 *.db
 *.sqlite

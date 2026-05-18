@@ -3,7 +3,6 @@ import io
 import os
 import re
 import sqlite3
-import uuid
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,7 +26,6 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import RequestEntityTooLarge
-from werkzeug.utils import secure_filename
 
 try:
     from google import genai
@@ -49,6 +47,19 @@ from services.scoring_service import (
     calculate_priority_score,
     calculate_skill_match_score,
     get_priority_label,
+)
+from services.storage_service import (
+    CHAT_IMAGE_MAX_BYTES,
+    delete_file_if_exists,
+    is_safe_stored_filename,
+    make_avatar_filename,
+    make_chat_attachment_filename,
+    make_document_filename,
+    save_uploaded_file,
+    secure_upload_filename,
+    validate_chat_image_upload,
+    validate_document_upload,
+    validate_image_upload,
 )
 
 
@@ -201,16 +212,6 @@ except Exception as error:
     )
     google_client = None
 
-ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "png", "jpg", "jpeg"}
-ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
-ALLOWED_CHAT_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
-ALLOWED_CHAT_IMAGE_MIME_TYPES = {
-    "image/png",
-    "image/jpeg",
-    "image/webp",
-    "image/gif",
-}
-CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 VALID_ROLES = {"jobseeker", "recruiter", "admin"}
 PUBLIC_REGISTER_ROLES = {"jobseeker", "recruiter"}
 ROLE_LABELS = {
@@ -788,72 +789,6 @@ def get_profile_completion(user, document_progress):
         "total": total_items,
         "percent": percent,
     }
-
-
-def is_allowed_image_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
-
-
-def is_allowed_chat_image_file(uploaded_file):
-    if uploaded_file is None or not uploaded_file.filename:
-        return False
-
-    if "." not in uploaded_file.filename:
-        return False
-
-    extension = uploaded_file.filename.rsplit(".", 1)[1].lower()
-    return (
-        extension in ALLOWED_CHAT_IMAGE_EXTENSIONS
-        and uploaded_file.mimetype in ALLOWED_CHAT_IMAGE_MIME_TYPES
-        and has_allowed_chat_image_signature(uploaded_file, extension)
-    )
-
-
-def has_allowed_chat_image_signature(uploaded_file, extension):
-    try:
-        current_position = uploaded_file.stream.tell()
-        uploaded_file.stream.seek(0)
-        header = uploaded_file.stream.read(16)
-        uploaded_file.stream.seek(current_position)
-    except (OSError, AttributeError):
-        return False
-
-    if extension == "png":
-        return header.startswith(b"\x89PNG\r\n\x1a\n")
-    if extension in {"jpg", "jpeg"}:
-        return header.startswith(b"\xff\xd8\xff")
-    if extension == "gif":
-        return header.startswith((b"GIF87a", b"GIF89a"))
-    if extension == "webp":
-        return header.startswith(b"RIFF") and header[8:12] == b"WEBP"
-
-    return False
-
-
-def get_uploaded_file_size(uploaded_file):
-    if uploaded_file is None:
-        return 0
-
-    try:
-        current_position = uploaded_file.stream.tell()
-        uploaded_file.stream.seek(0, os.SEEK_END)
-        size = uploaded_file.stream.tell()
-        uploaded_file.stream.seek(current_position)
-        return size
-    except (OSError, AttributeError):
-        return uploaded_file.content_length or 0
-
-
-def make_chat_attachment_filename(user_id, original_filename):
-    safe_name = secure_filename(original_filename or "")
-    extension = safe_name.rsplit(".", 1)[1].lower()
-    timestamp = now_utc().strftime("%Y%m%d%H%M%S")
-    return f"chat_{user_id}_{timestamp}_{uuid.uuid4().hex}.{extension}"
-
-
-def make_avatar_filename(user_id, original_filename):
-    extension = original_filename.rsplit(".", 1)[1].lower()
-    return f"user_{user_id}_avatar.{extension}"
 
 
 def get_user_scoring_context():
@@ -1721,44 +1656,6 @@ def get_chat_conversations(current_user_id, current_role, selected_contact_id=No
     return conversations
 
 
-def is_allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def make_document_filename(user_id, doc_type, original_filename):
-    extension = original_filename.rsplit(".", 1)[1].lower()
-    safe_doc_type = secure_filename(doc_type.replace("/", "_"))
-    return f"user_{user_id}_{safe_doc_type}.{extension}"
-
-
-def delete_uploaded_file(file_path):
-    if not file_path:
-        return
-
-    upload_folder = Path(app.config["UPLOAD_FOLDER"]).resolve()
-    target_path = (upload_folder / file_path).resolve()
-
-    if upload_folder in target_path.parents and target_path.exists():
-        try:
-            target_path.unlink()
-        except OSError:
-            pass
-
-
-def delete_avatar_file(file_name):
-    if not file_name:
-        return
-
-    avatar_folder = Path(app.config["AVATAR_UPLOAD_FOLDER"]).resolve()
-    target_path = (avatar_folder / file_name).resolve()
-
-    if avatar_folder in target_path.parents and target_path.exists():
-        try:
-            target_path.unlink()
-        except OSError:
-            pass
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -1933,9 +1830,9 @@ def chat_attachment_file(filename):
     if "user_id" not in session:
         abort(404)
 
-    safe_filename = secure_filename(filename)
-    if not safe_filename or safe_filename != filename:
+    if not is_safe_stored_filename(filename):
         abort(404)
+    safe_filename = secure_upload_filename(filename)
 
     attachment = get_db().execute(
         """
@@ -2330,7 +2227,7 @@ def edit_profile():
 
         uploaded_avatar = request.files.get("avatar_file")
         if uploaded_avatar and uploaded_avatar.filename:
-            if not is_allowed_image_file(uploaded_avatar.filename):
+            if not validate_image_upload(uploaded_avatar):
                 validation_errors.append("Foto profil harus berupa JPG, JPEG, atau PNG.")
 
         if validation_errors:
@@ -2349,16 +2246,18 @@ def edit_profile():
 
         avatar_path = user["avatar_path"] or ""
         if request.form.get("remove_avatar") == "1":
-            delete_avatar_file(avatar_path)
+            delete_file_if_exists(app.config["AVATAR_UPLOAD_FOLDER"], avatar_path)
             avatar_path = ""
 
         if uploaded_avatar and uploaded_avatar.filename:
-            avatar_folder = Path(app.config["AVATAR_UPLOAD_FOLDER"])
-            avatar_folder.mkdir(parents=True, exist_ok=True)
             avatar_filename = make_avatar_filename(session["user_id"], uploaded_avatar.filename)
             if avatar_path and avatar_path != avatar_filename:
-                delete_avatar_file(avatar_path)
-            uploaded_avatar.save(avatar_folder / avatar_filename)
+                delete_file_if_exists(app.config["AVATAR_UPLOAD_FOLDER"], avatar_path)
+            save_uploaded_file(
+                uploaded_avatar,
+                app.config["AVATAR_UPLOAD_FOLDER"],
+                avatar_filename,
+            )
             avatar_path = avatar_filename
 
         update_fields = PROFILE_FORM_FIELDS + ["avatar_path", "password_hash"]
@@ -2629,10 +2528,12 @@ def send_chat_message():
     if len(message) > CHAT_MESSAGE_MAX_LENGTH:
         return jsonify({"error": "Pesan terlalu panjang."}), 400
     if uploaded_image and uploaded_image.filename:
-        if not is_allowed_chat_image_file(uploaded_image):
-            return jsonify({"error": "Hanya file gambar yang dapat dikirim."}), 400
-        if get_uploaded_file_size(uploaded_image) > CHAT_IMAGE_MAX_BYTES:
-            return jsonify({"error": "Ukuran gambar maksimal 5 MB."}), 400
+        is_valid_image, image_error = validate_chat_image_upload(
+            uploaded_image,
+            CHAT_IMAGE_MAX_BYTES,
+        )
+        if not is_valid_image:
+            return jsonify({"error": image_error}), 400
 
     contact = get_chat_contact_payload(session["user_id"], current_role, contact_id)
     if contact is None:
@@ -2648,12 +2549,14 @@ def send_chat_message():
             uploaded_image.filename,
         )
         attachment_type = "image"
-        attachment_name = secure_filename(uploaded_image.filename) or "gambar"
+        attachment_name = secure_upload_filename(uploaded_image.filename) or "gambar"
         try:
-            chat_upload_folder = Path(app.config["CHAT_UPLOAD_FOLDER"])
-            chat_upload_folder.mkdir(parents=True, exist_ok=True)
-            uploaded_image.save(chat_upload_folder / attachment_path)
-        except OSError:
+            save_uploaded_file(
+                uploaded_image,
+                app.config["CHAT_UPLOAD_FOLDER"],
+                attachment_path,
+            )
+        except (OSError, ValueError):
             return jsonify({"error": "Gambar belum bisa diunggah. Silakan coba lagi."}), 500
 
     try:
@@ -2703,10 +2606,7 @@ def send_chat_message():
     except sqlite3.Error:
         get_db().rollback()
         if attachment_path:
-            try:
-                (Path(app.config["CHAT_UPLOAD_FOLDER"]) / attachment_path).unlink()
-            except OSError:
-                pass
+            delete_file_if_exists(app.config["CHAT_UPLOAD_FOLDER"], attachment_path)
         return jsonify({"error": "Pesan belum bisa dikirim. Silakan coba lagi."}), 500
 
     return jsonify(
@@ -2873,20 +2773,22 @@ def update_document(doc_type):
     is_uploaded = 1 if request.form.get("is_uploaded") == "on" else 0
 
     if uploaded_file and uploaded_file.filename:
-        if not is_allowed_file(uploaded_file.filename):
+        if not validate_document_upload(uploaded_file):
             flash("Format file tidak didukung. Gunakan PDF, DOC, DOCX, PNG, JPG, atau JPEG.")
             return redirect(url_for("documents"))
 
-        original_file_name = secure_filename(uploaded_file.filename)
+        original_file_name = secure_upload_filename(uploaded_file.filename)
         saved_file_name = make_document_filename(
             session["user_id"], doc_type, original_file_name
         )
-        upload_folder = Path(app.config["UPLOAD_FOLDER"])
-        upload_folder.mkdir(parents=True, exist_ok=True)
-        uploaded_file.save(upload_folder / saved_file_name)
+        save_uploaded_file(
+            uploaded_file,
+            app.config["UPLOAD_FOLDER"],
+            saved_file_name,
+        )
 
         if existing_document and existing_document["file_path"] != saved_file_name:
-            delete_uploaded_file(existing_document["file_path"])
+            delete_file_if_exists(app.config["UPLOAD_FOLDER"], existing_document["file_path"])
 
         file_name = original_file_name
         file_path = saved_file_name
@@ -2927,7 +2829,7 @@ def reset_document(doc_type):
 
     try:
         if existing_document:
-            delete_uploaded_file(existing_document["file_path"])
+            delete_file_if_exists(app.config["UPLOAD_FOLDER"], existing_document["file_path"])
 
         get_db().execute(
             """
