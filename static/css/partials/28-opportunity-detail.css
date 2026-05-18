@@ -1,0 +1,55 @@
+﻿/* =========================================================
+   09B. OPPORTUNITY DETAIL
+   Detail hero, metadata, scoring list, and requirement panels.
+========================================================= */
+
+.opportunity-detail-hero {
+    margin-bottom: 24px;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 24px;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.opportunity-detail-hero h1 {
+    margin: 12px 0 8px;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.detail-meta-row {
+    margin-top: 18px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: var(--muted);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.score-list {
+    display: grid;
+    gap: 10px;
+}
+
+.score-list p {
+    margin: 0;
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.back-link {
+    display: inline-flex;
+    margin-bottom: 16px;
+}
+

@@ -1,0 +1,194 @@
+﻿/* =========================================================
+   09. OPPORTUNITIES / PELUANG
+   Filters, opportunity cards, bookmark controls, and recommendations.
+========================================================= */
+
+.filter-toolbar {
+    margin-bottom: 26px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) 140px 180px 150px 62px;
+    gap: 14px;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.filter-toolbar label {
+    margin: 0;
+}
+
+.icon-filter-button {
+    width: 62px;
+    padding: 0;
+}
+
+.result-toolbar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+}
+
+.view-toggle {
+    padding: 4px;
+    display: inline-flex;
+    gap: 4px;
+    background: #EAEEF7;
+    border-radius: 10px;
+}
+
+.view-toggle button {
+    min-height: 36px;
+    padding: 7px 12px;
+    color: #4B5563;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+}
+
+.view-toggle button.active {
+    color: var(--primary);
+    background: #FFFFFF;
+}
+
+.opportunity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.saved-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.opportunity-card {
+    min-height: 320px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.company-mark {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 48px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #0F2544, #0B66C3);
+    border-radius: 10px;
+    font-weight: 900;
+}
+
+.company-mark.small {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    font-size: 0.78rem;
+}
+
+.opportunity-card h2 {
+    margin: 18px 0 6px;
+    color: var(--text);
+    font-size: 1.22rem;
+    line-height: 1.28;
+}
+
+.provider,
+.opportunity-meta,
+.small-text {
+    color: var(--muted);
+}
+
+.opportunity-meta {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.skill-chips {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-chips span {
+    color: #4B5563;
+    background: #EEF2F7;
+}
+
+.skill-chips.large span {
+    color: var(--primary);
+    background: #DBEAFE;
+    border: 1px solid #BFDBFE;
+}
+
+.card-divider {
+    height: 1px;
+    margin: auto 0 16px;
+    background: var(--border);
+}
+
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.bookmark-button {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.bookmark-button .bookmark-icon,
+.view-toggle .grid-icon,
+.view-toggle .list-icon {
+    position: relative;
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+}
+
+.bookmark-button.active,
+.bookmark-button:hover {
+    color: #FFFFFF;
+    background: var(--primary);
+}
+
+.recommended-row {
+    margin-top: 32px;
+}
+
+.recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.recommendation-tile.highlighted {
+    background: #EAF2FF;
+    border: 1px solid #BFDBFE;
+}
+

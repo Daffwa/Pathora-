@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "partials/brand_logo.html" import brand_logo %}
+
+{% block title %}Masuk - Pathora{% endblock %}
+
+{% block content %}
+<section class="auth-page login-auth">
+    <aside class="auth-visual">
+        {{ brand_logo(url_for('index'), "auth-brand") }}
+        <div class="auth-visual-copy">
+            <h1>Melangkah Lebih Jauh dengan Pathora</h1>
+            <p>Platform terpercaya untuk membantu mahasiswa menjembatani ambisi akademik dan realitas profesional.</p>
+        </div>
+        <div class="auth-quote">Pathora membantu ribuan mahasiswa mendapatkan peluang terbaik untuk karier mereka.</div>
+    </aside>
+
+    <section class="auth-panel">
+        <div class="auth-card">
+            <h2>Selamat Datang Kembali</h2>
+            <p>Silakan masuk ke akun Anda untuk melanjutkan.</p>
+
+            <div class="social-login">
+                <button type="button" class="social-button google-mark">Google</button>
+                <button type="button" class="social-button linkedin-mark">LinkedIn</button>
+            </div>
+
+            <div class="auth-divider"><span>Atau gunakan email</span></div>
+
+            <form method="post" action="{{ url_for('login') }}">
+                <label for="email">Email atau Username</label>
+                <input id="email" name="email" type="text" placeholder="contoh@mahasiswa.ac.id" required>
+
+                <div class="label-row">
+                    <label for="password">Kata Sandi</label>
+                    <a href="#lupa-password">Lupa Password?</a>
+                </div>
+                <input id="password" name="password" type="password" placeholder="Minimal 8 karakter" required>
+
+                <label class="checkbox-label subtle-check">
+                    <input name="remember" type="checkbox">
+                    Ingat saya untuk 30 hari
+                </label>
+
+                <button type="submit" class="primary-button full-width">Masuk</button>
+            </form>
+
+            <p class="form-switch">Belum punya akun? <a href="{{ url_for('register') }}">Daftar sekarang</a></p>
+            <div class="auth-links">
+                <a href="#privasi" data-legal-open="privacy">Privasi</a>
+                <a href="#ketentuan" data-legal-open="terms">Syarat & Ketentuan</a>
+            </div>
+        </div>
+        <a class="auth-help-button" href="#bantuan" aria-label="Bantuan"><span class="help-icon"></span></a>
+    </section>
+</section>
+
+{% include "partials/legal_modal.html" %}
+{% endblock %}

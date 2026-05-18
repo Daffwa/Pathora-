@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% from "partials/brand_logo.html" import brand_logo %}
+
+{% block title %}Daftar - Pathora{% endblock %}
+
+{% block content %}
+<section class="auth-page register-auth">
+    <aside class="auth-visual">
+        {{ brand_logo(url_for('index'), "auth-brand") }}
+        <div class="auth-visual-copy">
+            <h1>Mulai Perjalanan Profesionalmu Sekarang.</h1>
+            <p>Hubungkan ambisi akademikmu dengan peluang nyata. Pathora membantu mahasiswa menemukan magang dan karier impian melalui kurasi cerdas.</p>
+            <div class="auth-feature-list">
+                <span>Akses ke 500+ Perusahaan Partner</span>
+                <span>Tracking Lamaran Real-time</span>
+            </div>
+        </div>
+    </aside>
+
+    <section class="auth-panel">
+        <div class="auth-card register-card">
+            <h2>Buat Akun Baru</h2>
+            <p>Lengkapi data di bawah untuk bergabung dengan ekosistem Pathora.</p>
+
+            <form method="post" action="{{ url_for('register') }}">
+                <label for="name">Nama Lengkap</label>
+                <input id="name" name="name" type="text" value="{{ form_data.name }}" placeholder="Contoh: Budi Santoso" required>
+
+                <label for="email">Alamat Email</label>
+                <input id="email" name="email" type="email" value="{{ form_data.email }}" placeholder="nama@kampus.ac.id" required>
+
+                <fieldset class="role-fieldset">
+                    <legend>Pilih Peran Anda</legend>
+                    <div class="role-toggle">
+                        <label>
+                            <input type="radio" name="role" value="jobseeker" {% if form_data.role != "recruiter" %}checked{% endif %}>
+                            <span class="role-icon student-icon"></span>
+                            Pencari Peluang
+                        </label>
+                        <label>
+                            <input type="radio" name="role" value="recruiter" {% if form_data.role == "recruiter" %}checked{% endif %}>
+                            <span class="role-icon recruiter-icon"></span>
+                            Recruiter
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div data-role-fields="jobseeker" {% if form_data.role == "recruiter" %}hidden{% endif %}>
+                    <label for="skills">Keahlian Utama</label>
+                    <input id="skills" name="skills" type="text" value="{{ form_data.skills }}" placeholder="Python, SQL, UI/UX">
+                </div>
+
+                <div data-role-fields="recruiter" {% if form_data.role != "recruiter" %}hidden{% endif %}>
+                    <label for="company_name">Nama Perusahaan</label>
+                    <input id="company_name" name="company_name" type="text" value="{{ form_data.company_name }}" placeholder="Nama perusahaan">
+
+                    <label for="company_position">Posisi</label>
+                    <select id="company_position" name="company_position">
+                        <option value="">Pilih posisi</option>
+                        {% for position in recruiter_position_options %}
+                        <option value="{{ position }}" {% if form_data.company_position == position %}selected{% endif %}>{{ position }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <div data-other-position {% if form_data.company_position != "Other" %}hidden{% endif %}>
+                        <label for="company_position_other">Posisi Lainnya</label>
+                        <input id="company_position_other" name="company_position_other" type="text" value="{{ form_data.company_position_other }}" placeholder="Tulis posisi recruiter">
+                    </div>
+                </div>
+
+                <label for="password">Kata Sandi</label>
+                <input id="password" name="password" type="password" placeholder="Min. 8 karakter" required>
+                <div class="password-strength"><span></span><span></span><span></span><small>Kekuatan: Sedang</small></div>
+
+                <label for="confirm_password">Konfirmasi Kata Sandi</label>
+                <input id="confirm_password" name="confirm_password" type="password" placeholder="Ulangi kata sandi" required>
+
+                <label class="checkbox-label subtle-check">
+                    <input name="terms" type="checkbox" required>
+                    Saya menyetujui <a href="#ketentuan" data-legal-open="terms">Syarat & Ketentuan</a> serta <a href="#privasi" data-legal-open="privacy">Kebijakan Privasi</a>.
+                </label>
+
+                <button type="submit" class="primary-button full-width">Daftar</button>
+            </form>
+
+            <div class="auth-divider"><span>Atau daftar dengan</span></div>
+            <div class="social-login">
+                <button type="button" class="social-button google-mark">Google</button>
+                <button type="button" class="social-button linkedin-mark">LinkedIn</button>
+            </div>
+
+            <p class="form-switch">Sudah punya akun? <a href="{{ url_for('login') }}">Masuk di sini</a></p>
+        </div>
+        <a class="auth-help-button" href="#bantuan" aria-label="Bantuan"><span class="help-icon"></span></a>
+    </section>
+</section>
+
+{% include "partials/legal_modal.html" %}
+
+<script>
+    const roleRadios = document.querySelectorAll('input[name="role"]');
+    const jobseekerFields = document.querySelector('[data-role-fields="jobseeker"]');
+    const recruiterFields = document.querySelector('[data-role-fields="recruiter"]');
+    const companyNameInput = document.getElementById("company_name");
+    const companyPositionInput = document.getElementById("company_position");
+    const otherPositionFields = document.querySelector("[data-other-position]");
+    const otherPositionInput = document.getElementById("company_position_other");
+
+    function selectedRole() {
+        return document.querySelector('input[name="role"]:checked')?.value || "jobseeker";
+    }
+
+    function syncRoleFields() {
+        const isRecruiter = selectedRole() === "recruiter";
+        jobseekerFields.hidden = isRecruiter;
+        recruiterFields.hidden = !isRecruiter;
+        companyNameInput.required = isRecruiter;
+        companyPositionInput.required = isRecruiter;
+        syncOtherPosition();
+    }
+
+    function syncOtherPosition() {
+        const isRecruiter = selectedRole() === "recruiter";
+        const isOther = companyPositionInput.value === "Other";
+        otherPositionFields.hidden = !isRecruiter || !isOther;
+        otherPositionInput.required = isRecruiter && isOther;
+    }
+
+    roleRadios.forEach((radio) => radio.addEventListener("change", syncRoleFields));
+    companyPositionInput.addEventListener("change", syncOtherPosition);
+    syncRoleFields();
+</script>
+{% endblock %}

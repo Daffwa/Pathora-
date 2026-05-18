@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar Pelamar - Pathora{% endblock %}
+
+{% block content %}
+{% set current_sort = current_sort|default("recent") %}
+{% if opportunity %}
+    {% set skill_match_url = url_for('recruiter_opportunity_applicants', opportunity_id=opportunity.id, sort='skill_match') %}
+    {% set export_url = url_for('recruiter_applicants_export', opportunity_id=opportunity.id, sort=current_sort) %}
+{% else %}
+    {% set skill_match_url = url_for('recruiter_applicants', sort='skill_match') %}
+    {% set export_url = url_for('recruiter_applicants_export', sort=current_sort) %}
+{% endif %}
+<section class="page-heading split-heading">
+    <div>
+        <p class="breadcrumb-line">
+            {% if opportunity %}
+            Peluang &gt; {{ opportunity.title }}
+            {% else %}
+            Recruiter &gt; Daftar Pelamar
+            {% endif %}
+        </p>
+        <h1>{% if opportunity %}{{ opportunity.title }}{% else %}Daftar Pelamar{% endif %}</h1>
+        <p>{% if opportunity %}Kelola kandidat untuk lowongan ini.{% else %}Kelola kandidat dari semua lowongan aktif Anda.{% endif %}</p>
+    </div>
+    <div class="inline-actions">
+        <a class="secondary-button" href="{{ url_for('recruiter_opportunities') }}">Kelola Peluang</a>
+        <a class="primary-button" href="{{ export_url }}">Ekspor CSV</a>
+    </div>
+</section>
+
+<section class="summary-grid recruiter-applicant-summary">
+    <article class="summary-card compact-stat">
+        <small>Dalam Review</small>
+        <strong>{{ applicants|length }}</strong>
+        <p>Kandidat perlu ditinjau.</p>
+    </article>
+    <article class="summary-card compact-stat">
+        <small>Kandidat Pilihan</small>
+        <strong>{{ applicants|selectattr("status", "equalto", "Interview")|list|length }}</strong>
+        <p>Kandidat masuk shortlist.</p>
+    </article>
+</section>
+
+<form id="applicant-bulk-form" class="applicant-bulk-form" method="post" action="{{ url_for('recruiter_bulk_update_applicants') }}">
+    {% if opportunity %}
+    <input type="hidden" name="opportunity_id" value="{{ opportunity.id }}">
+    {% endif %}
+    <input type="hidden" name="sort" value="{{ current_sort }}">
+<section class="table-card applicant-table-card">
+    <div class="table-header">
+        <h2>Pelamar Saat Ini</h2>
+        <div class="inline-actions">
+            <label class="search-field table-search" for="applicant-search">
+                <span class="search-icon"></span>
+                <input id="applicant-search" type="search" placeholder="Cari nama, universitas, atau skill...">
+            </label>
+            <button type="button" class="secondary-button compact"><span class="filter-icon"></span>Filter</button>
+            <a class="secondary-button compact{% if current_sort == 'skill_match' %} active-control{% endif %}" href="{{ skill_match_url }}"><span class="chart-icon"></span>Kecocokan Skill</a>
+            <details class="bulk-actions-menu">
+                <summary class="primary-button compact">Aksi Massal</summary>
+                <div class="bulk-actions-panel">
+                    <label>
+                        <span>Status</span>
+                        <select name="status">
+                            {% for status in statuses %}
+                            <option value="{{ status }}" {% if status == "Sedang Direview" %}selected{% endif %}>{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button type="submit" class="primary-button compact">Terapkan</button>
+                </div>
+            </details>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="select-column">
+                        <input id="select-all-applicants" type="checkbox" aria-label="Pilih semua pelamar">
+                    </th>
+                    <th>Pelamar</th>
+                    <th>Skill Match %</th>
+                    <th>Status Dokumen</th>
+                    <th>Tanggal Daftar</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for applicant in applicants %}
+                {% set display_status = application_status_label(applicant.status) %}
+                {% set match = applicant.skill_match_score %}
+                <tr>
+                    <td class="select-column">
+                        <input type="checkbox" name="application_ids" value="{{ applicant.application_id }}" aria-label="Pilih {{ applicant.applicant_name }}">
+                    </td>
+                    <td>
+                        <div class="applicant-cell">
+                            <span class="avatar small-avatar">{{ applicant.applicant_name[:1] }}</span>
+                            <span>
+                                <strong>{{ applicant.applicant_name }}</strong>
+                                <small>{{ applicant.applicant_email }} &bull; {{ applicant.opportunity_title }}</small>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="skill-match-cell">
+                            <span class="match-bar"><i style="width: {{ match }}%"></i></span>
+                            <strong>{{ match }}%</strong>
+                        </div>
+                    </td>
+                    <td>
+                        {% if display_status == "Sudah Daftar" %}
+                        <span class="status-label warning">Menunggu Review</span>
+                        {% elif display_status == "Ditolak" %}
+                        <span class="status-label closed">Dokumen Kurang</span>
+                        {% elif display_status == "Diterima" %}
+                        <span class="status-label open">Diterima</span>
+                        {% else %}
+                        <span class="status-label open">{{ display_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ applicant.applied_at or applicant.updated_at }}</td>
+                    <td>
+                        <a class="secondary-button compact" href="{{ url_for('recruiter_applicant_detail', application_id=applicant.application_id) }}">Lihat Detail</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-inline">
+                            <strong>Belum ada pelamar</strong>
+                            <span>Pelamar akan muncul setelah jobseeker menambahkan lamaran.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+</form>
+
+<section class="recruiter-bottom-grid">
+    <article class="blue-insight-card">
+        <h2>Rekomendasi Shortlist AI</h2>
+        <p>Berdasarkan pola kandidat yang berhasil, Pathora merekomendasikan kandidat dengan skill match tertinggi untuk ditinjau lebih dulu.</p>
+        <button type="button" class="secondary-button light-button">Tinjau Kandidat Teratas</button>
+    </article>
+    <article class="panel-card diversity-card">
+        <h2>Metrik Keragaman</h2>
+        <p>Keseimbangan Gender <strong>48% / 52%</strong></p>
+        <div class="dual-bar"><span></span><i></i></div>
+        <p>Jangkauan Regional <strong>14 Kota</strong></p>
+    </article>
+</section>
+<script>
+(() => {
+    const form = document.getElementById("applicant-bulk-form");
+    const selectAll = document.getElementById("select-all-applicants");
+    if (!form || !selectAll) {
+        return;
+    }
+
+    const checkboxes = Array.from(form.querySelectorAll('input[name="application_ids"]'));
+    const syncSelectAll = () => {
+        const selectedCount = checkboxes.filter((checkbox) => checkbox.checked).length;
+        selectAll.checked = checkboxes.length > 0 && selectedCount === checkboxes.length;
+        selectAll.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+    };
+
+    selectAll.addEventListener("change", () => {
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = selectAll.checked;
+        });
+        syncSelectAll();
+    });
+
+    checkboxes.forEach((checkbox) => checkbox.addEventListener("change", syncSelectAll));
+    syncSelectAll();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Akses Ditolak - Pathora{% endblock %}
+
+{% block content %}
+<section class="empty-state">
+    {% set user_role = session.get("user_role") %}
+    {% if user_role == "student" %}
+        {% set user_role = "jobseeker" %}
+    {% endif %}
+    {% set return_endpoint = "login" %}
+    {% if user_role == "jobseeker" %}
+        {% set return_endpoint = "dashboard" %}
+    {% elif user_role == "recruiter" %}
+        {% set return_endpoint = "recruiter_dashboard" %}
+    {% elif user_role == "admin" %}
+        {% set return_endpoint = "admin_dashboard" %}
+    {% endif %}
+    <h1>Akses ditolak</h1>
+    <p class="muted">Role akun kamu tidak memiliki izin untuk membuka halaman ini.</p>
+    <a class="primary-button" href="{{ url_for(return_endpoint) }}">Kembali</a>
+</section>
+{% endblock %}

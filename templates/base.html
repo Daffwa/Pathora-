@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Pathora{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=responsive-20260517c">
+</head>
+{% set is_auth_page = request.endpoint in ["login", "register"] %}
+{% set has_app_shell = session.get("user_id") and not is_auth_page %}
+{% from "partials/brand_logo.html" import brand_logo %}
+<body class="{% if has_app_shell %}app-shell{% elif is_auth_page %}auth-shell{% else %}public-shell{% endif %}">
+    {% if has_app_shell %}
+    {% set user_role = session.get("user_role", "jobseeker") %}
+    {% if user_role == "student" %}
+        {% set user_role = "jobseeker" %}
+    {% endif %}
+    {% set home_endpoint = "dashboard" %}
+    {% if user_role == "recruiter" %}
+        {% set home_endpoint = "recruiter_dashboard" %}
+    {% elif user_role == "admin" %}
+        {% set home_endpoint = "admin_dashboard" %}
+    {% endif %}
+    {% set sidebar_name = sidebar_user["name"] if sidebar_user else session.get("user_name", "User") %}
+    {% set sidebar_avatar = sidebar_user["avatar_path"] if sidebar_user else "" %}
+    <div class="app-layout">
+        <aside class="sidebar" id="app-sidebar">
+            {{ brand_logo(url_for(home_endpoint), "sidebar-brand-logo") }}
+            <p class="sidebar-kicker">
+                {% if user_role == "recruiter" %}Recruiter Hub{% elif user_role == "admin" %}Admin Hub{% else %}Student Hub{% endif %}
+            </p>
+
+            <nav class="side-nav" aria-label="Navigasi utama">
+                {% if user_role == "jobseeker" %}
+                <a class="{% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><span class="nav-icon grid-icon"></span>Dashboard</a>
+                <a class="{% if request.endpoint in ['opportunities', 'opportunity_detail'] %}active{% endif %}" href="{{ url_for('opportunities') }}"><span class="nav-icon briefcase-icon"></span>Peluang</a>
+                <a class="{% if request.endpoint == 'bookmarks' %}active{% endif %}" href="{{ url_for('bookmarks') }}"><span class="nav-icon bookmark-sidebar-icon" aria-hidden="true"><img class="sidebar-bookmark-icon-img" src="{{ url_for('static', filename='img/sidebar-bookmark-icon.svg') }}" alt="" draggable="false"></span>Bookmark</a>
+                <a class="{% if request.endpoint == 'applications' %}active{% endif %}" href="{{ url_for('applications') }}"><span class="nav-icon checklist-icon"></span>Pelacakan Lamaran</a>
+                <a class="{% if request.endpoint == 'documents' %}active{% endif %}" href="{{ url_for('documents') }}"><span class="nav-icon doc-icon"></span>Kelola Dokumen</a>
+                <a class="{% if request.endpoint == 'chat' %}active{% endif %}" href="{{ url_for('chat') }}"><span class="nav-icon chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Chat</a>
+                {% elif user_role == "recruiter" %}
+                <a class="{% if request.endpoint == 'recruiter_dashboard' %}active{% endif %}" href="{{ url_for('recruiter_dashboard') }}"><span class="nav-icon grid-icon"></span>Dashboard Recruiter</a>
+                <a class="{% if request.endpoint in ['recruiter_applicants', 'recruiter_opportunity_applicants', 'recruiter_applicant_detail'] %}active{% endif %}" href="{{ url_for('recruiter_applicants') }}"><span class="nav-icon checklist-icon"></span>Daftar Pelamar</a>
+                <a class="{% if request.endpoint and request.endpoint.startswith('recruiter_opportunities') %}active{% endif %}" href="{{ url_for('recruiter_opportunities') }}"><span class="nav-icon briefcase-icon"></span>Kelola Peluang</a>
+                <a class="{% if request.endpoint == 'chat' %}active{% endif %}" href="{{ url_for('chat') }}"><span class="nav-icon chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Chat</a>
+                {% elif user_role == "admin" %}
+                <a class="{% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}" href="{{ url_for('admin_dashboard') }}"><span class="nav-icon shield-icon"></span>Admin</a>
+                <a class="{% if request.endpoint in ['opportunities', 'opportunity_detail'] %}active{% endif %}" href="{{ url_for('opportunities') }}"><span class="nav-icon briefcase-icon"></span>Peluang</a>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#bantuan"><span class="nav-icon help-icon"></span>Bantuan</a>
+            </div>
+        </aside>
+        <div class="sidebar-overlay" data-sidebar-overlay hidden></div>
+
+        <div class="app-main">
+            <header class="topbar">
+                <button class="mobile-menu-button" type="button" data-mobile-menu-button aria-controls="app-sidebar" aria-expanded="false" aria-label="Buka menu navigasi">
+                    <span class="mobile-menu-icon" aria-hidden="true"></span>
+                </button>
+                <form class="top-search" method="get" action="{% if user_role == 'recruiter' %}{{ url_for('recruiter_applicants') }}{% else %}{{ url_for('opportunities') }}{% endif %}">
+                    <label class="sr-only" for="global-search">Cari</label>
+                    <span class="search-icon" aria-hidden="true"></span>
+                    <input id="global-search" name="q" type="search" placeholder="{% if user_role == 'recruiter' %}Cari pelamar, posisi, atau skill...{% else %}Cari peluang, perusahaan, atau dokumen...{% endif %}">
+                </form>
+                <div class="topbar-actions">
+                    <details class="topbar-popover">
+                        <summary class="icon-button bell-button" aria-label="Notifikasi">
+                            <span class="bell-icon" aria-hidden="true">
+                                <img
+                                    class="notification-icon"
+                                    src="{{ url_for('static', filename='img/notification-bell.svg') }}"
+                                    alt=""
+                                    draggable="false"
+                                >
+                            </span>
+                        </summary>
+                        <div class="popover-panel">
+                            <strong>Notifikasi</strong>
+                            <p>{% if user_role == "recruiter" %}3 pelamar baru menunggu review.{% else %}2 deadline akan jatuh tempo minggu ini.{% endif %}</p>
+                        </div>
+                    </details>
+                    <details class="topbar-popover">
+                        <summary class="icon-button settings-button" aria-label="Pengaturan"><span class="settings-icon navigation-topbar-icon" aria-hidden="true"><img class="navigation-topbar-icon-img" src="{{ url_for('static', filename='img/navigation-icon.svg') }}" alt="" draggable="false"></span></summary>
+                        <div class="popover-panel">
+                            <strong>Pengaturan Cepat</strong>
+                            <a href="{% if user_role == 'jobseeker' %}{{ url_for('profile') }}{% else %}{{ url_for('recruiter_dashboard') }}{% endif %}">Preferensi akun</a>
+                            <a href="#bantuan">Pusat bantuan</a>
+                        </div>
+                    </details>
+                    <details class="topbar-popover profile-popover">
+                        <summary class="avatar-button" aria-label="Menu profil">
+                            <span class="avatar">
+                                {% if sidebar_avatar %}
+                                <img src="{{ url_for('profile_avatar', filename=sidebar_avatar) }}" alt="Foto profil {{ sidebar_name }}">
+                                {% else %}
+                                {{ sidebar_name[:1] }}
+                                {% endif %}
+                            </span>
+                        </summary>
+                        <div class="popover-panel profile-panel">
+                            <strong>{{ sidebar_name }}</strong>
+                            <span>{% if user_role == "recruiter" %}Recruiter{% elif user_role == "admin" %}Admin{% else %}Jobseeker{% endif %}</span>
+                            {% if user_role == "jobseeker" %}
+                            <a href="{{ url_for('profile') }}">Lihat Profil</a>
+                            {% endif %}
+                            <a href="{{ url_for('logout') }}">Logout</a>
+                        </div>
+                    </details>
+                </div>
+            </header>
+            <main class="page app-page">
+    {% else %}
+        {% if not is_auth_page %}
+        <header class="site-header">
+            <nav class="public-nav">
+                {{ brand_logo(url_for('index'), "small") }}
+                <div class="public-nav-links">
+                    <a href="{{ url_for('opportunities') }}">Peluang</a>
+                    <a href="{{ url_for('login') }}">Masuk</a>
+                    <a class="primary-button compact" href="{{ url_for('register') }}">Daftar</a>
+                </div>
+            </nav>
+        </header>
+        {% endif %}
+        <main class="page {% if is_auth_page %}auth-main{% else %}public-page{% endif %}">
+    {% endif %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if has_app_shell %}
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/topbar_popovers.js') }}" defer></script>
+    {% set ai_endpoints = ["dashboard", "opportunities", "bookmarks", "applications", "documents", "recruiter_dashboard"] %}
+    {% if user_role in ["jobseeker", "recruiter"] and request.endpoint in ai_endpoints %}
+    {% include "partials/ai_assistant.html" %}
+    <script src="{{ url_for('static', filename='js/ai_assistant.js') }}" defer></script>
+    {% endif %}
+    {% else %}
+        {% if not is_auth_page %}
+        <footer class="site-footer">
+            {{ brand_logo(url_for('index'), "small") }}
+            <p>Pathora membantu mahasiswa menemukan peluang, mengelola dokumen, dan memantau lamaran dalam satu tempat.</p>
+        </footer>
+        {% endif %}
+    {% endif %}
+</body>
+</html>

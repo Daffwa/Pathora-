@@ -1,0 +1,210 @@
+﻿/* =========================================================
+   21. RESPONSIVE DESIGN
+   Active breakpoints for auth, app shell, chat, recruiter, and profile.
+========================================================= */
+
+@media (max-width: 1180px) {
+    .opportunity-grid,
+    .saved-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-toolbar {
+        grid-template-columns: minmax(0, 1fr) minmax(170px, 0.55fr);
+    }
+
+    .filter-toolbar .search-field {
+        grid-column: 1 / -1;
+    }
+
+    .icon-filter-button {
+        width: 100%;
+    }
+
+    .dashboard-metrics,
+    .dashboard-content-grid,
+    .document-dashboard-grid,
+    .recruiter-command-grid,
+    .recruiter-analytics-grid,
+    .recruiter-bottom-grid,
+    .recruitment-hub-grid,
+    .applicant-detail-grid,
+    .opportunity-detail-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .skill-panel,
+    .quick-stats-card,
+    .documents-panel,
+    .resume-preview-card {
+        grid-column: auto;
+    }
+
+    .applicant-action-bar {
+        left: 0;
+    }
+
+    .recruitment-boost-card img {
+        height: 180px;
+    }
+}
+
+@media (max-width: 920px) {
+    .auth-page,
+    .student-hero-card,
+    .progress-stack,
+    .summary-grid,
+    .document-benefit-grid,
+    .recommendation-grid,
+    .tracker-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-visual {
+        min-height: 46vh;
+    }
+
+    .hero-illustration {
+        width: 100%;
+        max-width: 520px;
+        height: 180px;
+        justify-self: start;
+    }
+
+    .topbar {
+        min-height: 66px;
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .top-search {
+        max-width: none;
+        flex: 1 1 260px;
+    }
+
+    .topbar-actions {
+        flex: 0 0 auto;
+        justify-content: flex-end;
+        overflow: visible;
+        padding-bottom: 0;
+    }
+
+    .filter-toolbar {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .icon-filter-button {
+        width: 100%;
+    }
+
+    .chat-page {
+        height: auto;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        margin: 0;
+    }
+
+    .conversation-panel {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .chat-room {
+        min-height: 620px;
+    }
+
+    .message-row {
+        max-width: 92%;
+    }
+}
+
+@media (max-width: 760px) {
+    .app-layout {
+        display: block;
+    }
+
+    .sidebar {
+        position: relative;
+        min-height: auto;
+    }
+
+    .side-nav {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .topbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .top-search {
+        max-width: none;
+    }
+
+    .app-page {
+        padding: 20px;
+    }
+
+    .split-heading,
+    .table-header,
+    .boost-card,
+    .applicant-action-bar,
+    .document-row,
+    .chat-composer-actions {
+        align-items: stretch;
+        flex-direction: column;
+        display: flex;
+    }
+
+    .bulk-actions-menu,
+    .bulk-actions-menu summary {
+        width: 100%;
+    }
+
+    .bulk-actions-panel {
+        position: static;
+        min-width: 0;
+        margin-top: 8px;
+    }
+
+    .opportunity-grid,
+    .saved-grid,
+    .filter-toolbar,
+    .role-toggle,
+    .social-login {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-panel {
+        padding: 32px 22px;
+    }
+
+    .auth-brand {
+        left: 22px;
+        top: 24px;
+    }
+
+    .document-row-actions,
+    .document-upload-form {
+        justify-content: stretch;
+    }
+
+    .document-row-actions > *,
+    .document-upload-form label,
+    .document-upload-form button,
+    .card-actions a,
+    .card-actions button {
+        width: 100%;
+    }
+
+    .resume-paper {
+        width: calc(100% - 28px);
+        padding: 32px 22px;
+    }
+
+    .applicant-action-bar {
+        position: static;
+        margin-top: 24px;
+    }
+}
+

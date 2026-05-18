@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ form_title }} - Pathora{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <div class="form-card wide-form-card">
+        <h1>{{ form_title }}</h1>
+
+        <form method="post" action="{{ action_url }}">
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" value="{{ opportunity.title }}" required>
+
+            <label for="type">Opportunity Type</label>
+            <select id="type" name="type" required>
+                <option value="internship" {% if opportunity.type == "internship" %}selected{% endif %}>Internship</option>
+                <option value="scholarship" {% if opportunity.type == "scholarship" %}selected{% endif %}>Scholarship</option>
+            </select>
+
+            <label for="provider">Organizer</label>
+            <input id="provider" name="provider" type="text" value="{{ opportunity.provider }}" required>
+
+            <label for="location">Location</label>
+            <input id="location" name="location" type="text" value="{{ opportunity.location }}" required>
+
+            <label for="deadline">Deadline</label>
+            <input id="deadline" name="deadline" type="date" value="{{ opportunity.deadline }}" required>
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4">{{ opportunity.description }}</textarea>
+
+            <label for="requirements">Requirements</label>
+            <textarea id="requirements" name="requirements" rows="4">{{ opportunity.requirements }}</textarea>
+
+            <label for="official_link">Official Link</label>
+            <input id="official_link" name="official_link" type="url" value="{{ opportunity.official_link }}">
+
+            <label for="required_skills">Required Skills</label>
+            <input id="required_skills" name="required_skills" type="text" value="{{ opportunity.required_skills }}" placeholder="python, sql, excel">
+
+            <button type="submit">Simpan</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

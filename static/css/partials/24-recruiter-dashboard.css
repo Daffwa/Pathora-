@@ -1,0 +1,89 @@
+﻿/* =========================================================
+   08. DASHBOARD RECRUITER
+   Recruiter dashboard grids, analytics, applicants summary, and actions.
+========================================================= */
+
+.recruiter-command-grid,
+.recruiter-analytics-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(180px, 0.6fr));
+    gap: 24px;
+}
+
+.recruiter-analytics-grid {
+    grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1.55fr);
+}
+
+.recruiter-bottom-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+}
+
+.recruiter-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compact-stat {
+    min-height: 180px;
+    align-content: center;
+}
+
+.bar-chart {
+    height: 250px;
+    padding: 20px 16px 0;
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    border-bottom: 2px solid #CBD5E1;
+}
+
+.bar-chart span {
+    flex: 1;
+    min-width: 28px;
+    background: #CFE0FF;
+    border-radius: 8px 8px 0 0;
+}
+
+.bar-chart span.active {
+    background: #0B66C3;
+}
+
+.recruiter-application-list {
+    display: grid;
+}
+
+.recruiter-application-item {
+    min-height: 82px;
+    border-radius: 0;
+    background: #FFFFFF;
+    border-top: 1px solid var(--border);
+}
+
+.recruiter-application-item:first-child {
+    border-top: 0;
+}
+
+.recruiter-application-item .match-bar {
+    width: 90px;
+}
+
+.recruiter-application-item b {
+    color: var(--primary);
+}
+
+.recruiter-application-item em {
+    margin-left: auto;
+    padding: 4px 9px;
+    color: var(--orange);
+    background: #FFEDD5;
+    border-radius: 999px;
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.recruiter-side-stack {
+    display: grid;
+    gap: 24px;
+    align-content: start;
+}
+

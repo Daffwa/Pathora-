@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Peluang - Pathora{% endblock %}
+
+{% block content %}
+<section class="section-heading">
+    <h1>Kelola Peluang</h1>
+    <p>Tambah, edit, dan hapus peluang yang tampil di aplikasi.</p>
+    <a class="primary-button" href="{{ url_for('admin_create_opportunity') }}">Tambah Peluang</a>
+</section>
+
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Judul</th>
+                <th>Tipe</th>
+                <th>Penyelenggara</th>
+                <th>Lokasi</th>
+                <th>Deadline</th>
+                <th>Skill Dibutuhkan</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for opportunity in opportunities %}
+            <tr>
+                <td>{{ opportunity.title }}</td>
+                <td>{{ opportunity.type }}</td>
+                <td>{{ opportunity.provider }}</td>
+                <td>{{ opportunity.location }}</td>
+                <td>{{ opportunity.deadline }}</td>
+                <td>{{ opportunity.required_skills }}</td>
+                <td>
+                    <div class="inline-actions">
+                        <a href="{{ url_for('admin_edit_opportunity', opportunity_id=opportunity.id) }}">Edit</a>
+                        <form class="inline-form" method="post" action="{{ url_for('admin_delete_opportunity', opportunity_id=opportunity.id) }}">
+                            <button type="submit" class="secondary-action">Hapus</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">Belum ada peluang.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

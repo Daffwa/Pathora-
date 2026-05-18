@@ -1,0 +1,443 @@
+﻿/* =========================================================
+   17. PROFILE & EDIT PROFILE
+   Profile overview cards, saved opportunities, completion, and actions.
+========================================================= */
+
+.profile-page {
+    min-height: calc(100vh - 66px);
+    color: var(--text);
+    background: transparent;
+}
+
+.profile-page .profile-grid {
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+}
+
+.profile-page .profile-rail,
+.profile-page .profile-main-column {
+    gap: 22px;
+}
+
+.profile-page .profile-glass-card,
+.profile-page .saved-profile-card,
+.profile-page .saved-empty-card {
+    color: var(--text);
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    backdrop-filter: none;
+}
+
+.profile-page .profile-identity-card {
+    padding: 30px 26px;
+    text-align: center;
+}
+
+.profile-page .profile-avatar-xl {
+    width: 118px;
+    height: 118px;
+    margin: 0 auto 20px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #0B66C3, #0F8BD7);
+    border: 6px solid #EAF2FF;
+    box-shadow: 0 16px 32px rgba(11, 102, 195, 0.18);
+    overflow: hidden;
+}
+
+.profile-page .profile-avatar-xl > span {
+    color: #FFFFFF;
+    background: transparent;
+    font-size: 2.8rem;
+}
+
+.profile-page .profile-avatar-xl img {
+    object-fit: cover;
+}
+
+.profile-page .profile-identity-card h1 {
+    color: var(--text);
+    font-size: 1.7rem;
+    line-height: 1.2;
+}
+
+.profile-page .profile-identity-card p,
+.profile-page .profile-header-row p,
+.profile-page .saved-empty-card p,
+.profile-page .profile-completion-panel p {
+    color: var(--muted);
+}
+
+.profile-page .profile-chip-row {
+    justify-content: center;
+    margin: 18px 0 22px;
+}
+
+.profile-page .profile-chip-row span,
+.profile-page .compact-chip-list span {
+    min-height: 30px;
+    color: var(--primary);
+    background: #EAF2FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 999px;
+    text-transform: capitalize;
+}
+
+.profile-page .profile-contact-list {
+    margin: 0 0 22px;
+    padding: 16px;
+    gap: 12px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+}
+
+.profile-page .profile-contact-list p {
+    display: grid;
+    grid-template-columns: 20px minmax(84px, 0.4fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.profile-page .profile-contact-list strong {
+    color: #475569;
+    font-size: 0.78rem;
+}
+
+.profile-page .profile-contact-list em {
+    min-width: 0;
+    color: var(--text);
+    font-style: normal;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.profile-page .tiny-icon {
+    color: var(--primary);
+}
+
+.profile-page .profile-edit-main {
+    width: 100%;
+    min-height: 44px;
+}
+
+.profile-page .profile-detail-card {
+    padding: 26px;
+    display: grid;
+    gap: 24px;
+}
+
+.profile-page .profile-detail-card h2 {
+    margin: 0 0 12px;
+    color: var(--text);
+    font-size: 1.05rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.profile-page .profile-detail-card h2:not(:first-child) {
+    margin-top: 0;
+}
+
+.profile-page .profile-timeline {
+    padding: 16px 18px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid var(--primary);
+    border-radius: 14px;
+}
+
+.profile-page .profile-timeline strong {
+    color: var(--text);
+    font-size: 0.98rem;
+}
+
+.profile-page .profile-timeline span,
+.profile-page .profile-timeline small {
+    color: var(--muted);
+}
+
+.profile-page .profile-timeline small {
+    margin-top: 6px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.profile-page .profile-interest-list p {
+    margin: 0;
+    color: var(--text);
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+.profile-page .profile-interest-list span {
+    color: var(--primary);
+}
+
+.profile-page .profile-header-row {
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.profile-page .profile-header-row h1 {
+    color: var(--text);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    line-height: 1.14;
+}
+
+.profile-page .profile-header-actions {
+    flex-wrap: nowrap;
+}
+
+.profile-page .saved-profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.profile-page .saved-profile-card {
+    position: relative;
+    min-height: 300px;
+    padding: 22px;
+    display: grid;
+    gap: 18px;
+    overflow: visible;
+}
+
+.profile-page .saved-bookmark-form {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 2;
+    margin: 0;
+}
+
+.profile-page .saved-bookmark-button {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    color: #FFFFFF;
+    background: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 12px 28px rgba(0, 91, 170, 0.22);
+}
+
+.profile-page .saved-bookmark-button:hover {
+    color: #FFFFFF;
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: 0 14px 32px rgba(0, 59, 115, 0.28);
+}
+
+.profile-page .saved-bookmark-button .bookmark-icon {
+    width: 17px;
+    height: 17px;
+}
+
+.profile-page .saved-bookmark-button .bookmark-icon::before {
+    content: "";
+    width: 13px;
+    height: 17px;
+    margin: 0 auto;
+    border: 2px solid currentColor;
+    border-radius: 3px 3px 1px 1px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+    background: currentColor;
+}
+
+.profile-page .saved-card-topline {
+    min-height: 50px;
+    padding-right: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.profile-page .saved-card-body {
+    padding: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.profile-page .saved-card-body h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.25rem;
+    line-height: 1.25;
+}
+
+.profile-page .saved-provider {
+    color: #475569;
+    font-size: 0.96rem;
+}
+
+.profile-page .saved-meta {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.profile-page .saved-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-page .saved-progress-row {
+    margin-top: 6px;
+}
+
+.profile-page .saved-progress-row > div:first-child {
+    color: var(--muted);
+}
+
+.profile-page .saved-progress-row strong {
+    color: var(--primary);
+}
+
+.profile-page .mini-progress {
+    height: 8px;
+    background: #E5E7EB;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.profile-page .mini-progress span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #0F8BD7);
+    border-radius: inherit;
+}
+
+.profile-page .saved-card-actions {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-page .saved-card-actions a,
+.profile-page .saved-card-actions button {
+    width: 100%;
+}
+
+.profile-page .saved-card-actions form {
+    margin: 0;
+}
+
+.profile-page .saved-empty-card {
+    min-height: 260px;
+    padding: 34px;
+    grid-column: 1 / -1;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    text-align: center;
+    border-style: dashed;
+}
+
+.profile-page .saved-empty-card h2 {
+    margin: 18px 0 0;
+    color: var(--text);
+}
+
+.profile-page .empty-plus {
+    color: var(--primary);
+    background: #EAF2FF;
+    border-color: #BFDBFE;
+}
+
+.profile-page .profile-completion-panel {
+    padding: 28px;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 26px;
+    align-items: center;
+}
+
+.profile-page .profile-ring {
+    background:
+        radial-gradient(circle, #FFFFFF 0 58%, transparent 59%),
+        conic-gradient(var(--primary) var(--percent), #E5E7EB 0);
+}
+
+.profile-page .profile-ring span {
+    color: var(--text);
+}
+
+.profile-page .profile-completion-panel h2 {
+    color: var(--text);
+    font-size: 1.25rem;
+}
+
+.profile-page .profile-status-row span {
+    color: #64748B;
+}
+
+.profile-page .profile-status-row span.complete {
+    color: #059669;
+}
+
+.profile-page .profile-status-row span.complete::before {
+    background: currentColor;
+    box-shadow: inset 0 0 0 3px #FFFFFF;
+}
+
+@media (max-width: 1180px) {
+    .profile-page .profile-grid {
+        grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .profile-page .saved-profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 920px) {
+    .profile-page .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-page .profile-header-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .profile-page .profile-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 760px) {
+    .profile-page .profile-contact-list p {
+        grid-template-columns: 20px minmax(0, 1fr);
+    }
+
+    .profile-page .profile-contact-list strong {
+        display: none;
+    }
+
+    .profile-page .profile-header-actions,
+    .profile-page .saved-card-actions,
+    .profile-page .profile-completion-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-page .profile-header-actions {
+        display: grid;
+    }
+}
+

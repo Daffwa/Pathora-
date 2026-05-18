@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Peluang - Pathora{% endblock %}
+
+{% block content %}
+<section class="page-heading split-heading">
+    <div>
+        <h1>Recruitment Hub</h1>
+        <p>Kelola internship dan scholarship aktif dari perusahaan Anda.</p>
+    </div>
+    <a class="primary-button" href="{{ url_for('recruiter_create_opportunity') }}">+ Buat Lowongan</a>
+</section>
+
+{% set posting_stats = namespace(applicants=0) %}
+{% for opportunity in opportunities %}
+    {% set posting_stats.applicants = posting_stats.applicants + opportunity.applicant_count %}
+{% endfor %}
+
+<section class="recruitment-hub-grid">
+    <article class="recruitment-boost-card">
+        <img src="{{ url_for('static', filename='img/recruiter-opportunities-hero.png') }}" alt="Suasana interview profesional untuk rekrutmen">
+    </article>
+    <article class="blue-insight-card total-applicant-card">
+        <span>Total Pelamar</span>
+        <strong>{{ posting_stats.applicants }}</strong>
+        <p>+12% minggu ini</p>
+    </article>
+</section>
+
+<section class="table-card">
+    <div class="table-header">
+        <h2>Posting Aktif <span class="table-count">{{ opportunities|length }} Total</span></h2>
+        <div class="inline-actions">
+            <button type="button" class="icon-button" aria-label="Filter"><span class="filter-icon"></span></button>
+            <button type="button" class="icon-button" aria-label="Urutkan"><span class="list-icon"></span></button>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Judul Peluang</th>
+                    <th>Tipe</th>
+                    <th>Status</th>
+                    <th>Pelamar</th>
+                    <th>Deadline</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for opportunity in opportunities %}
+                <tr>
+                    <td>
+                        <strong>{{ opportunity.title }}</strong>
+                        <span>{{ opportunity.provider }}</span>
+                    </td>
+                    <td><span class="tag {{ opportunity.type }}">{{ "Magang" if opportunity.type == "internship" else "Beasiswa" }}</span></td>
+                    <td><span class="status-dot open"></span>Open</td>
+                    <td>
+                        <a class="applicant-count-pill" href="{{ url_for('recruiter_opportunity_applicants', opportunity_id=opportunity.id) }}">{{ opportunity.applicant_count }}</a>
+                    </td>
+                    <td>{{ opportunity.deadline }}</td>
+                    <td>
+                        <details class="action-menu">
+                            <summary aria-label="Aksi {{ opportunity.title }}"><span class="more-icon"></span></summary>
+                            <div class="action-menu-panel">
+                                <a href="{{ url_for('recruiter_opportunity_applicants', opportunity_id=opportunity.id) }}">Lihat Pelamar</a>
+                                <a href="{{ url_for('recruiter_edit_opportunity', opportunity_id=opportunity.id) }}">Edit</a>
+                                <form method="post" action="{{ url_for('recruiter_delete_opportunity', opportunity_id=opportunity.id) }}" onsubmit="return confirm('Hapus peluang ini?')">
+                                    <button type="submit" class="danger-link-button">Hapus</button>
+                                </form>
+                            </div>
+                        </details>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-inline">
+                            <strong>Belum ada peluang</strong>
+                            <span>Buat lowongan pertama untuk mulai menerima pelamar.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="recruiter-visibility-card">
+    <h2>Boost your recruitment visibility</h2>
+    <p>Featured posting membantu lowongan tampil lebih tinggi di hasil pencarian mahasiswa.</p>
+    <button type="button" class="secondary-button">Pelajari Premium</button>
+</section>
+{% endblock %}

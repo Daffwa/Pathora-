@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Dokumen - Pathora{% endblock %}
+
+{% block content %}
+{% set percent = (complete_count / total_count * 100)|round if total_count else 0 %}
+<section class="page-heading">
+    <h1>Kelola Dokumen</h1>
+    <p>{{ complete_count }} dari {{ total_count }} dokumen sudah tersedia untuk mendukung lamaran Anda.</p>
+</section>
+
+<section class="document-dashboard-grid">
+    <article class="profile-strength-card">
+        <div class="profile-ring-large" style="--percent: {{ percent }}%">
+            <strong>{{ percent }}%</strong>
+            <span>Lengkap</span>
+        </div>
+        <h2>Kekuatan Profil</h2>
+        <p>Lengkapi semua dokumen agar profil Anda lebih mudah diprioritaskan recruiter.</p>
+        <div class="progress-bar"><span style="width: {{ percent }}%"></span></div>
+        <small>{{ complete_count }} dari {{ total_count }} dokumen terunggah</small>
+    </article>
+
+    <article class="required-documents-card">
+        <div class="panel-heading">
+            <h2>Dokumen Wajib</h2>
+            <span class="soft-pill">Diperbarui hari ini</span>
+        </div>
+
+        <div class="document-row-list">
+            {% for document in documents %}
+            <article class="document-row {% if not document.is_uploaded %}missing{% endif %}">
+                <div class="document-row-main">
+                    <span class="document-check {% if document.is_uploaded %}checked{% endif %}"></span>
+                    <span class="document-icon doc-icon"></span>
+                    <div>
+                        <h3>
+                            {% if document.doc_type == "Transkrip" %}
+                            Transkrip Akademik
+                            {% elif document.doc_type == "Sertifikat" %}
+                            Sertifikat
+                            {% elif document.doc_type == "Motivation Letter" %}
+                            Surat Rekomendasi
+                            {% elif document.doc_type == "KTP/KTM" %}
+                            KTP / KTM
+                            {% else %}
+                            {{ document.doc_type }}
+                            {% endif %}
+                        </h3>
+                        <p>
+                            {% if document.file_name %}
+                            {{ document.file_name }}
+                            {% else %}
+                            Unggah file PDF, DOC, DOCX, PNG, JPG, atau JPEG.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="document-row-actions">
+                    {% if document.is_uploaded %}
+                    <span class="status-label open">Terverifikasi</span>
+                    {% else %}
+                    <span class="status-label closed">Belum Ada</span>
+                    {% endif %}
+
+                    {% if document.file_name %}
+                    <a class="secondary-button compact" href="{{ url_for('download_document', doc_type=document.doc_type) }}">Lihat</a>
+                    {% endif %}
+
+                    <form method="post" action="{{ url_for('update_document', doc_type=document.doc_type) }}" enctype="multipart/form-data" class="document-upload-form">
+                        {% if document.is_uploaded %}
+                        <input type="hidden" name="is_uploaded" value="on">
+                        {% endif %}
+                        <input id="file-{{ loop.index }}" name="document_file" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                        <input name="notes" type="hidden" value="{{ document.notes }}">
+                        <label class="secondary-button compact" for="file-{{ loop.index }}">{{ "Pilih File" if not document.is_uploaded else "Pilih Baru" }}</label>
+                        <button type="submit" class="primary-button compact">{{ "Ganti" if document.is_uploaded else "Unggah" }}</button>
+                    </form>
+
+                    {% if document.is_uploaded %}
+                    <form method="post" action="{{ url_for('reset_document', doc_type=document.doc_type) }}" onsubmit="return confirm('Reset dokumen ini?')">
+                        <button type="submit" class="ghost-danger-button">Reset</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+<section class="document-benefit-grid">
+    <article class="info-tile">
+        <span class="shield-icon"></span>
+        <div>
+        <h3>Penyimpanan Aman</h3>
+            <p>Dokumen tersimpan rapi dan hanya dipakai untuk kebutuhan lamaran.</p>
+        </div>
+    </article>
+    <article class="info-tile">
+        <span class="clock-icon"></span>
+        <div>
+        <h3>Kontrol Versi</h3>
+            <p>Ganti file kapan saja saat CV, transkrip, atau sertifikat sudah diperbarui.</p>
+        </div>
+    </article>
+    <article class="info-tile">
+        <span class="gauge-icon"></span>
+        <div>
+        <h3>Tips</h3>
+            <p>Profil dengan dokumen lengkap lebih mudah masuk shortlist recruiter.</p>
+        </div>
+    </article>
+</section>
+
+<section class="table-card">
+    <div class="table-header">
+        <h2>Aktivitas Dokumen Terbaru</h2>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nama File</th>
+                    <th>Tipe</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents if document.is_uploaded %}
+                <tr>
+                    <td><strong>{{ document.file_name or document.doc_type }}</strong></td>
+                    <td>{{ document.doc_type }}</td>
+                    <td><span class="status-label open">Disetujui</span></td>
+                    <td>
+                        <a href="{{ url_for('download_document', doc_type=document.doc_type) }}">Lihat</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-inline">
+                            <strong>Belum ada aktivitas dokumen</strong>
+                            <span>Unggah dokumen pertama untuk mulai membangun profil.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

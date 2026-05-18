@@ -1,0 +1,599 @@
+(function () {
+    const root = document.getElementById("ai-assistant-root");
+    if (!root) {
+        return;
+    }
+
+    const launcher = root.querySelector(".ai-launcher");
+    const panel = root.querySelector(".ai-panel");
+    const panelHeader = root.querySelector("[data-ai-drag-handle]");
+    const closeButton = root.querySelector(".ai-close");
+    const messages = root.querySelector(".ai-messages");
+    const form = root.querySelector(".ai-composer");
+    const input = root.querySelector("#ai-assistant-input");
+    const sendButton = root.querySelector(".ai-send-button");
+    const initialMessage = root.querySelector("[data-ai-initial-message]");
+    const initialTime = root.querySelector("[data-ai-initial-time]");
+    const quickButtons = root.querySelectorAll("[data-ai-prompt]");
+    const sizeButtons = root.querySelectorAll("[data-ai-size]");
+    const sizeDownButton = root.querySelector("[data-ai-size='down']");
+    const sizeUpButton = root.querySelector("[data-ai-size='up']");
+    const resizeHandle = root.querySelector(".ai-resize-handle");
+    const chatUrl = root.dataset.chatUrl;
+    const storageKey = "pathora.aiAssistant.anchor";
+    const sizeStorageKey = "pathora.aiAssistant.size";
+    const edgeGap = 24;
+    const panelDefaultSize = { width: 360, height: 520 };
+    const panelMinimumSize = { width: 320, height: 420 };
+    const panelMaximumSize = { width: 720 };
+    const maxMessageLength = 1000;
+    const genericAiError = "AI Assistant belum bisa memproses pertanyaan. Coba lagi nanti.";
+    let anchor = readAnchor();
+    let panelSize = readPanelSize();
+    let resizeTimer = null;
+    let isSending = false;
+
+    function clamp(value, min, max) {
+        if (max < min) {
+            return min;
+        }
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function getPanelSizeLimits() {
+        const viewportMaxWidth = Math.max(0, window.innerWidth - edgeGap * 2);
+        const viewportMaxHeight = Math.max(0, window.innerHeight - 80);
+        const minWidth = Math.min(panelMinimumSize.width, viewportMaxWidth);
+        const minHeight = Math.min(panelMinimumSize.height, viewportMaxHeight);
+        const maxWidth = Math.max(
+            minWidth,
+            Math.min(panelMaximumSize.width, viewportMaxWidth)
+        );
+        const maxHeight = Math.max(minHeight, viewportMaxHeight);
+
+        return { minWidth, minHeight, maxWidth, maxHeight };
+    }
+
+    function normalizePanelSize(width, height) {
+        const limits = getPanelSizeLimits();
+        return {
+            width: Math.round(clamp(width, limits.minWidth, limits.maxWidth)),
+            height: Math.round(clamp(height, limits.minHeight, limits.maxHeight)),
+        };
+    }
+
+    function readPanelSize() {
+        try {
+            const parsed = JSON.parse(window.localStorage.getItem(sizeStorageKey) || "null");
+            if (
+                parsed &&
+                Number.isFinite(parsed.width) &&
+                Number.isFinite(parsed.height)
+            ) {
+                return normalizePanelSize(parsed.width, parsed.height);
+            }
+        } catch (error) {
+            return normalizePanelSize(panelDefaultSize.width, panelDefaultSize.height);
+        }
+
+        return normalizePanelSize(panelDefaultSize.width, panelDefaultSize.height);
+    }
+
+    function savePanelSize(nextSize) {
+        try {
+            window.localStorage.setItem(sizeStorageKey, JSON.stringify(nextSize));
+        } catch (error) {
+            // Size memory is optional; resizing still works without storage.
+        }
+    }
+
+    function updateSizeButtons() {
+        const limits = getPanelSizeLimits();
+        const atMinimum =
+            panelSize.width <= limits.minWidth + 1 &&
+            panelSize.height <= limits.minHeight + 1;
+        const atMaximum =
+            panelSize.width >= limits.maxWidth - 1 &&
+            panelSize.height >= limits.maxHeight - 1;
+
+        if (sizeDownButton) {
+            sizeDownButton.disabled = atMinimum;
+        }
+        if (sizeUpButton) {
+            sizeUpButton.disabled = atMaximum;
+        }
+    }
+
+    function applyPanelSize(nextSize, shouldSave) {
+        panelSize = normalizePanelSize(nextSize.width, nextSize.height);
+        panel.style.width = `${panelSize.width}px`;
+        panel.style.height = `${panelSize.height}px`;
+
+        if (shouldSave !== false) {
+            savePanelSize(panelSize);
+        }
+
+        updateSizeButtons();
+        return panelSize;
+    }
+
+    function defaultAnchor() {
+        return {
+            x: window.innerWidth - edgeGap,
+            y: window.innerHeight - edgeGap,
+        };
+    }
+
+    function readAnchor() {
+        try {
+            const parsed = JSON.parse(window.localStorage.getItem(storageKey) || "null");
+            if (
+                parsed &&
+                Number.isFinite(parsed.x) &&
+                Number.isFinite(parsed.y)
+            ) {
+                return parsed;
+            }
+        } catch (error) {
+            return defaultAnchor();
+        }
+
+        return defaultAnchor();
+    }
+
+    function saveAnchor(nextAnchor) {
+        anchor = {
+            x: Math.round(nextAnchor.x),
+            y: Math.round(nextAnchor.y),
+        };
+
+        try {
+            window.localStorage.setItem(storageKey, JSON.stringify(anchor));
+        } catch (error) {
+            // Position memory is a convenience; the assistant still works without it.
+        }
+    }
+
+    function rememberAnchorFrom(element) {
+        const rect = element.getBoundingClientRect();
+        saveAnchor({
+            x: rect.left + rect.width,
+            y: rect.top + rect.height,
+        });
+    }
+
+    function placeElement(element) {
+        const rect = element.getBoundingClientRect();
+        const appliedSize = element === panel ? applyPanelSize(panelSize, false) : null;
+        const width = appliedSize ? appliedSize.width : rect.width || 76;
+        const height = appliedSize ? appliedSize.height : rect.height || 76;
+        const maxLeft = window.innerWidth - width - edgeGap;
+        const maxTop = window.innerHeight - height - edgeGap;
+        const left = clamp(anchor.x - width, edgeGap, maxLeft);
+        const top = clamp(anchor.y - height, edgeGap, maxTop);
+
+        element.style.left = `${Math.round(left)}px`;
+        element.style.top = `${Math.round(top)}px`;
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+
+        saveAnchor({
+            x: left + width,
+            y: top + height,
+        });
+    }
+
+    function setPanelPosition(left, top, width, height) {
+        const maxLeft = window.innerWidth - width - edgeGap;
+        const maxTop = window.innerHeight - height - edgeGap;
+        const nextLeft = clamp(left, edgeGap, maxLeft);
+        const nextTop = clamp(top, edgeGap, maxTop);
+
+        panel.style.left = `${Math.round(nextLeft)}px`;
+        panel.style.top = `${Math.round(nextTop)}px`;
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+        saveAnchor({
+            x: nextLeft + width,
+            y: nextTop + height,
+        });
+    }
+
+    function resizePanelBy(widthDelta, heightDelta) {
+        const rect = panel.getBoundingClientRect();
+        const currentSize = normalizePanelSize(
+            rect.width || panelSize.width,
+            rect.height || panelSize.height
+        );
+        const nextSize = applyPanelSize(
+            {
+                width: currentSize.width + widthDelta,
+                height: currentSize.height + heightDelta,
+            },
+            true
+        );
+        const right = rect.right || anchor.x;
+        const bottom = rect.bottom || anchor.y;
+
+        setPanelPosition(
+            right - nextSize.width,
+            bottom - nextSize.height,
+            nextSize.width,
+            nextSize.height
+        );
+        scrollMessages();
+    }
+
+    function setInitialCopy() {
+        const firstName = (root.dataset.userName || "teman").trim().split(/\s+/)[0] || "teman";
+        const role = root.dataset.userRole;
+
+        if (role === "recruiter") {
+            initialMessage.textContent = `Halo ${firstName}! Saya Pathora AI. Saya bisa bantu menyusun lowongan, shortlist kandidat, dan menyiapkan interview.`;
+        } else {
+            initialMessage.textContent = `Halo ${firstName}! Saya Pathora AI. Ada yang bisa saya bantu hari ini?`;
+        }
+
+        initialTime.textContent = formatTime(new Date());
+    }
+
+    function formatTime(date) {
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const suffix = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        return `${hours}:${minutes} ${suffix}`;
+    }
+
+    function scrollMessages() {
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    function appendMessage(author, text, timestamp) {
+        const row = document.createElement("article");
+        row.className = `ai-message-row ${author}`;
+
+        const bubble = document.createElement("div");
+        bubble.className = "ai-message-bubble";
+        bubble.textContent = text;
+
+        const time = document.createElement("time");
+        time.className = "ai-message-time";
+        time.textContent = timestamp || formatTime(new Date());
+
+        row.append(bubble, time);
+        messages.appendChild(row);
+        scrollMessages();
+
+        return row;
+    }
+
+    function setComposerBusy(isBusy) {
+        isSending = isBusy;
+        input.disabled = isBusy;
+        sendButton.disabled = isBusy;
+        quickButtons.forEach((button) => {
+            button.disabled = isBusy;
+        });
+    }
+
+    async function sendMessage(message) {
+        if (isSending) {
+            return;
+        }
+
+        const userMessage = (message || "").trim();
+        if (!userMessage) {
+            appendMessage("assistant", "Pesan tidak boleh kosong.");
+            return;
+        }
+
+        if (userMessage.length > maxMessageLength) {
+            appendMessage("assistant", "Pesan terlalu panjang. Maksimal 1000 karakter.");
+            return;
+        }
+
+        appendMessage("user", userMessage);
+        const pendingRow = appendMessage("assistant", "AI sedang mengetik...");
+        const pendingBubble = pendingRow.querySelector(".ai-message-bubble");
+        const pendingTime = pendingRow.querySelector(".ai-message-time");
+
+        setComposerBusy(true);
+
+        try {
+            const response = await fetch(chatUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({ message: userMessage }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.error || genericAiError);
+            }
+
+            pendingBubble.textContent = data.answer || "Maaf, saya belum bisa memberikan jawaban saat ini.";
+            pendingTime.textContent = data.timestamp || formatTime(new Date());
+        } catch (error) {
+            pendingBubble.textContent = error.message || genericAiError;
+            pendingTime.textContent = formatTime(new Date());
+        } finally {
+            setComposerBusy(false);
+            input.focus({ preventScroll: true });
+            scrollMessages();
+        }
+    }
+
+    function openAssistant() {
+        rememberAnchorFrom(launcher);
+        launcher.hidden = true;
+        panel.hidden = false;
+        launcher.setAttribute("aria-expanded", "true");
+
+        window.requestAnimationFrame(() => {
+            placeElement(panel);
+            input.focus({ preventScroll: true });
+            scrollMessages();
+        });
+    }
+
+    function closeAssistant() {
+        rememberAnchorFrom(panel);
+        panel.hidden = true;
+        launcher.hidden = false;
+        launcher.setAttribute("aria-expanded", "false");
+
+        window.requestAnimationFrame(() => {
+            placeElement(launcher);
+            launcher.focus({ preventScroll: true });
+        });
+    }
+
+    function enableDrag(element, handle, onTap) {
+        let drag = null;
+
+        handle.addEventListener("pointerdown", (event) => {
+            if (event.button !== undefined && event.button !== 0) {
+                return;
+            }
+
+            const rect = element.getBoundingClientRect();
+            drag = {
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startY: event.clientY,
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                moved: false,
+            };
+
+            handle.setPointerCapture(event.pointerId);
+            element.classList.add("is-dragging");
+            event.preventDefault();
+        });
+
+        handle.addEventListener("pointermove", (event) => {
+            if (!drag || event.pointerId !== drag.pointerId) {
+                return;
+            }
+
+            const deltaX = event.clientX - drag.startX;
+            const deltaY = event.clientY - drag.startY;
+            if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+                drag.moved = true;
+            }
+
+            const maxLeft = window.innerWidth - drag.width - edgeGap;
+            const maxTop = window.innerHeight - drag.height - edgeGap;
+            const left = clamp(drag.left + deltaX, edgeGap, maxLeft);
+            const top = clamp(drag.top + deltaY, edgeGap, maxTop);
+
+            element.style.left = `${Math.round(left)}px`;
+            element.style.top = `${Math.round(top)}px`;
+            element.style.right = "auto";
+            element.style.bottom = "auto";
+            saveAnchor({
+                x: left + drag.width,
+                y: top + drag.height,
+            });
+        });
+
+        function finishDrag(event, shouldTap) {
+            if (!drag || event.pointerId !== drag.pointerId) {
+                return;
+            }
+
+            if (handle.hasPointerCapture(event.pointerId)) {
+                handle.releasePointerCapture(event.pointerId);
+            }
+
+            const wasTap = !drag.moved;
+            drag = null;
+            element.classList.remove("is-dragging");
+            rememberAnchorFrom(element);
+
+            if (wasTap && shouldTap && typeof onTap === "function") {
+                onTap();
+            }
+        }
+
+        handle.addEventListener("pointerup", (event) => finishDrag(event, true));
+        handle.addEventListener("pointercancel", (event) => finishDrag(event, false));
+    }
+
+    function enablePanelResize() {
+        if (!resizeHandle) {
+            return;
+        }
+
+        let resize = null;
+
+        function startResize(pointerId, startX, startY) {
+            const rect = panel.getBoundingClientRect();
+            resize = {
+                pointerId,
+                startX,
+                startY,
+                left: rect.left,
+                top: rect.top,
+                width: rect.width || panelSize.width,
+                height: rect.height || panelSize.height,
+            };
+
+            panel.classList.add("is-resizing");
+        }
+
+        function updateResize(clientX, clientY) {
+            if (!resize) {
+                return;
+            }
+
+            const deltaX = clientX - resize.startX;
+            const deltaY = clientY - resize.startY;
+            const nextSize = applyPanelSize(
+                {
+                    width: resize.width + deltaX,
+                    height: resize.height + deltaY,
+                },
+                true
+            );
+
+            setPanelPosition(resize.left, resize.top, nextSize.width, nextSize.height);
+            scrollMessages();
+        }
+
+        function finishResize() {
+            if (!resize) {
+                return;
+            }
+
+            resize = null;
+            panel.classList.remove("is-resizing");
+            rememberAnchorFrom(panel);
+        }
+
+        resizeHandle.addEventListener("pointerdown", (event) => {
+            if (event.button !== undefined && event.button !== 0) {
+                return;
+            }
+
+            startResize(event.pointerId, event.clientX, event.clientY);
+            resizeHandle.setPointerCapture(event.pointerId);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        resizeHandle.addEventListener("pointermove", (event) => {
+            if (!resize || event.pointerId !== resize.pointerId) {
+                return;
+            }
+
+            updateResize(event.clientX, event.clientY);
+        });
+
+        function finishPointerResize(event) {
+            if (!resize || event.pointerId !== resize.pointerId) {
+                return;
+            }
+
+            if (resizeHandle.hasPointerCapture(event.pointerId)) {
+                resizeHandle.releasePointerCapture(event.pointerId);
+            }
+
+            finishResize();
+        }
+
+        resizeHandle.addEventListener("pointerup", finishPointerResize);
+        resizeHandle.addEventListener("pointercancel", finishPointerResize);
+
+        resizeHandle.addEventListener("mousedown", (event) => {
+            if (event.button !== 0 || resize) {
+                return;
+            }
+
+            startResize("mouse", event.clientX, event.clientY);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        window.addEventListener("mousemove", (event) => {
+            if (!resize) {
+                return;
+            }
+
+            updateResize(event.clientX, event.clientY);
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (!resize) {
+                return;
+            }
+
+            finishResize();
+        });
+    }
+
+    applyPanelSize(panelSize, false);
+    setInitialCopy();
+    enableDrag(launcher, launcher, openAssistant);
+    enableDrag(panel, panelHeader);
+    enablePanelResize();
+
+    launcher.addEventListener("click", () => {
+        if (!launcher.hidden) {
+            openAssistant();
+        }
+    });
+
+    closeButton.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+    });
+    closeButton.addEventListener("click", closeAssistant);
+
+    sizeButtons.forEach((button) => {
+        button.addEventListener("pointerdown", (event) => {
+            event.stopPropagation();
+        });
+        button.addEventListener("click", () => {
+            const direction = button.dataset.aiSize === "up" ? 1 : -1;
+            resizePanelBy(direction * 80, direction * 80);
+        });
+    });
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const message = input.value.trim();
+        if (isSending) {
+            return;
+        }
+        input.value = "";
+        sendMessage(message);
+    });
+
+    quickButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            if (isSending) {
+                return;
+            }
+            input.value = button.dataset.aiPrompt || button.textContent.trim();
+            form.requestSubmit();
+        });
+    });
+
+    window.addEventListener("resize", () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+            applyPanelSize(panelSize, false);
+            placeElement(panel.hidden ? launcher : panel);
+        }, 80);
+    });
+
+    window.requestAnimationFrame(() => {
+        placeElement(launcher);
+    });
+})();

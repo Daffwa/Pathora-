@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Detail Pelamar - Pathora{% endblock %}
+
+{% block content %}
+<article class="applicant-detail-page">
+    <a class="back-link" href="{{ url_for('recruiter_applicants') }}">Kembali ke Daftar Pelamar</a>
+
+    {% set display_status = application_status_label(application.status) %}
+    {% if display_status == "Diterima" %}
+    <div class="toast-card success-toast">
+        <span class="check-icon"></span>
+        <div>
+            <strong>Lamaran Diterima</strong>
+            <p>{{ application.applicant_name }} sudah dipindahkan ke tahap berikutnya.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <section class="page-heading">
+        <h1>Profil Pelamar</h1>
+        <p>Tinjau lamaran untuk {{ application.opportunity_title }}.</p>
+    </section>
+
+    <section class="applicant-detail-grid">
+        <aside class="applicant-profile-card">
+            <div class="profile-avatar-xl">
+                <span>{{ application.applicant_name[:1] }}</span>
+            </div>
+            <h2>{{ application.applicant_name }}</h2>
+            <p>{{ application.applicant_email }}</p>
+            <div class="profile-chip-row">
+                <span>{{ application.opportunity_location }}</span>
+                <span>{{ display_status }}</span>
+            </div>
+            <div class="profile-contact-list">
+                <p><span class="mail-tiny"></span>{{ application.applicant_email }}</p>
+                <p><span class="briefcase-icon"></span>{{ application.opportunity_title }}</p>
+                <p><span class="calendar-icon"></span>Melamar {{ application.applied_at }}</p>
+            </div>
+        </aside>
+
+        <section class="panel-card skill-panel">
+            <h2>Skill &amp; Kompetensi Utama</h2>
+            <div class="skill-chips large">
+                {% for skill in (application.applicant_skills or "TypeScript, React, Python, SQL, UI/UX").split(",") %}
+                {% if skill.strip() %}
+                <span>{{ skill.strip() }}</span>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="panel-card quick-stats-card">
+            <h2>Statistik Cepat</h2>
+            <div class="stat-pair">
+                <div><strong>85%</strong><span>Kecocokan Skill</span></div>
+                <div><strong>24j</strong><span>Waktu Respons</span></div>
+            </div>
+        </section>
+
+        <section class="resume-preview-card">
+            <header>
+                <strong>Resume_{{ application.applicant_name|replace(" ", "_") }}.pdf</strong>
+                <div class="inline-actions">
+                    <button type="button" class="icon-button" aria-label="Perbesar"><span class="search-icon"></span></button>
+                    <button type="button" class="icon-button" aria-label="Download"><span class="download-icon"></span></button>
+                </div>
+            </header>
+            <div class="resume-paper">
+                <h2>{{ application.applicant_name|upper }}</h2>
+                <p>{{ application.applicant_email }} | linkedin.com/in/{{ application.applicant_name|lower|replace(" ", "") }}</p>
+                <hr>
+                <h3>Pendidikan</h3>
+                <p><strong>Universitas Unggulan</strong><br>Computer Science | Estimasi lulus 2026</p>
+                <h3>Pengalaman</h3>
+                <p><strong>Project Intern</strong><br>Membangun dashboard analitik dan mengoptimalkan workflow tim.</p>
+                <h3>Portfolio</h3>
+                <p>portfolio.pathora.dev/{{ application.applicant_name|lower|replace(" ", "-") }}</p>
+            </div>
+        </section>
+
+        <section class="panel-card documents-panel">
+            <h2>Dokumen Pelamar</h2>
+            <div class="document-mini-list">
+                {% for document in documents %}
+                <div>
+                    <span class="doc-icon"></span>
+                    <strong>{{ document.doc_type }}</strong>
+                    <em class="{% if document.is_uploaded %}success-text{% else %}danger-text{% endif %}">{{ "Terverifikasi" if document.is_uploaded else "Belum Ada" }}</em>
+                </div>
+                {% else %}
+                <p>Belum ada data dokumen untuk pelamar ini.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </section>
+
+    <form class="applicant-action-bar" method="post" action="{{ url_for('recruiter_update_application_status', application_id=application.application_id) }}">
+        <input id="application-status-input" type="hidden" name="status" value="{{ display_status }}">
+        <div>
+            <span>Status: {{ display_status }}</span>
+            <span>Melamar pada: {{ application.applied_at }}</span>
+        </div>
+        {% if session.get("user_role") == "recruiter" %}
+        <a class="primary-button compact applicant-message-button" href="{{ url_for('chat', user_id=application.applicant_user_id) }}">Kirim Pesan</a>
+        {% endif %}
+        <label>
+            <span class="sr-only">Status lamaran</span>
+            <select name="status_select" onchange="document.getElementById('application-status-input').value = this.value">
+                {% for status in statuses %}
+                <option value="{{ status }}" {% if display_status == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button type="submit" class="danger-button" onclick="document.getElementById('application-status-input').value = 'Ditolak'">Tolak Lamaran</button>
+        <button type="submit" class="success-button" onclick="document.getElementById('application-status-input').value = 'Diterima'">Terima Lamaran</button>
+    </form>
+</article>
+{% endblock %}

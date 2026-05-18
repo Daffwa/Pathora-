@@ -1,0 +1,63 @@
+﻿/* =========================================================
+   02C. PUBLIC PAGES
+   Landing/public content and public dashboard hero overrides.
+========================================================= */
+
+.site-header,
+.site-footer {
+    background: #FFFFFF;
+    border-color: var(--border);
+}
+
+.public-nav {
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.public-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.hero,
+.feature-section,
+.cta-band {
+    color: var(--text);
+}
+
+.hero h1,
+.dashboard-hero h1,
+.empty-state h1 {
+    color: var(--text);
+    letter-spacing: 0;
+}
+
+.hero p,
+.feature-card p,
+.cta-band p {
+    color: var(--muted);
+}
+
+.hero-panel,
+.feature-card,
+.cta-band {
+    background: #FFFFFF;
+    border-color: var(--border);
+}
+
+.empty-state,
+.empty-inline {
+    padding: 28px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.empty-inline strong {
+    display: block;
+    color: var(--text);
+}
+

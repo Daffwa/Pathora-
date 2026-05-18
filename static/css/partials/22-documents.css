@@ -1,0 +1,145 @@
+﻿/* =========================================================
+   12. DOCUMENT MANAGEMENT / KELOLA DOKUMEN
+   Document dashboard, upload rows, and document benefits.
+========================================================= */
+
+.document-dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.45fr);
+    gap: 24px;
+    align-items: stretch;
+}
+
+.profile-strength-card {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 16px;
+    text-align: center;
+}
+
+.profile-ring-large {
+    width: 190px;
+    height: 190px;
+}
+
+.profile-ring-large span {
+    margin-top: 34px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.document-row-list {
+    display: grid;
+    gap: 16px;
+}
+
+.document-row {
+    padding: 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.document-row.missing {
+    border-style: dashed;
+}
+
+.document-row-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.document-row h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+}
+
+.document-row p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.document-check {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+}
+
+.document-check.checked {
+    position: relative;
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.document-check.checked::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 3px;
+    width: 7px;
+    height: 12px;
+    border: solid #FFFFFF;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.document-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.document-upload-form {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.document-upload-form input[type="file"] {
+    position: absolute;
+    width: 1px;
+    min-height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.document-upload-form label {
+    margin: 0;
+    cursor: pointer;
+}
+
+.document-benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.info-tile {
+    padding: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.info-tile h3 {
+    margin: 0 0 6px;
+}
+
+.info-tile p {
+    margin: 0;
+    color: var(--muted);
+}
+

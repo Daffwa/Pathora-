@@ -1,0 +1,115 @@
+﻿/* =========================================================
+   15. RECRUITER APPLICANTS
+   Applicants list, bulk actions, status controls, and summary cards.
+========================================================= */
+
+.recruiter-applicant-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 540px;
+    margin-left: auto;
+    margin-bottom: 24px;
+}
+
+.table-search {
+    width: min(340px, 42vw);
+}
+
+.secondary-button.active-control {
+    color: var(--primary-dark);
+    background: #EAF4FF;
+    border-color: var(--primary);
+}
+
+.applicant-bulk-form {
+    margin: 0;
+}
+
+.select-column {
+    width: 48px;
+    text-align: center;
+}
+
+.select-column input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+}
+
+.bulk-actions-menu {
+    position: relative;
+}
+
+.bulk-actions-menu summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    list-style: none;
+}
+
+.bulk-actions-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.bulk-actions-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    display: grid;
+    gap: 10px;
+    min-width: 220px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.bulk-actions-panel label {
+    display: grid;
+    gap: 6px;
+}
+
+.bulk-actions-panel span {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.bulk-actions-panel select {
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    background: #FFFFFF;
+    font: inherit;
+    font-weight: 700;
+}
+
+.skill-match-cell .match-bar {
+    width: 70px;
+}
+
+.diversity-card p {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.dual-bar {
+    display: flex;
+    height: 8px;
+}
+
+.dual-bar span {
+    width: 48%;
+    background: var(--primary);
+}
+
+.dual-bar i {
+    width: 52%;
+    background: var(--orange);
+}
+

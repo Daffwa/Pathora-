@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Pathora{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-hero admin-hero">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>Ringkasan data peluang internship dan scholarship yang tampil di aplikasi.</p>
+            <div class="hero-actions">
+                <a class="primary-button" href="{{ url_for('admin_opportunities') }}">Kelola Peluang</a>
+                <a class="secondary-button" href="{{ url_for('admin_create_opportunity') }}">Tambah Peluang</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="summary-grid">
+        <article class="summary-card">
+            <span class="summary-icon grid-icon"></span>
+            <span>Total Peluang</span>
+            <strong>{{ total_opportunities }}</strong>
+            <small>Semua data peluang</small>
+        </article>
+        <article class="summary-card">
+            <span class="summary-icon rocket-icon"></span>
+            <span>Magang</span>
+            <strong>{{ total_internship }}</strong>
+            <small>Program magang aktif</small>
+        </article>
+        <article class="summary-card">
+            <span class="summary-icon bookmark-icon"></span>
+            <span>Beasiswa</span>
+            <strong>{{ total_scholarship }}</strong>
+            <small>Beasiswa aktif</small>
+        </article>
+    </section>
+</section>
+{% endblock %}

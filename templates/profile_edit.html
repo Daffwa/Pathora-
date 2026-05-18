@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Pathora{% endblock %}
+
+{% block content %}
+<form class="profile-edit-page" method="post" action="{{ url_for('edit_profile') }}" enctype="multipart/form-data">
+    <aside class="edit-profile-summary profile-glass-card">
+        <div class="profile-avatar-xl">
+            {% if user.avatar_path %}
+            <img src="{{ url_for('profile_avatar', filename=user.avatar_path) }}" alt="Foto profil {{ user.name }}">
+            {% else %}
+            <span>{{ form_data.name[:1] if form_data.name else "U" }}</span>
+            {% endif %}
+        </div>
+        <h1>{{ form_data.name or "Profile Jobseeker" }}</h1>
+        <p>Kelola informasi akun dan kariermu.</p>
+
+        <label class="avatar-upload-control" for="avatar-file">
+            <span class="upload-icon"></span>
+            <strong>Ganti Foto Profile</strong>
+            <small>Pilih foto baru</small>
+            <em>Format JPG/PNG, maksimal 2MB</em>
+            <input id="avatar-file" name="avatar_file" type="file" accept=".jpg,.jpeg,.png">
+        </label>
+
+        {% if user.avatar_path %}
+        <label class="remove-avatar-check">
+            <input type="checkbox" name="remove_avatar" value="1">
+            Hapus foto saat ini
+        </label>
+        {% endif %}
+
+        <div class="edit-progress-card">
+            <div class="profile-ring small" style="--percent: {{ profile_completion.percent }}%">
+                <span>{{ profile_completion.percent }}%</span>
+            </div>
+            <div>
+                <strong>Kelengkapan Profile</strong>
+                <p>{{ document_progress.complete_count }} dokumen tersedia</p>
+            </div>
+        </div>
+
+        <a class="secondary-button" href="{{ url_for('profile') }}">Preview Profile</a>
+    </aside>
+
+    <div class="profile-form-stack">
+        <section class="profile-edit-heading">
+            <div>
+                <h1>Edit Profile</h1>
+                <p>Perbarui informasi yang dipakai sistem untuk rekomendasi, saved opportunities, dan tracker lamaran.</p>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon user-icon"></span>
+                <h2>Informasi Pribadi</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label>
+                    Nama Lengkap
+                    <input name="name" type="text" value="{{ form_data.name }}" required>
+                </label>
+                <label>
+                    Nama Panggilan
+                    <input name="nickname" type="text" value="{{ form_data.nickname }}">
+                </label>
+                <label>
+                    Email
+                    <input name="email" type="email" value="{{ form_data.email }}" required>
+                </label>
+                <label>
+                    Telepon
+                    <input name="phone" type="tel" value="{{ form_data.phone }}">
+                </label>
+                <label>
+                    Tanggal Lahir
+                    <input name="birth_date" type="date" value="{{ form_data.birth_date }}">
+                </label>
+                <label>
+                    Jenis Kelamin
+                    <select name="gender">
+                        <option value="">Pilih</option>
+                        <option value="Laki-laki" {% if form_data.gender == "Laki-laki" %}selected{% endif %}>Laki-laki</option>
+                        <option value="Perempuan" {% if form_data.gender == "Perempuan" %}selected{% endif %}>Perempuan</option>
+                    </select>
+                </label>
+                <label class="span-2">
+                    Domisili
+                    <input name="domicile" type="text" value="{{ form_data.domicile }}">
+                </label>
+                <label class="span-2">
+                    Bio
+                    <textarea name="bio" rows="4">{{ form_data.bio }}</textarea>
+                </label>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon doc-icon"></span>
+                <h2>Informasi Akademik</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label class="span-2">
+                    Universitas
+                    <input name="university" type="text" value="{{ form_data.university }}">
+                </label>
+                <label>
+                    Fakultas
+                    <input name="faculty" type="text" value="{{ form_data.faculty }}">
+                </label>
+                <label>
+                    Program Studi
+                    <input name="major" type="text" value="{{ form_data.major }}">
+                </label>
+                <label>
+                    Jenjang
+                    <input name="degree" type="text" value="{{ form_data.degree }}" placeholder="S1, D4, S2">
+                </label>
+                <label>
+                    Semester
+                    <input name="semester" type="number" min="1" max="14" value="{{ form_data.semester }}">
+                </label>
+                <label>
+                    IPK
+                    <input name="gpa" type="text" inputmode="decimal" value="{{ form_data.gpa }}" placeholder="3.85">
+                </label>
+                <label>
+                    Tahun Masuk
+                    <input name="entry_year" type="number" min="1900" value="{{ form_data.entry_year }}">
+                </label>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon compass-icon"></span>
+                <h2>Preferensi Karier</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label>
+                    Posisi yang Diminati
+                    <input name="desired_positions" type="text" value="{{ form_data.desired_positions }}" placeholder="UI/UX Designer, Frontend Developer">
+                </label>
+                <label>
+                    Jenis Program
+                    <select name="preferred_program">
+                        <option value="">Pilih</option>
+                        {% for option in ["Magang", "Beasiswa", "Full-time", "Kompetisi"] %}
+                        <option value="{{ option }}" {% if form_data.preferred_program == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Lokasi Preferensi
+                    <input name="preferred_locations" type="text" value="{{ form_data.preferred_locations }}" placeholder="Jakarta, Bandung, Remote">
+                </label>
+                <label>
+                    Sistem Kerja
+                    <select name="work_arrangement">
+                        <option value="">Pilih</option>
+                        {% for option in ["Hybrid", "Remote", "On-site"] %}
+                        <option value="{{ option }}" {% if form_data.work_arrangement == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon bookmark-icon"></span>
+                <h2>Keahlian dan Tautan</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label class="span-2">
+                    Skills / Keahlian
+                    <input name="skills" type="text" value="{{ form_data.skills }}" placeholder="Python, SQL, UI/UX">
+                </label>
+                <label class="span-2">
+                    Industri Minat
+                    <input name="interests" type="text" value="{{ form_data.interests }}" placeholder="Artificial Intelligence, Fintech">
+                </label>
+                <label>
+                    LinkedIn
+                    <input name="linkedin" type="text" value="{{ form_data.linkedin }}" placeholder="linkedin.com/in/username">
+                </label>
+                <label>
+                    GitHub
+                    <input name="github" type="text" value="{{ form_data.github }}" placeholder="github.com/username">
+                </label>
+                <label class="span-2">
+                    Portfolio
+                    <input name="portfolio_url" type="url" value="{{ form_data.portfolio_url }}" placeholder="https://portfolio.example.com">
+                </label>
+                <div class="span-2 profile-upload-drop">
+                    <strong>CV dan Dokumen</strong>
+                    <p>Dokumen utama tetap dikelola di halaman Kelola Dokumen.</p>
+                    <a class="secondary-button compact" href="{{ url_for('documents') }}">Kelola Dokumen</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon shield-icon"></span>
+                <h2>Keamanan Akun</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label>
+                    Kata Sandi Lama
+                    <input name="old_password" type="password" autocomplete="current-password">
+                </label>
+                <label>
+                    Kata Sandi Baru
+                    <input name="new_password" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter">
+                </label>
+                <label>
+                    Konfirmasi Kata Sandi Baru
+                    <input name="confirm_password" type="password" autocomplete="new-password">
+                </label>
+            </div>
+        </section>
+
+        <footer class="profile-sticky-actions">
+            <a class="secondary-button subtle-danger-button" href="{{ url_for('profile') }}">Batal</a>
+            <div>
+                <a class="secondary-button" href="{{ url_for('profile') }}">Preview Profile</a>
+                <button type="submit" class="primary-button">Simpan Perubahan</button>
+            </div>
+        </footer>
+    </div>
+</form>
+{% endblock %}

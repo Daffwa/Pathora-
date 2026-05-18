@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Pelacakan Lamaran - Pathora{% endblock %}
+
+{% block content %}
+{% set stats = namespace(interviews=0, pending=0, rejected=0) %}
+{% for application in applications %}
+    {% set display_status = application_status_label(application.status) %}
+    {% if display_status == "Interview" %}
+        {% set stats.interviews = stats.interviews + 1 %}
+    {% elif display_status == "Ditolak" %}
+        {% set stats.rejected = stats.rejected + 1 %}
+    {% elif display_status != "Diterima" %}
+        {% set stats.pending = stats.pending + 1 %}
+    {% endif %}
+{% endfor %}
+
+<section class="page-heading split-heading">
+    <div>
+        <h1>Pelacakan Lamaran</h1>
+        <p>Kelola dan pantau progres perjalanan profesional Anda.</p>
+    </div>
+    <a class="primary-button" href="{{ url_for('opportunities') }}">+ Tambah Lamaran</a>
+</section>
+
+<section class="summary-grid tracker-summary">
+    <article class="summary-card">
+        <span class="summary-icon checklist-icon"></span>
+        <small>Total Lamaran</small>
+        <strong>{{ applications|length }}</strong>
+    </article>
+    <article class="summary-card">
+        <span class="summary-icon calendar-icon"></span>
+        <small>Interview</small>
+        <strong>{{ stats.interviews }}</strong>
+    </article>
+    <article class="summary-card">
+        <span class="summary-icon clock-icon"></span>
+        <small>Menunggu Review</small>
+        <strong>{{ stats.pending }}</strong>
+    </article>
+    <article class="summary-card danger">
+        <span class="summary-icon danger-icon"></span>
+        <small>Ditolak</small>
+        <strong>{{ stats.rejected }}</strong>
+    </article>
+</section>
+
+<section class="table-card">
+    <div class="table-header">
+        <h2>Lamaran Aktif <span class="table-count">Aktif</span></h2>
+        <div class="inline-actions">
+            <button type="button" class="secondary-button compact"><span class="filter-icon"></span>Filter</button>
+            <button type="button" class="secondary-button compact"><span class="download-icon"></span>Export</button>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nama Posisi</th>
+                    <th>Perusahaan</th>
+                    <th>Tanggal Lamaran</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                <tr>
+                    <td>
+                        <strong>{{ application.title }}</strong>
+                        <span>{{ "Magang" if application.type == "internship" else "Beasiswa" }} &bull; {{ application.location }}</span>
+                    </td>
+                    <td>
+                        <div class="company-cell">
+                            <span class="company-mark small">{{ application.provider[:1] }}</span>
+                            {{ application.provider }}
+                        </div>
+                    </td>
+                    <td>{{ application.applied_at or application.updated_at }}</td>
+                    <td>
+                        {% set display_status = application_status_label(application.status) %}
+                        <div class="application-status-cell">
+                            <span class="status-badge {{ application_status_badge_class(application.status) }}">{{ display_status }}</span>
+                            <small>Status lamaran diperbarui oleh pihak recruiter.</small>
+                        </div>
+                    </td>
+                    <td>
+                        <details class="action-menu">
+                            <summary aria-label="Aksi lamaran {{ application.title }}"><span class="more-icon"></span></summary>
+                            <div class="action-menu-panel">
+                                <a href="{{ url_for('opportunity_detail', opportunity_id=application.opportunity_id) }}">Lihat Detail</a>
+                                <form method="post" action="{{ url_for('remove_application', application_id=application.application_id) }}" onsubmit="return confirm('Hapus tracker lamaran ini?')">
+                                    <button type="submit" class="danger-link-button">Hapus</button>
+                                </form>
+                            </div>
+                        </details>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-inline">
+                            <strong>Belum ada lamaran aktif</strong>
+                            <span>Tambahkan peluang ke tracker dari halaman Peluang.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="tracker-bottom-grid">
+    <article class="priority-task-card">
+        <span class="alert-chip">Tugas Prioritas</span>
+        <h2>Siapkan Interview dengan Innovate Tech</h2>
+        <p>Tinjau misi perusahaan dan siapkan highlight portofolio sebelum jadwal interview berikutnya.</p>
+        <div class="inline-actions">
+            <button type="button" class="primary-button">Buat Pengingat</button>
+            <a class="secondary-button" href="{{ url_for('opportunities') }}">Lihat Panduan</a>
+        </div>
+    </article>
+    <article class="panel-card quick-actions-card">
+        <h2>Aksi Cepat</h2>
+        <div class="action-list">
+            <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Perbarui CV</a>
+            <a href="{{ url_for('applications') }}"><span class="clock-icon"></span>Track Follow-up</a>
+            <a href="{{ url_for('opportunities') }}"><span class="chart-icon"></span>Laporan Lamaran</a>
+        </div>
+    </article>
+</section>
+{% endblock %}

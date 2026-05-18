@@ -1,0 +1,19 @@
+<div class="deadline-info">
+    {% if opportunity.deadline_status == "Closed" %}
+    <span class="status-label closed">Closed</span>
+    {% elif opportunity.deadline_status == "Urgent" %}
+    <span class="status-label urgent">Urgent</span>
+    {% else %}
+    <span class="status-label open">Open</span>
+    {% endif %}
+
+    {% if opportunity.days_left is not none %}
+        {% if opportunity.days_left < 0 %}
+        <span>Deadline sudah lewat</span>
+        {% elif opportunity.days_left == 0 %}
+        <span>Deadline hari ini</span>
+        {% else %}
+        <span>{{ opportunity.days_left }} hari tersisa</span>
+        {% endif %}
+    {% endif %}
+</div>

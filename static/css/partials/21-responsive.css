@@ -1,0 +1,1092 @@
+/* =========================================================
+   RESPONSIVE DESIGN
+   Mobile-first overrides for Pathora app pages.
+========================================================= */
+
+html,
+body {
+    max-width: 100%;
+}
+
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+}
+
+.app-main,
+.app-page,
+.page,
+.panel-card,
+.metric-card,
+.summary-card,
+.table-card,
+.opportunity-card,
+.profile-glass-card,
+.profile-form-card,
+.dashboard-panel,
+.document-card,
+.chat-room,
+.chat-messages {
+    min-width: 0;
+}
+
+.mobile-menu-button,
+.sidebar-overlay {
+    display: none;
+}
+
+.topbar-popover:not([open]) .popover-panel {
+    display: none;
+}
+
+.role-toggle input {
+    width: 1px;
+    height: 1px;
+    min-height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.mobile-menu-button {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    place-items: center;
+    color: var(--primary);
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.mobile-menu-icon {
+    position: relative;
+    width: 18px;
+    height: 2px;
+    display: block;
+    background: currentColor;
+    border-radius: 999px;
+}
+
+.mobile-menu-icon::before,
+.mobile-menu-icon::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+}
+
+.mobile-menu-icon::before {
+    top: -6px;
+}
+
+.mobile-menu-icon::after {
+    top: 6px;
+}
+
+.chat-back-button {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .app-layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    .app-page {
+        padding: 24px;
+    }
+
+    .topbar {
+        padding-inline: 20px;
+    }
+
+    .top-search {
+        max-width: 380px;
+    }
+
+    .filter-toolbar {
+        grid-template-columns: minmax(0, 1fr) minmax(150px, 0.45fr);
+    }
+
+    .filter-toolbar .search-field {
+        grid-column: 1 / -1;
+    }
+
+    .icon-filter-button {
+        width: 100%;
+    }
+
+    .opportunity-grid,
+    .saved-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .table-header {
+        align-items: flex-start;
+    }
+
+    .inline-actions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    html,
+    body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    body.sidebar-drawer-open {
+        overflow: hidden;
+    }
+
+    .app-shell,
+    .auth-shell,
+    .public-shell,
+    .app-layout,
+    .app-main,
+    .page,
+    .app-page,
+    .public-page,
+    .auth-main,
+    .dashboard-page,
+    .profile-page,
+    .profile-edit-page {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .app-layout {
+        display: block;
+        min-height: 100dvh;
+    }
+
+    .sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1000;
+        width: min(280px, 86vw);
+        min-height: 0;
+        height: 100dvh;
+        padding: 24px 12px 18px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease;
+        box-shadow: 18px 0 48px rgba(15, 23, 42, 0.18);
+    }
+
+    .sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .sidebar .brand-logo {
+        margin-inline: 10px;
+    }
+
+    .sidebar-kicker {
+        margin-inline: 14px;
+    }
+
+    .side-nav {
+        grid-template-columns: 1fr !important;
+    }
+
+    .side-nav a,
+    .sidebar-footer a {
+        min-height: 46px;
+        padding-inline: 14px;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: rgba(15, 23, 42, 0.45);
+    }
+
+    .sidebar-overlay.is-open:not([hidden]) {
+        display: block;
+    }
+
+    .mobile-menu-button {
+        display: inline-grid;
+        flex: 0 0 40px;
+    }
+
+    .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 70;
+        min-height: auto;
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .top-search {
+        min-width: 0;
+        width: 100%;
+        max-width: none;
+        flex: 0 1 auto;
+    }
+
+    .top-search input {
+        min-height: 40px;
+        padding-right: 12px;
+        font-size: 0.88rem;
+    }
+
+    .topbar-actions {
+        min-width: 0;
+        gap: 4px;
+        justify-content: flex-end;
+        overflow: visible;
+        padding-bottom: 0;
+    }
+
+    .icon-button,
+    .avatar-button {
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
+        flex: 0 0 36px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .popover-panel {
+        position: fixed;
+        top: 62px;
+        right: 12px;
+        left: auto;
+        width: min(320px, calc(100vw - 24px));
+        max-height: calc(100dvh - 86px);
+        overflow: auto;
+    }
+
+    .app-page,
+    .public-page {
+        padding: 16px;
+    }
+
+    .flash-messages {
+        margin-bottom: 16px;
+    }
+
+    .page-heading,
+    .section-heading {
+        margin-bottom: 18px;
+    }
+
+    .page-heading h1,
+    .section-heading h1,
+    .profile-page .profile-header-row h1,
+    .profile-edit-page .profile-edit-heading h1 {
+        font-size: clamp(1.55rem, 8vw, 2rem);
+        line-height: 1.18;
+    }
+
+    .page-heading p,
+    .section-heading p,
+    .muted-text {
+        font-size: 0.94rem;
+    }
+
+    .split-heading,
+    .table-header,
+    .panel-heading,
+    .result-toolbar,
+    .boost-card,
+    .document-row,
+    .applicant-action-bar,
+    .profile-header-row,
+    .profile-edit-heading,
+    .profile-sticky-actions,
+    .chat-composer-actions {
+        align-items: stretch;
+        flex-direction: column;
+        display: flex;
+    }
+
+    .inline-actions,
+    .card-actions,
+    .profile-header-actions,
+    .document-row-actions,
+    .document-upload-form {
+        width: 100%;
+        align-items: stretch;
+        justify-content: stretch;
+        flex-wrap: wrap;
+    }
+
+    .inline-actions > *,
+    .card-actions > * {
+        min-width: 0;
+    }
+
+    .split-heading > .primary-button,
+    .split-heading > .secondary-button,
+    .page-heading > .primary-button,
+    .page-heading > .secondary-button,
+    .inline-actions > .primary-button,
+    .inline-actions > .secondary-button,
+    .inline-actions > button:not(.icon-button),
+    .document-row-actions > *,
+    .document-upload-form label,
+    .document-upload-form button,
+    .profile-header-actions a,
+    .profile-sticky-actions a,
+    .profile-sticky-actions button {
+        width: 100%;
+    }
+
+    button:not(.icon-button):not(.avatar-button):not(.mobile-menu-button):not(.bookmark-button):not(.chat-attachment-remove):not(.ai-send-button):not(.ai-size-button):not(.ai-close),
+    .primary-button,
+    .secondary-button,
+    .danger-button,
+    .success-button,
+    .ghost-danger-button {
+        white-space: normal;
+        text-align: center;
+    }
+
+    .auth-page,
+    .student-hero-card,
+    .dashboard-metrics,
+    .dashboard-content-grid,
+    .tracker-bottom-grid,
+    .document-dashboard-grid,
+    .document-benefit-grid,
+    .recommendation-grid,
+    .recruiter-command-grid,
+    .recruiter-analytics-grid,
+    .recruiter-bottom-grid,
+    .recruitment-hub-grid,
+    .applicant-detail-grid,
+    .profile-page .profile-grid,
+    .profile-page .saved-profile-grid,
+    .profile-edit-page,
+    .profile-edit-page .profile-form-grid,
+    .summary-grid,
+    .opportunity-grid,
+    .saved-grid,
+    .filter-toolbar,
+    .role-toggle,
+    .social-login,
+    .stat-pair,
+    .score-row,
+    .progress-stack {
+        grid-template-columns: 1fr !important;
+    }
+
+    .panel-card,
+    .metric-card,
+    .summary-card,
+    .table-card,
+    .opportunity-card,
+    .profile-strength-card,
+    .required-documents-card,
+    .info-tile,
+    .detail-grid section,
+    .detail-score-card,
+    .applicant-profile-card,
+    .resume-preview-card,
+    .dashboard-panel,
+    .profile-page .profile-glass-card,
+    .profile-page .saved-profile-card,
+    .profile-page .saved-empty-card,
+    .profile-edit-page .profile-form-card,
+    .profile-edit-page .edit-profile-summary {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .panel-card,
+    .metric-card,
+    .summary-card,
+    .table-card,
+    .profile-strength-card,
+    .required-documents-card,
+    .detail-grid section,
+    .detail-score-card,
+    .applicant-profile-card,
+    .resume-preview-card,
+    .dashboard-panel,
+    .profile-edit-page .profile-form-card {
+        padding: 20px;
+    }
+
+    .filter-toolbar {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .icon-filter-button {
+        min-height: 44px;
+    }
+
+    .view-toggle {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .view-toggle button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .student-hero-card {
+        min-height: 0;
+        padding: 22px;
+        gap: 18px;
+    }
+
+    .student-hero-card h2 {
+        font-size: clamp(1.5rem, 8vw, 2rem);
+    }
+
+    .student-hero-card .secondary-button {
+        width: 100%;
+    }
+
+    .hero-illustration {
+        width: 100%;
+        max-width: 100%;
+        height: 180px;
+        justify-self: stretch;
+    }
+
+    .boost-thumb {
+        min-height: 150px;
+    }
+
+    .summary-card,
+    .compact-stat {
+        min-height: auto;
+    }
+
+    .deadline-item,
+    .quick-actions a,
+    .action-list a,
+    .recommendation-tile,
+    .recruiter-application-item {
+        min-width: 0;
+    }
+
+    .deadline-item em,
+    .recruiter-application-item em {
+        margin-left: 0;
+    }
+
+    .table-card {
+        overflow: hidden;
+    }
+
+    .table-wrap,
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table,
+    .table-responsive table {
+        min-width: 720px;
+    }
+
+    .table-search {
+        width: 100%;
+    }
+
+    .action-menu-panel,
+    .bulk-actions-panel {
+        right: 0;
+        max-width: calc(100vw - 32px);
+    }
+
+    .bulk-actions-menu,
+    .bulk-actions-menu summary {
+        width: 100%;
+    }
+
+    .bulk-actions-panel {
+        position: static;
+        min-width: 0;
+        margin-top: 8px;
+    }
+
+    .auth-page {
+        min-height: 100dvh;
+    }
+
+    .auth-visual {
+        min-height: 240px;
+        padding: 78px 20px 26px;
+        gap: 22px;
+        justify-content: end;
+    }
+
+    .auth-brand {
+        top: 24px;
+        left: 20px;
+        width: 148px;
+    }
+
+    .auth-brand img {
+        width: 140px;
+    }
+
+    .auth-visual h1 {
+        margin-bottom: 10px;
+        font-size: clamp(1.65rem, 8vw, 2rem);
+    }
+
+    .auth-visual p {
+        font-size: 0.98rem;
+        line-height: 1.55;
+    }
+
+    .auth-feature-list {
+        margin-top: 22px;
+        gap: 10px;
+    }
+
+    .auth-quote {
+        width: 100%;
+        padding: 14px;
+    }
+
+    .auth-panel {
+        min-height: auto;
+        padding: 28px 18px 72px;
+        place-items: start center;
+    }
+
+    .auth-card {
+        width: 100%;
+    }
+
+    .auth-card h2 {
+        font-size: 1.35rem;
+    }
+
+    .auth-links {
+        margin-top: 30px;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .auth-help-button {
+        right: 16px;
+        bottom: 14px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .legal-modal {
+        padding: 18px 12px;
+    }
+
+    .legal-modal__card {
+        width: calc(100vw - 24px);
+        max-height: 84dvh;
+        padding: 22px;
+        border-radius: 14px;
+    }
+
+    .legal-modal__footer {
+        bottom: -22px;
+        margin: 20px -22px -22px;
+        padding: 14px 22px 18px;
+    }
+
+    .document-row-main {
+        min-width: 0;
+        align-items: flex-start;
+    }
+
+    .document-row-main > div {
+        min-width: 0;
+    }
+
+    .document-row p {
+        overflow-wrap: anywhere;
+    }
+
+    .profile-ring-large {
+        width: 150px;
+        height: 150px;
+    }
+
+    .profile-page .profile-contact-list p {
+        grid-template-columns: 20px minmax(0, 1fr);
+    }
+
+    .profile-page .profile-contact-list strong {
+        display: none;
+    }
+
+    .profile-page .saved-card-actions,
+    .profile-page .profile-completion-panel,
+    .profile-edit-page .profile-sticky-actions > div {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-page .saved-card-actions {
+        display: grid;
+    }
+
+    .profile-edit-page {
+        padding-bottom: 24px;
+    }
+
+    .profile-edit-page .edit-profile-summary {
+        position: static;
+    }
+
+    .profile-edit-page .profile-form-grid .span-2 {
+        grid-column: auto;
+    }
+
+    .profile-edit-page .profile-sticky-actions {
+        position: static;
+        border-radius: 16px;
+    }
+
+    .applicant-detail-page {
+        padding-bottom: 0;
+    }
+
+    .toast-card {
+        top: 72px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+
+    .resume-preview-card header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .resume-paper {
+        width: calc(100% - 28px);
+        min-height: 0;
+        margin: 18px auto;
+        padding: 28px 20px;
+    }
+
+    .resume-paper h2,
+    .resume-paper p {
+        overflow-wrap: anywhere;
+    }
+
+    .document-mini-list div {
+        grid-template-columns: 28px minmax(0, 1fr);
+    }
+
+    .document-mini-list em {
+        grid-column: 2;
+    }
+
+    .applicant-action-bar {
+        position: static;
+        min-height: 0;
+        margin-top: 24px;
+        padding: 16px;
+    }
+
+    .applicant-action-bar > div {
+        margin-right: 0;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .applicant-action-bar select,
+    .applicant-action-bar a,
+    .applicant-action-bar button {
+        width: 100%;
+    }
+
+    .recruitment-boost-card img {
+        height: auto;
+        min-height: 180px;
+        object-fit: cover;
+    }
+
+    .recruiter-application-item {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+    }
+
+    .recruiter-application-item .match-bar,
+    .recruiter-application-item b,
+    .recruiter-application-item em {
+        grid-column: 2;
+    }
+
+    .chat-page {
+        height: calc(100dvh - 116px);
+        min-height: 540px;
+        display: block;
+        margin: -16px;
+        overflow: hidden;
+    }
+
+    .conversation-panel {
+        height: 100%;
+        padding: 14px;
+        overflow-y: auto;
+        border-right: 0;
+        border-bottom: 0;
+    }
+
+    .chat-room {
+        height: 100%;
+        min-height: 0;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    .chat-page.is-contact-list-open .chat-room,
+    .chat-page.is-chat-open .conversation-panel {
+        display: none;
+    }
+
+    .chat-page.is-contact-list-open .conversation-panel {
+        display: block;
+    }
+
+    .chat-page.is-chat-open .chat-room {
+        display: grid;
+    }
+
+    .conversation-item {
+        min-height: 82px;
+        padding: 12px 8px;
+    }
+
+    .chat-room-header {
+        min-height: 58px;
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .chat-back-button {
+        min-height: 36px;
+        padding: 8px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex: 0 0 auto;
+        color: var(--primary);
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.86rem;
+    }
+
+    .chat-back-button[hidden] {
+        display: none !important;
+    }
+
+    .back-icon {
+        width: 9px;
+        height: 9px;
+        display: inline-block;
+        border-left: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+    }
+
+    .chat-contact {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .chat-contact strong,
+    .chat-contact > div > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chat-tools {
+        flex: 0 0 auto;
+    }
+
+    .chat-messages {
+        padding: 14px 12px;
+        gap: 12px;
+    }
+
+    .message-row {
+        max-width: 100%;
+    }
+
+    .message-row > div {
+        max-width: calc(100% - 42px);
+    }
+
+    .message-row.outgoing > div {
+        max-width: 86%;
+    }
+
+    .message-row p,
+    .message-row .chat-message-bubble {
+        overflow-wrap: anywhere;
+    }
+
+    .message-row.outgoing .chat-message-bubble,
+    .message-row.incoming .chat-message-bubble {
+        max-width: 100%;
+    }
+
+    .chat-message-image,
+    .chat-attachment-image {
+        max-width: min(100%, 82vw);
+        max-height: 220px;
+    }
+
+    .chat-composer {
+        padding: 12px;
+    }
+
+    .chat-composer textarea {
+        min-height: 74px;
+    }
+
+    .chat-composer-actions {
+        gap: 10px;
+    }
+
+    .chat-composer-actions > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .chat-attachment-preview {
+        grid-template-columns: 58px minmax(0, 1fr) 32px;
+        gap: 10px;
+    }
+
+    .chat-attachment-preview img,
+    .chat-attachment-thumb {
+        width: 58px;
+        height: 58px;
+    }
+
+    .ai-assistant-root .ai-launcher,
+    .ai-launcher {
+        right: 16px !important;
+        bottom: 16px !important;
+        left: auto !important;
+        top: auto !important;
+        width: 56px;
+        height: 56px;
+    }
+
+    .ai-panel {
+        width: min(360px, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: 75dvh !important;
+        right: 12px !important;
+        left: auto !important;
+        bottom: 84px !important;
+        top: auto !important;
+    }
+
+    .ai-resize-handle {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-menu-button,
+    .sidebar-overlay {
+        display: none !important;
+    }
+
+    .sidebar {
+        transform: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar {
+        grid-template-columns: auto minmax(92px, 1fr) auto;
+        gap: 8px;
+    }
+
+    .top-search input {
+        padding-left: 36px;
+        font-size: 0.82rem;
+    }
+
+    .top-search .search-icon {
+        left: 12px;
+    }
+
+    .topbar-actions {
+        gap: 2px;
+    }
+
+    .icon-button,
+    .avatar-button {
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
+        flex-basis: 34px;
+    }
+
+    .avatar {
+        width: 34px;
+        height: 34px;
+    }
+
+    .app-page,
+    .public-page {
+        padding: 14px;
+    }
+
+    .panel-card,
+    .metric-card,
+    .summary-card,
+    .table-card,
+    .profile-strength-card,
+    .required-documents-card,
+    .detail-grid section,
+    .detail-score-card,
+    .applicant-profile-card,
+    .resume-preview-card,
+    .dashboard-panel,
+    .profile-edit-page .profile-form-card {
+        padding: 16px;
+    }
+
+    .auth-visual {
+        min-height: 190px;
+        padding: 70px 18px 22px;
+    }
+
+    .auth-quote,
+    .auth-feature-list {
+        display: none;
+    }
+
+    .auth-panel {
+        padding-inline: 16px;
+    }
+
+    .label-row,
+    .auth-links {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .student-hero-card {
+        padding: 18px;
+    }
+
+    .hero-illustration {
+        height: 150px;
+    }
+
+    .score-ring {
+        width: 88px;
+        height: 88px;
+    }
+
+    .card-actions,
+    .saved-card-actions,
+    .chat-composer-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .card-actions a,
+    .card-actions button,
+    .card-actions form,
+    .saved-card-actions a,
+    .saved-card-actions button,
+    .saved-card-actions form {
+        width: 100%;
+    }
+
+    .bookmark-button {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    .chat-page {
+        height: calc(100dvh - 104px);
+        min-height: 500px;
+        margin: -14px;
+    }
+
+    .chat-tools {
+        display: none;
+    }
+
+    .message-row.outgoing > div {
+        max-width: 88%;
+    }
+
+    .chat-message-image,
+    .chat-attachment-image {
+        max-width: min(100%, 86vw);
+        max-height: 200px;
+    }
+
+    .ai-panel {
+        width: calc(100vw - 24px) !important;
+        max-width: none !important;
+        height: min(560px, 75dvh) !important;
+        min-width: 0 !important;
+        min-height: min(380px, 75dvh) !important;
+        right: 12px !important;
+        left: 12px !important;
+        bottom: 80px !important;
+    }
+
+    .ai-panel-header {
+        min-height: 62px;
+    }
+
+    .ai-quick-actions {
+        max-height: 96px;
+    }
+
+    .legal-modal__button {
+        width: 100%;
+    }
+}

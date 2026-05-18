@@ -1,0 +1,168 @@
+<div id="legalModal" class="legal-modal" aria-hidden="true" hidden>
+    <div class="legal-modal__backdrop" data-legal-close></div>
+    <section class="legal-modal__card" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle" tabindex="-1">
+        <button type="button" class="legal-modal__close" data-legal-close aria-label="Tutup">&times;</button>
+        <h2 id="legalModalTitle"></h2>
+        <div id="legalModalBody" class="legal-modal__body"></div>
+        <footer class="legal-modal__footer">
+            <button type="button" class="legal-modal__button" data-legal-close>Saya Mengerti</button>
+        </footer>
+    </section>
+</div>
+
+<template id="privacyLegalContent">
+    <p>Pathora berkomitmen untuk menjaga keamanan dan kerahasiaan data pengguna. Kebijakan ini menjelaskan bagaimana data dikumpulkan, digunakan, dan dilindungi saat pengguna menggunakan platform Pathora.</p>
+
+    <h3>1. Data yang Dikumpulkan</h3>
+    <p>Pathora dapat mengumpulkan data seperti nama, email, peran pengguna, informasi pendidikan, minat karier, data lamaran, bookmark peluang, dan dokumen pendukung yang diunggah oleh pengguna.</p>
+
+    <h3>2. Penggunaan Data</h3>
+    <p>Data digunakan untuk membantu pengguna mencari peluang magang, beasiswa, dan karier yang relevan. Data juga digunakan untuk menampilkan rekomendasi, memantau status lamaran, mengelola dokumen, serta meningkatkan kualitas layanan platform.</p>
+
+    <h3>3. Keamanan Data</h3>
+    <p>Pathora berupaya menjaga keamanan data pengguna melalui pembatasan akses, validasi input, dan pengelolaan data yang sesuai kebutuhan aplikasi. Pengguna disarankan untuk tidak membagikan password, kode OTP, atau informasi sensitif melalui chat.</p>
+
+    <h3>4. Dokumen Pengguna</h3>
+    <p>Dokumen seperti CV, transkrip, sertifikat, dan portofolio hanya digunakan untuk mendukung proses lamaran dan rekomendasi peluang. Dokumen tidak akan digunakan di luar kebutuhan platform.</p>
+
+    <h3>5. Berbagi Data</h3>
+    <p>Pathora tidak menjual data pribadi pengguna. Data hanya dapat ditampilkan kepada pihak terkait seperti recruiter/admin sesuai kebutuhan proses lamaran.</p>
+
+    <h3>6. Hak Pengguna</h3>
+    <p>Pengguna dapat memperbarui informasi profil, menghapus data tertentu jika tersedia, dan menghubungi pengelola platform jika terdapat masalah terkait data pribadi.</p>
+
+    <h3>7. Perubahan Kebijakan</h3>
+    <p>Kebijakan privasi dapat diperbarui sesuai kebutuhan pengembangan aplikasi. Perubahan akan diterapkan untuk meningkatkan keamanan dan kenyamanan pengguna.</p>
+</template>
+
+<template id="termsLegalContent">
+    <p>Dengan menggunakan Pathora, pengguna dianggap telah membaca, memahami, dan menyetujui syarat serta ketentuan penggunaan platform ini.</p>
+
+    <h3>1. Penggunaan Platform</h3>
+    <p>Pathora digunakan untuk membantu pengguna menemukan peluang magang, beasiswa, dan pengembangan karier. Pengguna wajib menggunakan platform secara bijak dan tidak menyalahgunakan fitur yang tersedia.</p>
+
+    <h3>2. Akun Pengguna</h3>
+    <p>Pengguna bertanggung jawab atas keamanan akun masing-masing. Pengguna wajib menggunakan data yang benar saat melakukan pendaftaran dan tidak diperbolehkan menggunakan identitas palsu.</p>
+
+    <h3>3. Data Lamaran</h3>
+    <p>Setelah pengguna mengirim lamaran, status awal akan tercatat sebagai "Sudah Daftar". Perubahan status lanjutan seperti "Sedang Direview", "Interview", "Diterima", atau "Ditolak" hanya dapat dilakukan oleh recruiter/admin yang berwenang.</p>
+
+    <h3>4. Dokumen dan Informasi</h3>
+    <p>Pengguna bertanggung jawab atas keaslian dokumen yang diunggah, termasuk CV, transkrip, sertifikat, portofolio, dan dokumen pendukung lainnya.</p>
+
+    <h3>5. Komunikasi</h3>
+    <p>Fitur chat digunakan untuk komunikasi profesional antara jobseeker dan recruiter. Pengguna tidak diperbolehkan mengirim spam, konten berbahaya, ujaran kebencian, atau informasi palsu.</p>
+
+    <h3>6. Batasan Tanggung Jawab</h3>
+    <p>Pathora membantu mengelola dan menampilkan peluang, tetapi tidak menjamin pengguna pasti diterima pada program magang, beasiswa, atau pekerjaan tertentu.</p>
+
+    <h3>7. Perubahan Layanan</h3>
+    <p>Pengelola platform dapat memperbarui fitur, tampilan, atau aturan penggunaan untuk meningkatkan kualitas aplikasi.</p>
+
+    <h3>8. Pelanggaran</h3>
+    <p>Jika pengguna menyalahgunakan platform, pengelola berhak membatasi akses, menonaktifkan akun, atau mengambil tindakan lain sesuai kebutuhan.</p>
+</template>
+
+<script>
+(() => {
+    const legalModal = document.getElementById("legalModal");
+
+    if (!legalModal) {
+        return;
+    }
+
+    const legalModalCard = legalModal.querySelector(".legal-modal__card");
+    const legalModalTitle = document.getElementById("legalModalTitle");
+    const legalModalBody = document.getElementById("legalModalBody");
+    const legalContent = {
+        privacy: {
+            hash: "privasi",
+            title: "Kebijakan Privasi Pathora",
+            templateId: "privacyLegalContent",
+        },
+        terms: {
+            hash: "ketentuan",
+            title: "Syarat & Ketentuan Pathora",
+            templateId: "termsLegalContent",
+        },
+    };
+
+    function updateLegalHash(type) {
+        const content = legalContent[type];
+
+        if (!content) {
+            return;
+        }
+
+        history.replaceState(null, "", `#${content.hash}`);
+    }
+
+    function clearLegalHash() {
+        if (["#privasi", "#ketentuan"].includes(window.location.hash)) {
+            history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+    }
+
+    function openLegalModal(type, shouldSyncHash = true) {
+        const content = legalContent[type];
+        const template = content ? document.getElementById(content.templateId) : null;
+
+        if (!content || !template || !legalModalTitle || !legalModalBody) {
+            return;
+        }
+
+        legalModalTitle.textContent = content.title;
+        legalModalBody.replaceChildren(template.content.cloneNode(true));
+        legalModal.hidden = false;
+        legalModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("legal-modal-open");
+
+        if (shouldSyncHash) {
+            updateLegalHash(type);
+        }
+
+        if (legalModalCard) {
+            legalModalCard.focus({ preventScroll: true });
+        }
+    }
+
+    function closeLegalModal() {
+        legalModal.hidden = true;
+        legalModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("legal-modal-open");
+        clearLegalHash();
+    }
+
+    function openLegalModalFromHash() {
+        if (window.location.hash === "#privasi") {
+            openLegalModal("privacy", false);
+        } else if (window.location.hash === "#ketentuan") {
+            openLegalModal("terms", false);
+        }
+    }
+
+    document.querySelectorAll("[data-legal-open]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openLegalModal(link.dataset.legalOpen);
+        });
+    });
+
+    document.querySelectorAll("[data-legal-close]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            closeLegalModal();
+        });
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !legalModal.hidden) {
+            closeLegalModal();
+        }
+    });
+
+    window.addEventListener("hashchange", openLegalModalFromHash);
+    openLegalModalFromHash();
+})();
+</script>

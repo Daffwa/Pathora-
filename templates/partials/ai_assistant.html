@@ -1,0 +1,92 @@
+{% set assistant_name = sidebar_name if sidebar_user else session.get("user_name", "User") %}
+<div
+    class="ai-assistant-root"
+    id="ai-assistant-root"
+    data-chat-url="{{ url_for('api_assistant') }}"
+    data-user-name="{{ assistant_name }}"
+    data-user-role="{{ user_role }}"
+>
+    <button class="ai-launcher" type="button" aria-label="Buka Pathora AI" aria-expanded="false">
+        <img
+            class="ai-assistant-icon"
+            src="{{ url_for('static', filename='img/ai-assistant-main.svg') }}"
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+        >
+    </button>
+
+    <section class="ai-panel" aria-label="Pathora AI" hidden>
+        <header class="ai-panel-header" data-ai-drag-handle>
+            <div class="ai-bot-badge" aria-hidden="true">
+                <img
+                    class="ai-bot-icon"
+                    src="{{ url_for('static', filename='img/ai-assistant-main.svg') }}"
+                    alt=""
+                    aria-hidden="true"
+                    draggable="false"
+                >
+            </div>
+            <div class="ai-panel-title">
+                <strong>Pathora AI</strong>
+                <span>Online &bull; Virtual Assistant</span>
+            </div>
+            <div class="ai-panel-controls" aria-label="Kontrol ukuran Pathora AI">
+                <button
+                    class="ai-size-button ai-size-down"
+                    type="button"
+                    data-ai-size="down"
+                    aria-label="Perkecil Pathora AI"
+                ></button>
+                <button
+                    class="ai-size-button ai-size-up"
+                    type="button"
+                    data-ai-size="up"
+                    aria-label="Perbesar Pathora AI"
+                ></button>
+            </div>
+            <button class="ai-close" type="button" aria-label="Tutup Pathora AI"></button>
+        </header>
+
+        <div class="ai-messages" role="log" aria-live="polite" aria-relevant="additions">
+            <article class="ai-message-row assistant">
+                <div class="ai-message-bubble" data-ai-initial-message>
+                    Halo! Saya Pathora AI. Ada yang bisa saya bantu hari ini?
+                </div>
+                <time class="ai-message-time" data-ai-initial-time></time>
+            </article>
+        </div>
+
+        <div class="ai-quick-actions" aria-label="Saran pertanyaan cepat">
+            <span>Saran pertanyaan:</span>
+            {% if user_role == "recruiter" %}
+            <button type="button" data-ai-prompt="Bagaimana cara membuat lowongan?">Cara buat lowongan</button>
+            <button type="button" data-ai-prompt="Bagaimana cara shortlist kandidat terbaik?">Shortlist kandidat</button>
+            <button type="button" data-ai-prompt="Bagaimana cara cek status dokumen pelamar?">Cek dokumen</button>
+            {% else %}
+            <button type="button" data-ai-prompt="Bagaimana cara daftar?">Cara daftar</button>
+            <button type="button" data-ai-prompt="Bagaimana cara apply peluang?">Cara apply</button>
+            <button type="button" data-ai-prompt="Bagaimana cara upload dokumen?">Cara upload dokumen</button>
+            <button type="button" data-ai-prompt="Bagaimana cara cek status lamaran?">Cek status lamaran</button>
+            <button type="button" data-ai-prompt="Tolong rekomendasikan peluang untuk saya">Rekomendasi peluang</button>
+            {% endif %}
+        </div>
+
+        <form class="ai-composer" autocomplete="off">
+            <label class="sr-only" for="ai-assistant-input">Tanya Pathora AI</label>
+            <input
+                id="ai-assistant-input"
+                name="message"
+                type="text"
+                placeholder="Tulis pesan..."
+                maxlength="1000"
+            >
+            <button class="ai-send-button" type="submit" aria-label="Kirim pesan"></button>
+        </form>
+        <button
+            class="ai-resize-handle"
+            type="button"
+            aria-label="Resize Pathora AI"
+        ></button>
+    </section>
+</div>

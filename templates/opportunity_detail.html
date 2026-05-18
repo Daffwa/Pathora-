@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opportunity.title }} - Pathora{% endblock %}
+
+{% block content %}
+<article class="detail-page opportunity-detail-page">
+    <a class="back-link" href="{{ url_for('opportunities') }}">Kembali ke Peluang</a>
+
+    <section class="opportunity-detail-hero">
+        <div>
+            <span class="tag {{ opportunity.type }}">{{ "Magang" if opportunity.type == "internship" else "Beasiswa" }}</span>
+            <h1>{{ opportunity.title }}</h1>
+            <p>{{ opportunity.provider }} &bull; {{ opportunity.location }}</p>
+            <div class="detail-meta-row">
+                <span><span class="calendar-icon"></span>Deadline {{ opportunity.deadline }}</span>
+                {% if opportunity.days_left is not none %}
+                <span><span class="clock-icon"></span>{% if opportunity.days_left < 0 %}Ditutup{% elif opportunity.days_left == 0 %}Hari ini{% else %}{{ opportunity.days_left }} hari lagi{% endif %}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <aside class="detail-score-card">
+            {% if can_use_jobseeker_actions %}
+            <span>Match Score</span>
+            <strong>{{ opportunity.priority_score }}%</strong>
+            <div class="progress-bar"><span style="width: {{ opportunity.priority_score }}%"></span></div>
+            <p>{{ opportunity.priority_label }}</p>
+            <div class="inline-actions">
+                <form class="inline-form" method="post" action="{{ url_for('track_opportunity', opportunity_id=opportunity.id) }}">
+                    <button type="submit" class="primary-button compact">Lamar Sekarang</button>
+                </form>
+                <form class="inline-form" method="post" action="{{ url_for('bookmark_opportunity', opportunity_id=opportunity.id) }}">
+                    <button type="submit" class="bookmark-button" aria-label="Simpan peluang"><span class="bookmark-icon"></span></button>
+                </form>
+            </div>
+            {% elif is_logged_in %}
+            <span>Match Score</span>
+            <strong>Jobseeker</strong>
+            <p>Skor prioritas personal hanya tersedia untuk akun jobseeker.</p>
+            {% else %}
+            <span>Match Score</span>
+            <strong>Login</strong>
+            <p>Masuk untuk melihat skor prioritas personal.</p>
+            <a class="primary-button compact" href="{{ url_for('login') }}">Masuk</a>
+            {% endif %}
+        </aside>
+    </section>
+
+    <div class="detail-grid">
+        <section>
+            <h2>Deskripsi</h2>
+            <p>{{ opportunity.description }}</p>
+        </section>
+
+        <section>
+            <h2>Persyaratan</h2>
+            <p>{{ opportunity.requirements }}</p>
+        </section>
+
+        <section>
+            <h2>Skill Dibutuhkan</h2>
+            <div class="skill-chips">
+                {% for skill in opportunity.required_skills.split(",") %}
+                {% if skill.strip() %}
+                <span>{{ skill.strip() }}</span>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section>
+            <h2>Priority Score</h2>
+            {% if can_use_jobseeker_actions %}
+            <div class="score-list">
+                <p><span>Final score</span><strong>{{ opportunity.priority_score }}</strong></p>
+                <p><span>Days left</span><strong>{{ opportunity.days_left if opportunity.days_left is not none else "Tidak tersedia" }}</strong></p>
+                <p><span>Skill match</span><strong>{{ opportunity.skill_match_score }}</strong></p>
+                <p><span>Dokumen</span><strong>{{ opportunity.document_score }}</strong></p>
+            </div>
+            {% else %}
+            <p>Login sebagai jobseeker untuk melihat skor prioritas personal.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Tautan Resmi</h2>
+            {% if opportunity.official_link %}
+            <a class="secondary-button compact" href="{{ opportunity.official_link }}" target="_blank" rel="noreferrer">Buka Tautan</a>
+            {% else %}
+            <p>Belum ada tautan resmi untuk peluang ini.</p>
+            {% endif %}
+        </section>
+    </div>
+</article>
+{% endblock %}

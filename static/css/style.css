@@ -1,0 +1,40 @@
+﻿/* =========================================================
+   PATHORA CSS ENTRYPOINT
+   Imports modular CSS partials in cascade-safe order.
+========================================================= */
+
+@import url("./partials/01-variables.css");
+@import url("./partials/02-foundation-buttons-forms.css");
+@import url("./partials/03-base-layout.css");
+@import url("./partials/04-foundation-sidebar.css");
+@import url("./partials/05-foundation-topbar.css");
+@import url("./partials/06-foundation-forms.css");
+@import url("./partials/07-foundation-cards-tables.css");
+@import url("./partials/08-foundation-jobseeker-dashboard.css");
+@import url("./partials/09-foundation-profile.css");
+@import url("./partials/10-foundation-ai-assistant.css");
+@import url("./partials/11-foundation-responsive.css");
+@import url("./partials/12-active-theme-tokens.css");
+@import url("./partials/13-buttons-forms.css");
+@import url("./partials/14-layout.css");
+@import url("./partials/15-sidebar.css");
+@import url("./partials/16-topbar.css");
+@import url("./partials/17-cards-tables.css");
+@import url("./partials/18-auth.css");
+@import url("./partials/19-jobseeker-dashboard.css");
+@import url("./partials/20-opportunities.css");
+@import url("./partials/21-applications.css");
+@import url("./partials/22-documents.css");
+@import url("./partials/23-chat.css");
+@import url("./partials/24-recruiter-dashboard.css");
+@import url("./partials/25-recruiter-applicants.css");
+@import url("./partials/26-recruiter-opportunities.css");
+@import url("./partials/27-recruiter-applicant-detail.css");
+@import url("./partials/28-opportunity-detail.css");
+@import url("./partials/29-public-pages.css");
+@import url("./partials/30-ai-assistant.css");
+@import url("./partials/31-utilities-icons.css");
+@import url("./partials/32-responsive.css");
+@import url("./partials/33-profile.css");
+@import url("./partials/34-edit-profile.css");
+@import url("./partials/21-responsive.css?v=responsive-20260517c");

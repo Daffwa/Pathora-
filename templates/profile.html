@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - Pathora{% endblock %}
+
+{% block content %}
+<section class="profile-page">
+    <div class="profile-grid">
+        <aside class="profile-rail" aria-label="Ringkasan profil">
+            <article class="profile-glass-card profile-identity-card">
+                <div class="profile-avatar-xl">
+                    {% if user.avatar_path %}
+                    <img src="{{ url_for('profile_avatar', filename=user.avatar_path) }}" alt="Foto profil {{ user.name }}">
+                    {% else %}
+                    <span>{{ user.name[:1] }}</span>
+                    {% endif %}
+                </div>
+
+                <h1>{{ user.name or "Belum diisi" }}</h1>
+                <p>
+                    {% if user.major or user.university %}
+                    {{ user.major or "Mahasiswa" }}{% if user.university %} • {{ user.university }}{% endif %}
+                    {% else %}
+                    Belum diisi
+                    {% endif %}
+                </p>
+
+                <div class="profile-chip-row">
+                    <span>{{ "Mahasiswa" if user.role == "jobseeker" else user.role|capitalize }}</span>
+                    <span>{{ user.major or "Belum diisi" }}</span>
+                </div>
+
+                <div class="profile-contact-list">
+                    <p><span class="tiny-icon mail-tiny"></span><strong>Email</strong><em>{{ user.email or "Belum diisi" }}</em></p>
+                    <p><span class="tiny-icon phone-tiny"></span><strong>Nomor telepon</strong><em>{{ user.phone or "Belum diisi" }}</em></p>
+                    <p><span class="tiny-icon pin-tiny"></span><strong>Lokasi</strong><em>{{ user.domicile or "Belum diisi" }}</em></p>
+                </div>
+
+                <a class="primary-button profile-edit-main" href="{{ url_for('edit_profile') }}">Edit Profil</a>
+            </article>
+
+            <article class="profile-glass-card profile-detail-card">
+                <section>
+                    <h2>Pendidikan</h2>
+                    <div class="profile-timeline">
+                        <strong>{{ user.university or "Belum diisi" }}</strong>
+                        <span>{{ user.degree or "Belum diisi" }}{% if user.major %} {{ user.major }}{% endif %}</span>
+                        <small>{{ user.entry_year or "Belum diisi" }}{% if user.entry_year %} - Sekarang{% endif %}</small>
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Keahlian</h2>
+                    <div class="compact-chip-list">
+                        {% for skill in skills %}
+                        <span>{{ skill }}</span>
+                        {% else %}
+                        <span>Belum diisi</span>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Minat Karier</h2>
+                    <div class="profile-interest-list">
+                        {% for position in desired_positions %}
+                        <p>{{ position }} <span aria-hidden="true">&#10003;</span></p>
+                        {% else %}
+                        <p>Belum diisi <span aria-hidden="true">+</span></p>
+                        {% endfor %}
+                    </div>
+                </section>
+            </article>
+        </aside>
+
+        <div class="profile-main-column">
+            <section class="profile-header-row">
+                <div>
+                    <h1>Peluang Tersimpan</h1>
+                    <p>Lanjutkan pendaftaran dari peluang yang sudah kamu simpan.</p>
+                </div>
+                <div class="profile-header-actions">
+                    <a class="secondary-button compact" href="{{ url_for('opportunities') }}">Cari Peluang</a>
+                    <a class="primary-button compact" href="{{ url_for('edit_profile') }}">Lengkapi Profil</a>
+                </div>
+            </section>
+
+            <section class="saved-profile-grid" id="saved-opportunities" aria-label="Peluang tersimpan">
+                {% for opportunity in saved_opportunities %}
+                <article class="saved-profile-card">
+                    <form class="saved-bookmark-form" method="post" action="{{ url_for('remove_bookmark', opportunity_id=opportunity.id) }}">
+                        <button type="submit" class="saved-bookmark-button" aria-label="Hapus {{ opportunity.title }} dari bookmark"><span class="bookmark-icon"></span></button>
+                    </form>
+
+                    <div class="saved-card-topline">
+                        <span class="company-mark">{{ opportunity.provider[:1] }}</span>
+                        <span class="tag {{ opportunity.type }}">{{ "Magang" if opportunity.type == "internship" else "Beasiswa" }}</span>
+                    </div>
+
+                    <div class="saved-card-body">
+                        <h2>{{ opportunity.title }}</h2>
+                        <strong class="saved-provider">{{ opportunity.provider }}</strong>
+                        <p class="saved-meta">
+                            <span><span class="location-icon"></span>{{ opportunity.location }}</span>
+                            <span>
+                                {% if opportunity.days_left is not none %}
+                                    {% if opportunity.days_left < 0 %}
+                                    Ditutup
+                                    {% elif opportunity.days_left == 0 %}
+                                    Deadline hari ini
+                                    {% else %}
+                                    {{ opportunity.days_left }} hari lagi
+                                    {% endif %}
+                                {% else %}
+                                Deadline {{ opportunity.deadline }}
+                                {% endif %}
+                            </span>
+                        </p>
+
+                        <div class="saved-progress-row">
+                            <div>
+                                <span>{{ opportunity.application_status or "Kecocokan Profil" }}</span>
+                                <strong>{{ opportunity.priority_score or 0 }}%</strong>
+                            </div>
+                            <div class="mini-progress"><span style="width: {{ opportunity.priority_score or 0 }}%"></span></div>
+                        </div>
+
+                        <div class="saved-card-actions">
+                            <a class="secondary-button compact" href="{{ url_for('opportunity_detail', opportunity_id=opportunity.id) }}">Detail</a>
+                            {% if opportunity.application_status %}
+                            <a class="primary-button compact" href="{{ url_for('applications') }}">Lanjutkan</a>
+                            {% else %}
+                            <form method="post" action="{{ url_for('track_opportunity', opportunity_id=opportunity.id) }}">
+                                <button type="submit" class="primary-button compact">Track</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% else %}
+                <article class="saved-empty-card">
+                    <div class="empty-plus">+</div>
+                    <h2>Belum ada peluang tersimpan</h2>
+                    <p>Simpan peluang magang atau beasiswa agar mudah dilacak di sini.</p>
+                    <a class="primary-button compact" href="{{ url_for('opportunities') }}">Cari Peluang</a>
+                </article>
+                {% endfor %}
+            </section>
+
+            <section class="profile-glass-card profile-completion-panel">
+                <div class="profile-ring" style="--percent: {{ profile_completion.percent }}%">
+                    <span>{{ profile_completion.percent }}%</span>
+                </div>
+                <div>
+                    <h2>Kelengkapan Profil</h2>
+                    <p>{{ document_progress.complete_count }} dari {{ document_progress.total_count }} dokumen tersedia. Lengkapi profil agar rekomendasi makin akurat.</p>
+                    <div class="profile-status-row">
+                        <span class="{% if user.university %}complete{% endif %}">Pendidikan</span>
+                        <span class="{% if user.skills %}complete{% endif %}">Keahlian</span>
+                        <span class="{% if document_progress.complete_count %}complete{% endif %}">Dokumen</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}

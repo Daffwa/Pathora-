@@ -1,0 +1,12 @@
+﻿/* =========================================================
+   02B. BASE LAYOUT
+   Logged-in app shell and page spacing.
+========================================================= */
+
+.app-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    background: var(--bg);
+}
+

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Beranda - Pathora{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div>
+        <h1>Kejar Peluang Karier & Pendidikan Impianmu dengan Lebih Cerdas</h1>
+        <p>
+            Satu platform untuk melacak magang, beasiswa, dokumen, dan status lamaran.
+            Pathora membantu kamu memprioritaskan peluang yang paling dekat dengan profilmu.
+        </p>
+        <div class="hero-actions">
+            <a class="primary-button" href="{{ url_for('register') }}">Mulai Sekarang</a>
+            <a class="secondary-button" href="{{ url_for('opportunities') }}">Lihat Peluang</a>
+        </div>
+        <div class="hero-proof">
+            <span></span><span></span><span></span>
+            <strong>12,000+</strong>
+            <p>mahasiswa siap mengelola rencana akademik dan kariernya.</p>
+        </div>
+    </div>
+    <div class="hero-panel dashboard-preview" aria-label="Preview dashboard">
+        <div class="preview-toolbar">
+            <span></span>
+            <strong>Preview Dashboard</strong>
+            <small>Live</small>
+        </div>
+        <div class="preview-chart">
+            <i style="height: 28%"></i>
+            <i style="height: 42%"></i>
+            <i style="height: 36%"></i>
+            <i style="height: 61%"></i>
+            <i style="height: 70%"></i>
+            <i style="height: 88%"></i>
+        </div>
+        <div class="preview-row">
+            <span>Dokumen lengkap</span>
+            <strong>83%</strong>
+        </div>
+        <div class="preview-row">
+            <span>Lamaran diproses</span>
+            <strong>12</strong>
+        </div>
+        <div class="preview-row">
+            <span>Peluang prioritas</span>
+            <strong>05</strong>
+        </div>
+    </div>
+</section>
+
+<section class="feature-section">
+    <div class="section-heading centered">
+        <h2>Fitur Unggulan Pathora</h2>
+        <p>Kami merancang alat bantu yang fokus pada hasil, bukan sekadar daftar panjang yang sulit dipantau.</p>
+    </div>
+
+    <div class="feature-grid">
+        <article class="feature-card">
+            <span class="feature-icon rocket-icon"></span>
+            <h3>Pelacak Pintar</h3>
+            <p>Monitoring semua status lamaran dalam satu dashboard interaktif dengan deadline yang mudah dibaca.</p>
+            <a href="{{ url_for('opportunities') }}">Pelajari Selengkapnya</a>
+        </article>
+        <article class="feature-card">
+            <span class="feature-icon doc-icon"></span>
+            <h3>Checklist Dokumen</h3>
+            <p>Pastikan CV, transkrip, portofolio, dan motivation letter selalu siap saat peluang dibuka.</p>
+            <a href="{{ url_for('register') }}">Siapkan Profil</a>
+        </article>
+        <article class="feature-card">
+            <span class="feature-icon gauge-icon"></span>
+            <h3>Skor Prioritas</h3>
+            <p>Algoritma sederhana membantu menilai kecocokan deadline, skill, dan kesiapan dokumenmu.</p>
+            <a href="{{ url_for('opportunities') }}">Lihat Skor</a>
+        </article>
+    </div>
+</section>
+
+<section class="cta-band">
+    <h2>Siap Untuk Langkah Besar Berikutnya?</h2>
+    <p>Buat akun gratis, simpan peluang, lalu biarkan dashboard membantu kamu menjaga fokus.</p>
+    <div class="hero-actions">
+        <a class="primary-button" href="{{ url_for('register') }}">Mulai Gratis Sekarang</a>
+        <a class="secondary-button" href="{{ url_for('login') }}">Masuk ke Akun</a>
+    </div>
+</section>
+{% endblock %}

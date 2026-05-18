@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="120 150 840 720" role="img" aria-label="Chat message">
+  <g fill="none" stroke="#000" stroke-width="42" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M780 282h24c68 0 114 47 114 115v200c0 68-46 115-114 115h-56v108L586 712H450" />
+    <path d="M284 190h380c69 0 116 47 116 116v202c0 69-47 116-116 116H430L282 734V624h-4c-69 0-116-47-116-116V306c0-69 47-116 122-116Z" />
+  </g>
+  <g fill="#000">
+    <circle cx="338" cy="407" r="39" />
+    <circle cx="489" cy="407" r="39" />
+    <circle cx="640" cy="407" r="39" />
+  </g>
+</svg>

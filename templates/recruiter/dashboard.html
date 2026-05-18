@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Recruiter - Pathora{% endblock %}
+
+{% block content %}
+<section class="dashboard-page recruiter-home">
+    <div class="page-heading split-heading">
+        <div>
+            <h1>Dashboard Recruiter</h1>
+            <p>Selamat datang kembali, {{ recruiter.name }}. Pantau pipeline rekrutmen dan kandidat prioritas hari ini.</p>
+        </div>
+        <div class="inline-actions">
+            <button type="button" class="secondary-button">Buat Laporan</button>
+            <a class="primary-button" href="{{ url_for('recruiter_create_opportunity') }}">+ Buat Lowongan</a>
+        </div>
+    </div>
+
+    <section class="recruiter-command-grid">
+        <article class="panel-card quick-actions-card">
+            <h2>Aksi Cepat</h2>
+            <div class="quick-actions recruiter-actions">
+                <a href="{{ url_for('recruiter_create_opportunity') }}"><span class="doc-icon"></span>Buat Lowongan</a>
+                <a href="{{ url_for('recruiter_applicants') }}"><span class="calendar-icon"></span>Kandidat Pilihan</a>
+                <a href="{{ url_for('chat') }}"><span class="chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Chat</a>
+                <a href="{{ url_for('recruiter_opportunities') }}"><span class="chart-icon"></span>Analitik</a>
+            </div>
+        </article>
+
+        <article class="summary-card compact-stat">
+            <span class="summary-icon briefcase-icon"></span>
+            <small>Lowongan Aktif</small>
+            <strong>{{ total_opportunities }}</strong>
+            <p>{{ recruiter.company_name or "Perusahaan belum diisi" }}</p>
+        </article>
+
+        <article class="summary-card compact-stat">
+            <span class="summary-icon user-icon"></span>
+            <small>Total Pelamar</small>
+            <strong>{{ total_applicants }}</strong>
+            <p>{{ recent_applicants|length }} menunggu review</p>
+        </article>
+    </section>
+
+    <section class="recruiter-analytics-grid">
+        <article class="summary-card compact-stat pending-card">
+            <span class="summary-icon calendar-icon"></span>
+            <small>Interview Tertunda</small>
+            <strong>{{ recent_applicants|length }}</strong>
+            <p>Jadwalkan kandidat shortlist minggu ini.</p>
+        </article>
+
+        <article class="panel-card chart-panel">
+            <div class="panel-heading">
+                <h2>Efisiensi Pipeline Rekrutmen</h2>
+                <span class="soft-pill">30 Hari Terakhir</span>
+            </div>
+            <div class="bar-chart" aria-hidden="true">
+                <span style="height: 38%"></span>
+                <span style="height: 55%"></span>
+                <span class="active" style="height: 72%"></span>
+                <span style="height: 40%"></span>
+                <span style="height: 82%"></span>
+                <span style="height: 64%"></span>
+                <span style="height: 48%"></span>
+            </div>
+        </article>
+    </section>
+
+    <section class="recruiter-bottom-grid">
+        <article class="table-card recent-applications-card">
+            <div class="table-header">
+                <h2>Lamaran Terbaru</h2>
+                <a href="{{ url_for('recruiter_applicants') }}">Lihat Semua</a>
+            </div>
+            <div class="recruiter-application-list">
+                {% for applicant in recent_applicants %}
+                <a class="recruiter-application-item" href="{{ url_for('recruiter_applicant_detail', application_id=applicant.application_id) }}">
+                    <span class="avatar small-avatar">{{ applicant.applicant_name[:1] }}</span>
+                    <span>
+                        <strong>{{ applicant.applicant_name }}</strong>
+                        <small>Melamar {{ applicant.opportunity_title }}</small>
+                    </span>
+                    <span class="match-bar"><i style="width: {{ 92 - loop.index0 * 7 }}%"></i></span>
+                    <b>{{ 92 - loop.index0 * 7 }}%</b>
+                    <em>{{ applicant.status }}</em>
+                </a>
+                {% else %}
+                <div class="empty-inline">
+                    <strong>Belum ada pelamar</strong>
+                    <span>Buat lowongan pertama untuk mulai menerima kandidat.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <aside class="recruiter-side-stack">
+            <article class="panel-card action-required-card">
+                <h2>Perlu Aksi</h2>
+                <div class="action-list">
+                    <a href="{{ url_for('recruiter_applicants') }}"><span class="checklist-icon"></span>Review kandidat baru</a>
+                    <a href="{{ url_for('chat') }}"><span class="chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Balas pesan kandidat</a>
+                </div>
+            </article>
+            <article class="blue-insight-card">
+                <h2>Rekomendasi Shortlist AI</h2>
+                <p>Pathora menemukan kandidat dengan kecocokan kuat dari lowongan aktif Anda.</p>
+                <a class="secondary-button light-button" href="{{ url_for('recruiter_applicants') }}">Tinjau Kandidat Teratas</a>
+            </article>
+        </aside>
+    </section>
+</section>
+{% endblock %}

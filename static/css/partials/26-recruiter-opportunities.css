@@ -1,0 +1,61 @@
+﻿/* =========================================================
+   16. RECRUITER OPPORTUNITIES
+   Recruiter opportunity hub cards, visibility panels, and counts.
+========================================================= */
+
+.recruitment-hub-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 304px;
+    gap: 24px;
+}
+
+.recruitment-boost-card {
+    overflow: hidden;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.recruitment-boost-card img {
+    width: 100%;
+    height: 220px;
+    display: block;
+    object-fit: cover;
+    object-position: center 48%;
+}
+
+.total-applicant-card strong {
+    display: block;
+    margin: 12px 0;
+    color: #FFFFFF;
+    font-size: 2.2rem;
+}
+
+.applicant-count-pill {
+    min-width: 56px;
+    padding: 6px 12px;
+    display: inline-flex;
+    justify-content: center;
+    color: var(--primary);
+    background: #DCEBFF;
+    border-radius: 6px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    display: inline-block !important;
+    margin-right: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+}
+
+.recruiter-visibility-card {
+    min-height: 210px;
+    padding: 32px;
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+        repeating-linear-gradient(90deg, #F0F0F0 0 60px, #E4E4E4 60px 120px);
+    border-radius: 12px;
+}
+

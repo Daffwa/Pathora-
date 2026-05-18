@@ -1,0 +1,174 @@
+﻿/* =========================================================
+   20. TABLES, CARDS, BADGES
+   Foundation cards, grids, metadata rows, badges, and actions.
+========================================================= */
+
+.opportunity-grid,
+.document-list,
+.summary-grid {
+    display: grid;
+    gap: 24px;
+}
+
+.opportunity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.opportunity-card,
+.application-card,
+.document-card {
+    padding: 26px;
+}
+
+.card-topline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.company-mark {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 54px;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+    border-radius: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.tag,
+.status-label,
+.skill-chips span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.tag {
+    color: var(--green);
+    background: rgba(52, 211, 153, 0.12);
+    text-transform: uppercase;
+}
+
+.opportunity-card h2,
+.application-card h2,
+.document-card h2 {
+    margin: 18px 0 8px;
+    font-size: 1.35rem;
+    line-height: 1.3;
+}
+
+.provider,
+.deadline,
+.small-text {
+    color: var(--muted);
+}
+
+.opportunity-meta,
+.deadline-info {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.deadline-info {
+    min-height: 30px;
+    margin-top: 14px;
+}
+
+.status-label.urgent {
+    color: #ffd8d2;
+    background: rgba(255, 180, 171, 0.14);
+}
+
+.status-label.open {
+    color: #68fcbf;
+    background: rgba(52, 211, 153, 0.14);
+}
+
+.status-label.closed {
+    color: #ffb4ab;
+    background: rgba(255, 122, 138, 0.14);
+}
+
+.skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.skill-chips span {
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.08);
+    text-transform: capitalize;
+}
+
+.card-divider {
+    height: 1px;
+    margin: 24px 0;
+    background: var(--line);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.inline-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.inline-form,
+.hidden-form {
+    margin: 0;
+}
+
+.inline-form button,
+.remove-form button {
+    width: auto;
+    margin-top: 0;
+}
+
+.match-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.match-badge strong {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--primary-bright);
+    background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,
+        conic-gradient(var(--primary), var(--secondary), rgba(255, 255, 255, 0.12)) border-box;
+    border: 4px solid transparent;
+    font-size: 0.82rem;
+}
+
+.match-badge span {
+    color: var(--text);
+    font-weight: 700;
+    line-height: 1.1;
+}
+

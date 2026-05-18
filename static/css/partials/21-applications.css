@@ -1,0 +1,249 @@
+﻿/* =========================================================
+   11. APPLICATION TRACKER / PELACAKAN LAMARAN
+   Tracker summaries, application tables, status badges, and actions.
+========================================================= */
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.summary-card {
+    min-height: 128px;
+    display: grid;
+    gap: 10px;
+}
+
+.summary-card small {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.summary-card strong {
+    color: var(--text);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.summary-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.table-card {
+    padding: 0;
+    overflow: visible;
+}
+
+.table-header {
+    margin: 0;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: #FFFFFF;
+    border: 0;
+    border-radius: 0 0 12px 12px;
+    box-shadow: none;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+}
+
+.data-table th {
+    padding: 15px 24px;
+    color: #5F6673;
+    background: #EEF2FA;
+    font-size: 0.82rem;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.data-table td {
+    padding: 18px 24px;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.data-table td span {
+    display: block;
+    color: var(--muted);
+}
+
+.company-cell,
+.applicant-cell,
+.skill-match-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-form {
+    margin: 0;
+}
+
+.status-form select {
+    min-height: 38px;
+    padding: 8px 34px 8px 12px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.application-status-cell {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+}
+
+.application-status-cell small {
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.data-table td .status-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    width: max-content;
+    padding: 6px 12px;
+    color: #1E3A8A;
+    background: #DBEAFE;
+    border: 1px solid #BFDBFE;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.data-table td .status-applied,
+.status-applied {
+    color: #1D4ED8;
+    background: #DBEAFE;
+    border-color: #BFDBFE;
+}
+
+.data-table td .status-review,
+.status-review {
+    color: #92400E;
+    background: #FEF3C7;
+    border-color: #FCD34D;
+}
+
+.data-table td .status-interview,
+.status-interview {
+    color: #4338CA;
+    background: #E0E7FF;
+    border-color: #C7D2FE;
+}
+
+.data-table td .status-accepted,
+.status-accepted {
+    color: #047857;
+    background: #D1FAE5;
+    border-color: #A7F3D0;
+}
+
+.data-table td .status-rejected,
+.status-rejected {
+    color: #B91C1C;
+    background: #FEE2E2;
+    border-color: #FECACA;
+}
+
+.data-table td .status-unknown,
+.status-unknown {
+    color: #475569;
+    background: #E2E8F0;
+    border-color: #CBD5E1;
+}
+
+.action-menu {
+    position: relative;
+    width: max-content;
+}
+
+.action-menu summary {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    list-style: none;
+    color: #64748B;
+    cursor: pointer;
+}
+
+.action-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.action-menu-panel {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    z-index: 20;
+    min-width: 150px;
+    padding: 8px;
+    display: grid;
+    gap: 4px;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
+
+.action-menu-panel a,
+.danger-link-button {
+    min-height: 36px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+}
+
+.danger-link-button {
+    width: 100%;
+    color: var(--danger);
+}
+
+.action-menu-panel a:hover,
+.danger-link-button:hover {
+    color: var(--primary);
+    background: #F1F5FB;
+    transform: none;
+}
+
+.priority-task-card {
+    padding: 28px;
+    display: grid;
+    align-content: center;
+    gap: 14px;
+    background: #F1F5FB;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.priority-task-card h2 {
+    margin: 0;
+}
+

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Halaman Tidak Ditemukan - Pathora{% endblock %}
+
+{% block content %}
+<section class="empty-state">
+    <h1>Halaman tidak ditemukan</h1>
+    <p class="muted">
+        Peluang atau halaman yang kamu cari tidak tersedia. Coba kembali ke daftar peluang.
+    </p>
+    <a class="primary-button" href="{{ url_for('opportunities') }}">Lihat Daftar Peluang</a>
+</section>
+{% endblock %}

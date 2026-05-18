@@ -1,0 +1,222 @@
+﻿/* =========================================================
+   20. TABLES, CARDS, BADGES
+   Shared headings, panels, cards, badges, progress, and utilities.
+========================================================= */
+
+.flash-messages {
+    margin-bottom: 20px;
+}
+
+.flash-messages p {
+    color: #075985;
+    background: #E0F2FE;
+    border: 1px solid #BAE6FD;
+    border-radius: 12px;
+}
+
+.page-heading,
+.section-heading {
+    margin-bottom: 26px;
+}
+
+.page-heading h1,
+.section-heading h1 {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: clamp(1.8rem, 3vw, 2.35rem);
+    line-height: 1.12;
+    letter-spacing: 0;
+}
+
+.page-heading p,
+.section-heading p,
+.muted-text {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1rem;
+}
+
+.split-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.breadcrumb-line {
+    margin: 0 0 8px !important;
+    color: var(--muted);
+    font-size: 0.82rem !important;
+    font-weight: 800;
+}
+
+.panel-card,
+.metric-card,
+.opportunity-card,
+.summary-card,
+.table-card,
+.profile-strength-card,
+.required-documents-card,
+.info-tile,
+.detail-grid section,
+.detail-score-card,
+.applicant-profile-card,
+.resume-preview-card,
+.form-card,
+.auth-card,
+.dashboard-panel,
+.document-card {
+    color: var(--text);
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: none;
+}
+
+.panel-card,
+.metric-card,
+.summary-card,
+.table-card,
+.profile-strength-card,
+.required-documents-card,
+.detail-grid section,
+.detail-score-card,
+.applicant-profile-card,
+.resume-preview-card,
+.dashboard-panel {
+    padding: 24px;
+}
+
+.panel-heading,
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.panel-heading h2,
+.table-header h2,
+.panel-card h2,
+.metric-card h2,
+.required-documents-card h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.18rem;
+    line-height: 1.25;
+}
+
+.soft-pill,
+.table-count,
+.alert-chip,
+.deadline-pill {
+    min-height: 24px;
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    color: var(--primary);
+    background: #DCEBFF;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.soft-pill.light {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.tag,
+.status-label,
+.skill-chips span {
+    min-height: 22px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: none;
+}
+
+.tag {
+    color: #075985;
+    background: #DBEAFE;
+}
+
+.tag.scholarship {
+    color: #9A3412;
+    background: #FFEDD5;
+}
+
+.status-label.open {
+    color: #15803D;
+    background: #DCFCE7;
+}
+
+.status-label.warning {
+    color: #A16207;
+    background: #FEF3C7;
+}
+
+.status-label.closed,
+.status-label.urgent {
+    color: #B91C1C;
+    background: #FEE2E2;
+}
+
+.success-text {
+    color: var(--success) !important;
+}
+
+.warning-text {
+    color: var(--warning) !important;
+}
+
+.danger-text {
+    color: var(--danger) !important;
+}
+
+.progress-bar,
+.mini-progress,
+.match-bar,
+.dual-bar {
+    height: 10px;
+    overflow: hidden;
+    background: #E5E7EB;
+    border-radius: 999px;
+}
+
+.progress-bar span,
+.progress-bar div,
+.mini-progress span,
+.match-bar i,
+.dual-bar span,
+.dual-bar i {
+    display: block;
+    height: 100%;
+    background: var(--primary);
+    border-radius: inherit;
+}
+
+.progress-bar.warning span {
+    background: var(--orange);
+}
+
+.inline-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.inline-form,
+.hidden-form {
+    margin: 0;
+}
+
+.inline-form button,
+.remove-form button {
+    margin-top: 0;
+}
+

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Pathora{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="page-heading split-heading">
+        <div>
+            <h1>Selamat datang kembali, {{ user_name }}!</h1>
+            <p>Anda punya {{ summary.total_applications }} lamaran aktif dan {{ summary.total_urgent }} deadline terdekat.</p>
+        </div>
+        <span class="verified-pill"><span class="shield-icon"></span>Akun Terverifikasi</span>
+    </div>
+
+    <section class="student-hero-card">
+        <div>
+            <h2>Temukan peluang yang paling cocok minggu ini</h2>
+            <p>Pathora memprioritaskan rekomendasi berdasarkan skill, deadline, dan kesiapan dokumen Anda.</p>
+            <a class="secondary-button light-button" href="{{ url_for('opportunities') }}">Cari Peluang</a>
+        </div>
+        <div class="hero-illustration" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/dashboard-hero-professional.png') }}" alt="">
+        </div>
+    </section>
+
+    <section class="dashboard-metrics">
+        <article class="metric-card priority-card">
+            <div class="panel-heading">
+                <h2>Skor Prioritas</h2>
+                <span class="soft-pill">Tinggi</span>
+            </div>
+            <div class="score-row">
+                <div class="score-ring" style="--percent: {{ top_priority.priority_score if top_priority else 75 }}%">
+                    <span>{{ top_priority.priority_score if top_priority else 75 }}%</span>
+                </div>
+                <p>Profil Anda cocok untuk {{ top_priority.title if top_priority else "peluang prioritas" }}. <a href="{{ url_for('documents') }}">Tingkatkan skor</a></p>
+            </div>
+        </article>
+
+        <article class="metric-card wide">
+            <div class="panel-heading">
+                <h2>Progress Lamaran</h2>
+            </div>
+            <div class="progress-stack">
+                <div>
+                    <div class="progress-label"><span>Kelengkapan Dokumen</span><strong>{{ progress_percent }}%</strong></div>
+                    <div class="progress-bar"><span style="width: {{ progress_percent }}%"></span></div>
+                    <small class="success-text">Resume dan dokumen utama siap.</small>
+                </div>
+                <div>
+                    <div class="progress-label"><span>Keaktifan Lamaran</span><strong>{{ 40 if summary.total_applications < 3 else 80 }}%</strong></div>
+                    <div class="progress-bar warning"><span style="width: {{ 40 if summary.total_applications < 3 else 80 }}%"></span></div>
+                    <small class="warning-text">Tambah tracker agar progres mudah dipantau.</small>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="dashboard-content-grid">
+        <article class="panel-card">
+            <div class="panel-heading">
+                <h2>Deadline Terdekat</h2>
+                <a href="{{ url_for('opportunities') }}">Lihat Semua</a>
+            </div>
+            <div class="deadline-list">
+                {% for opportunity in urgent_deadlines[:3] %}
+                <a class="deadline-item" href="{{ url_for('opportunity_detail', opportunity_id=opportunity.id) }}">
+                    <span class="item-icon briefcase-icon"></span>
+                    <div>
+                        <strong>{{ opportunity.title }}</strong>
+                        <small>{{ opportunity.provider }}</small>
+                    </div>
+                    <em>{% if opportunity.days_left == 0 %}Hari ini{% else %}{{ opportunity.days_left }} hari lagi{% endif %}</em>
+                </a>
+                {% else %}
+                <div class="empty-inline">
+                    <strong>Tidak ada deadline kritis</strong>
+                    <span>Simpan peluang agar deadline muncul di sini.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="match-card">
+            <span class="soft-pill light">Rekomendasi Baru</span>
+            <h2>{{ top_priority.title if top_priority else "Software Engineering Fellow" }}</h2>
+            <p>{{ top_priority.provider if top_priority else "FinTech Corp" }} memberi sinyal cocok dengan profil Anda.</p>
+            {% if top_priority %}
+            <a class="secondary-button light-button" href="{{ url_for('opportunity_detail', opportunity_id=top_priority.id) }}">Lihat Detail</a>
+            {% else %}
+            <a class="secondary-button light-button" href="{{ url_for('opportunities') }}">Lamar Sekarang</a>
+            {% endif %}
+        </article>
+
+        <article class="panel-card quick-actions-card">
+            <h2>Aksi Cepat</h2>
+            <div class="quick-actions">
+                <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Perbarui CV</a>
+                <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Transkrip</a>
+                <a href="{{ url_for('opportunities') }}"><span class="briefcase-icon"></span>Cari Peluang</a>
+            </div>
+        </article>
+
+        <article class="panel-card">
+            <h2>Kelengkapan Profil</h2>
+            <div class="progress-label"><span>{{ summary.completed_documents }} dari {{ summary.total_documents }} dokumen lengkap</span><strong>{{ progress_percent }}%</strong></div>
+            <div class="progress-bar"><span style="width: {{ progress_percent }}%"></span></div>
+            <p class="muted-text">Tambahkan dokumen dan skill utama agar peluang rekomendasi makin relevan.</p>
+        </article>
+    </section>
+
+    <section class="boost-card">
+        <div class="boost-thumb" aria-hidden="true"></div>
+        <div>
+            <h2>Optimalkan lamaran Anda</h2>
+            <p>CV yang lengkap membantu recruiter memahami skill Anda lebih cepat. Pastikan portofolio dan transkrip sudah terbaru.</p>
+        </div>
+        <a class="secondary-button" href="{{ url_for('documents') }}">Optimalkan CV</a>
+    </section>
+</section>
+{% endblock %}

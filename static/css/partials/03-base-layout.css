@@ -1,0 +1,128 @@
+﻿/* =========================================================
+   02. BASE LAYOUT
+   Public shell, branding, page wrappers, and flash messages.
+========================================================= */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 64px;
+    display: flex;
+    align-items: center;
+}
+
+.nav {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand, .brand-wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.brand span, .brand-wordmark span {
+    color: var(--primary);
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 176px;
+    max-width: 100%;
+}
+
+.brand-logo img {
+    width: 160px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.brand-logo.small {
+    width: 148px;
+}
+
+.brand-logo.small img {
+    width: 136px;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+.nav-links a {
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    color: var(--primary);
+}
+
+.public-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+}
+
+.page {
+    width: 100%;
+}
+
+.flash-messages {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.flash-messages p {
+    margin: 0;
+    padding: 13px 16px;
+    color: var(--primary-bright);
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.24);
+    border-radius: var(--radius-sm);
+}
+
+.site-footer {
+    width: min(var(--container), calc(100% - 40px));
+    margin: 0 auto;
+    padding: 52px 0 28px;
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    font-size: 0.88rem;
+}
+
+.site-footer > div {
+    max-width: 390px;
+}
+
+.app-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: var(--sidebar) minmax(0, 1fr);
+}
+

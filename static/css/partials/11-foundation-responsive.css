@@ -1,0 +1,225 @@
+﻿/* =========================================================
+   21. RESPONSIVE DESIGN
+   Foundation breakpoints and reduced-motion preferences.
+========================================================= */
+
+@media (max-width: 1180px) {
+    .app-layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    .sidebar-brand {
+        font-size: 1.28rem;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-form,
+    .dashboard-grid-priority {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .profile-grid,
+    .profile-edit-page {
+        grid-template-columns: 1fr;
+    }
+
+    .edit-profile-summary {
+        position: static;
+    }
+}
+
+@media (max-width: 920px) {
+    .hero,
+    .feature-grid,
+    .opportunity-grid,
+    .document-list,
+    .dashboard-grid,
+    .detail-grid,
+    .form-grid,
+    .dashboard-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        min-height: auto;
+        padding-top: 56px;
+    }
+
+    .filter-form {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .saved-profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .top-search {
+        width: 100%;
+        max-width: none;
+        flex: 0 1 auto;
+    }
+
+    .topbar-actions {
+        justify-content: space-between;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .recommendation-card {
+        grid-template-columns: 54px minmax(0, 1fr);
+    }
+
+    .match-score,
+    .arrow-link {
+        grid-column: 2;
+    }
+}
+
+@media (max-width: 760px) {
+    .nav {
+        min-height: auto;
+        padding: 16px 0;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .nav-links {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .app-layout {
+        display: block;
+    }
+
+    .sidebar {
+        position: relative;
+        min-height: auto;
+        padding: 18px;
+        gap: 18px;
+    }
+
+    .side-nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .side-nav a {
+        min-height: 48px;
+        padding-inline: 12px;
+        font-size: 0.88rem;
+    }
+
+    .sidebar-user {
+        margin-top: 0;
+    }
+
+    .ai-launcher {
+        width: 68px;
+        height: 68px;
+    }
+
+    .ai-panel {
+        width: calc(100vw - 24px);
+        height: min(540px, calc(100vh - 24px));
+        border-radius: 18px;
+    }
+
+    .ai-panel-header {
+        min-height: 68px;
+        padding: 14px;
+    }
+
+    .ai-message-bubble {
+        max-width: 90%;
+    }
+
+    .app-page,
+    .topbar {
+        padding-inline: 18px;
+    }
+
+    .summary-grid,
+    .filter-form,
+    .profile-form-grid,
+    .profile-completion-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-header-row,
+    .profile-edit-heading,
+    .profile-sticky-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .profile-header-actions,
+    .profile-sticky-actions > div {
+        justify-content: stretch;
+    }
+
+    .profile-header-actions a,
+    .profile-sticky-actions a,
+    .profile-sticky-actions button,
+    .saved-card-actions a,
+    .saved-card-actions button {
+        width: 100%;
+    }
+
+    .profile-form-grid .span-2 {
+        grid-column: auto;
+    }
+
+    .hero h1,
+    .dashboard-hero h1 {
+        font-size: clamp(2.2rem, 12vw, 3.3rem);
+    }
+
+    .hero-panel,
+    .form-card,
+    .opportunity-card,
+    .application-card,
+    .document-card,
+    .summary-card,
+    .dashboard-panel,
+    .detail-grid section,
+    .feature-card,
+    .cta-band,
+    .empty-state {
+        padding: 22px;
+    }
+
+    .card-actions,
+    .filter-actions,
+    .site-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .card-actions button,
+    .card-actions .primary-button,
+    .card-actions .secondary-button,
+    .filter-actions button,
+    .filter-actions .secondary-button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+

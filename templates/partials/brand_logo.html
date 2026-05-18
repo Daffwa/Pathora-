@@ -1,0 +1,5 @@
+{% macro brand_logo(href, class_name="") -%}
+<a class="brand-logo {{ class_name }}" href="{{ href }}" aria-label="Pathora">
+    <img src="{{ url_for('static', filename='img/pathora-logo.png') }}" alt="Pathora - Temukan peluang. Wujudkan masa depan.">
+</a>
+{%- endmacro %}

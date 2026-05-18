@@ -1,0 +1,556 @@
+﻿/* =========================================================
+   22. UTILITIES & ICON REFINEMENTS
+   CSS-drawn icons, utility icon sizing, and visual helper classes.
+========================================================= */
+
+.nav-icon,
+.feature-icon,
+.summary-icon,
+.document-icon,
+.form-icon,
+.item-icon,
+.search-icon,
+.calendar-icon,
+.clock-icon,
+.bookmark-icon,
+.grid-icon,
+.list-icon,
+.briefcase-icon,
+.chat-icon,
+.chart-icon,
+.filter-icon,
+.checklist-icon,
+.download-icon,
+.more-icon,
+.video-icon,
+.phone-icon,
+.attach-icon,
+.smile-icon,
+.check-icon {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    flex: 0 0 22px;
+    color: currentColor;
+}
+
+.summary-icon,
+.item-icon,
+.document-icon,
+.form-icon {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    color: var(--primary);
+    background: #DCEBFF;
+    border-radius: 10px;
+}
+
+.more-icon::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    margin: auto;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 -7px 0 currentColor, 0 7px 0 currentColor;
+}
+
+.bell-icon::before {
+    content: "";
+    width: 14px;
+    height: 15px;
+    margin: 2px auto 0;
+    border: 2px solid currentColor;
+    border-bottom: 0;
+    border-radius: 10px 10px 4px 4px;
+}
+
+.bell-icon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    bottom: 3px;
+    width: 10px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 -2px currentColor;
+}
+
+.calendar-icon::before {
+    content: "";
+    width: 16px;
+    height: 15px;
+    margin: 4px auto 0;
+    border: 2px solid currentColor;
+    border-radius: 5px;
+}
+
+.calendar-icon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 3px;
+    height: 5px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 8px 0 0 currentColor, 2px 7px 0 -1px currentColor;
+}
+
+.video-icon::before {
+    content: "";
+    width: 14px;
+    height: 10px;
+    margin: 6px 0 0 2px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+}
+
+.video-icon::after {
+    content: "";
+    position: absolute;
+    right: 2px;
+    top: 7px;
+    border-left: 6px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+
+.phone-icon::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    margin: auto;
+    border: 2px solid currentColor;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 4px;
+    transform: rotate(45deg);
+}
+
+.chart-icon::before {
+    content: "";
+    width: 4px;
+    height: 15px;
+    margin: 4px auto 0;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: -7px 5px 0 currentColor, 7px -3px 0 currentColor;
+}
+
+.checklist-icon::before {
+    content: "";
+    width: 15px;
+    height: 17px;
+    margin: 3px auto 0;
+    border: 2px solid currentColor;
+    border-radius: 5px;
+}
+
+.checklist-icon::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 10px;
+    width: 8px;
+    height: 4px;
+    border-left: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+}
+
+.attach-icon::before {
+    content: "";
+    width: 8px;
+    height: 16px;
+    margin: 2px auto;
+    border: 2px solid currentColor;
+    border-radius: 999px;
+    border-top-color: transparent;
+}
+
+.smile-icon::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+}
+
+.smile-icon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 7px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 7px 0 0 currentColor, 3px 6px 0 -1px currentColor;
+}
+
+.icon-button .bell-icon::before {
+    content: "";
+    width: 14px;
+    height: 15px;
+    margin: 2px auto 0;
+    border: 2px solid currentColor;
+    border-bottom: 0;
+    border-radius: 10px 10px 4px 4px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.icon-button .bell-icon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    bottom: 3px;
+    width: 10px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 -2px currentColor;
+}
+
+.icon-filter-button .filter-icon::before,
+.secondary-button .filter-icon::before {
+    content: "";
+    width: 16px;
+    height: 2px;
+    margin: 6px auto 0;
+    background: currentColor;
+    box-shadow: 0 5px 0 currentColor, 0 10px 0 currentColor;
+    border: 0;
+    border-radius: 999px;
+}
+
+.icon-filter-button .filter-icon::after,
+.secondary-button .filter-icon::after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    right: 5px;
+    top: 4px;
+    background: currentColor;
+    border-radius: 50%;
+    box-shadow: -8px 5px 0 currentColor, 0 10px 0 currentColor;
+}
+
+.icon-button .more-icon::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    margin: auto;
+    border: 0;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 -7px 0 currentColor, 0 7px 0 currentColor;
+}
+
+.icon-button .more-icon::after {
+    content: none;
+}
+
+.icon-button .video-icon::before {
+    content: "";
+    width: 14px;
+    height: 10px;
+    margin: 6px 0 0 2px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    background: transparent;
+}
+
+.icon-button .video-icon::after {
+    content: "";
+    position: absolute;
+    right: 2px;
+    top: 7px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+
+.icon-button .phone-icon::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    margin: auto;
+    border: 2px solid currentColor;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 4px;
+    background: transparent;
+    transform: rotate(45deg);
+}
+
+.icon-button .phone-icon::after {
+    content: none;
+}
+
+.icon-button .attach-icon::before {
+    content: "";
+    width: 8px;
+    height: 16px;
+    margin: 2px auto;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.icon-button .attach-icon::after {
+    content: none;
+}
+
+.icon-button .smile-icon::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.icon-button .smile-icon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 7px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 7px 0 0 currentColor, 3px 6px 0 -1px currentColor;
+}
+
+.bookmark-button {
+    min-width: 42px;
+    flex: 0 0 42px;
+}
+
+.bookmark-button .bookmark-icon::before {
+    content: "";
+    width: 14px;
+    height: 18px;
+    margin: 2px auto;
+    border: 2px solid currentColor;
+    border-radius: 3px 3px 1px 1px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+    background: transparent;
+}
+
+.bookmark-button.active .bookmark-icon::before,
+.bookmark-button:hover .bookmark-icon::before {
+    background: currentColor;
+}
+
+.view-toggle .grid-icon::before,
+.view-toggle .list-icon::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+}
+
+.view-toggle .grid-icon::before {
+    background:
+        linear-gradient(currentColor, currentColor) 50% 0 / 2px 100% no-repeat,
+        linear-gradient(currentColor, currentColor) 0 50% / 100% 2px no-repeat;
+}
+
+.view-toggle .list-icon::before {
+    border: 0;
+    height: 14px;
+    background:
+        linear-gradient(currentColor, currentColor) 0 1px / 100% 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 0 6px / 100% 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 0 11px / 100% 2px no-repeat;
+}
+
+.side-nav .briefcase-icon::before,
+.sidebar-footer .briefcase-icon::before {
+    content: "";
+    width: 17px;
+    height: 13px;
+    margin: 6px auto 0;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    background: transparent;
+}
+
+.side-nav .briefcase-icon::after,
+.sidebar-footer .briefcase-icon::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 3px;
+    width: 8px;
+    height: 5px;
+    border: 2px solid currentColor;
+    border-bottom: 0;
+    border-radius: 3px 3px 0 0;
+}
+
+.side-nav .bookmark-icon::before,
+.sidebar-footer .bookmark-icon::before {
+    content: "";
+    width: 14px;
+    height: 18px;
+    margin: 2px auto;
+    border: 2px solid currentColor;
+    border-radius: 3px 3px 1px 1px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+    background: transparent;
+}
+
+.side-nav .bookmark-sidebar-icon {
+    align-items: center;
+    justify-content: center;
+}
+
+.side-nav .bookmark-sidebar-icon::before {
+    content: none;
+}
+
+.sidebar-bookmark-icon-img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.side-nav a.active .sidebar-bookmark-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+.side-nav a:hover .sidebar-bookmark-icon-img {
+    opacity: 1;
+}
+
+.chat-menu-icon {
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    flex-shrink: 0;
+}
+
+.chat-menu-icon::before,
+.chat-menu-icon::after {
+    content: none !important;
+}
+
+.chat-menu-icon-img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.side-nav .chat-menu-icon-img,
+.sidebar-footer .chat-menu-icon-img {
+    width: 20px;
+    height: 20px;
+}
+
+.side-nav a.active .chat-menu-icon-img,
+.side-nav a:hover .chat-menu-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+.side-nav .checklist-icon::before,
+.sidebar-footer .checklist-icon::before,
+.side-nav .doc-icon::before,
+.sidebar-footer .doc-icon::before {
+    content: "";
+    width: 15px;
+    height: 18px;
+    margin: 2px auto;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    background:
+        linear-gradient(currentColor, currentColor) 50% 38% / 8px 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 50% 60% / 8px 2px no-repeat;
+}
+
+.side-nav .grid-icon::before,
+.sidebar-footer .grid-icon::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    margin: 2px auto;
+    border: 2px solid currentColor;
+    border-radius: 5px;
+    background:
+        linear-gradient(currentColor, currentColor) 50% 0 / 2px 100% no-repeat,
+        linear-gradient(currentColor, currentColor) 0 50% / 100% 2px no-repeat;
+}
+
+.sidebar-footer .help-icon::before {
+    content: "?";
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.sidebar-footer .logout-icon::before {
+    content: "";
+    width: 16px;
+    height: 14px;
+    margin: 4px auto;
+    border: 2px solid currentColor;
+    border-right: 0;
+    border-radius: 3px 0 0 3px;
+    background: transparent;
+}
+
+.sidebar-footer .logout-icon::after {
+    content: "";
+    position: absolute;
+    right: 1px;
+    top: 10px;
+    width: 12px;
+    height: 2px;
+    background: currentColor;
+    box-shadow: 5px -4px 0 -3px currentColor, 5px 4px 0 -3px currentColor;
+}
+
+.search-icon::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    margin: 3px 0 0 3px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+}
+
+.search-icon::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 2px;
+    right: 2px;
+    bottom: 3px;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+
