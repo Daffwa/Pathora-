@@ -18,6 +18,7 @@ from routes import (
     chat_routes,
     dashboard_routes,
     document_routes,
+    help_routes,
     opportunity_routes,
     profile_routes,
     public_routes,
@@ -40,6 +41,7 @@ def register_routes(app):
     profile_routes.register(app)
     ai_routes.register(app)
     dashboard_routes.register(app)
+    help_routes.register(app)
     opportunity_routes.register(app)
     chat_routes.register(app)
     application_routes.register(app)

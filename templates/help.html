@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Pusat Bantuan - Pathora{% endblock %}
+
+{% block content %}
+<section class="page-heading split-heading">
+    <div>
+        <h1>Pusat Bantuan</h1>
+        <p>Cari panduan singkat untuk akun, profil, dokumen, peluang, lamaran, chat, recruiter, dan admin.</p>
+    </div>
+    {% if selected_context %}
+    <span class="soft-pill">Konteks: {{ selected_context_label }}</span>
+    {% endif %}
+</section>
+
+<form class="filter-toolbar help-toolbar" method="get" action="{{ url_for('help') }}">
+    <label class="search-field" for="help-q">
+        <span class="search-icon"></span>
+        <input id="help-q" name="q" type="search" value="{{ query }}" placeholder="Cari bantuan, contoh: cv, chat, status...">
+    </label>
+    <label for="help-category">
+        <span class="sr-only">Kategori</span>
+        <select id="help-category" name="category">
+            <option value="">Semua kategori</option>
+            {% for category in categories %}
+            <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    {% if selected_context %}
+    <input type="hidden" name="context" value="{{ selected_context }}">
+    {% endif %}
+    <button class="primary-button" type="submit"><span class="search-icon"></span>Cari</button>
+    <a class="secondary-button" href="{{ url_for('help') }}">Reset</a>
+</form>
+
+<section class="help-quick-links" aria-label="Link cepat bantuan">
+    <a href="{{ url_for('register') }}"><span class="student-icon"></span>Daftar Akun</a>
+    <a href="{{ url_for('login') }}"><span class="shield-icon"></span>Login</a>
+    <a href="{{ url_for('edit_profile') }}"><span class="user-icon"></span>Edit Profil</a>
+    <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Dokumen</a>
+    <a href="{{ url_for('opportunities') }}"><span class="briefcase-icon"></span>Peluang</a>
+    <a href="{{ url_for('applications') }}"><span class="checklist-icon"></span>Pelacakan</a>
+    <a href="{{ url_for('chat') }}"><span class="chat-icon"></span>Chat</a>
+    <a href="{{ url_for('recruiter_applicants') }}"><span class="calendar-icon"></span>Recruiter</a>
+</section>
+
+{% if context_articles %}
+<section class="context-help-panel">
+    <div class="panel-heading">
+        <h2>Relevan untuk {{ selected_context_label }}</h2>
+        <span class="soft-pill">{{ context_articles|length }} artikel</span>
+    </div>
+    <div class="context-help-grid">
+        {% for article in context_articles %}
+        <a class="context-help-item" href="#{{ article.id }}">
+            <span>{{ article.category }}</span>
+            <strong>{{ article.title }}</strong>
+            <small>{{ article.summary }}</small>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="help-popular-section">
+    <div class="section-heading">
+        <h1>Artikel Populer</h1>
+        <p>Panduan yang paling sering dibutuhkan saat memakai Pathora.</p>
+    </div>
+    <div class="help-popular-grid">
+        {% for article in popular_articles %}
+        <a class="help-popular-card" href="#{{ article.id }}">
+            <span class="soft-pill">{{ article.category }}</span>
+            <strong>{{ article.title }}</strong>
+            <small>{{ article.summary }}</small>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="help-content-grid">
+    <aside class="help-category-panel" aria-label="Filter kategori bantuan">
+        <h2>Kategori</h2>
+        <a class="{% if not selected_category %}active{% endif %}" href="{{ url_for('help', q=query, context=selected_context) if selected_context else url_for('help', q=query) }}">Semua kategori</a>
+        {% for category in categories %}
+        <a class="{% if selected_category == category %}active{% endif %}" href="{{ url_for('help', q=query, category=category, context=selected_context) if selected_context else url_for('help', q=query, category=category) }}">{{ category }}</a>
+        {% endfor %}
+    </aside>
+
+    <div class="help-article-list">
+        <div class="result-toolbar">
+            <span>{{ articles|length }} artikel ditemukan{% if query %} untuk "{{ query }}"{% endif %}</span>
+            {% if selected_category %}
+            <span class="soft-pill">{{ selected_category }}</span>
+            {% endif %}
+        </div>
+
+        {% for article in articles %}
+        <details class="help-article-card" id="{{ article.id }}" {% if loop.first %}open{% endif %}>
+            <summary>
+                <span class="status-label open">{{ article.category }}</span>
+                <strong>{{ article.title }}</strong>
+                <small>{{ article.summary }}</small>
+            </summary>
+            <div class="help-article-body">
+                {% for paragraph in article.body %}
+                <p>{{ paragraph }}</p>
+                {% endfor %}
+                <div class="skill-chips">
+                    {% for keyword in article.keywords[:5] %}
+                    <span>{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </details>
+        {% else %}
+        <div class="empty-inline help-empty-state">
+            <strong>Artikel tidak ditemukan</strong>
+            <span>Coba kata kunci lain atau pilih Semua kategori.</span>
+            <a class="primary-button compact" href="{{ url_for('help') }}">Lihat semua bantuan</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

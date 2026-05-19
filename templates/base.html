@@ -26,6 +26,24 @@
     {% endif %}
     {% set sidebar_name = sidebar_user["name"] if sidebar_user else session.get("user_name", "User") %}
     {% set sidebar_avatar = sidebar_user["avatar_path"] if sidebar_user else "" %}
+    {% set help_context_by_endpoint = {
+        "dashboard": "dashboard",
+        "documents": "documents",
+        "profile": "profile",
+        "edit_profile": "profile",
+        "opportunities": "opportunities",
+        "opportunity_detail": "opportunities",
+        "bookmarks": "opportunities",
+        "applications": "applications",
+        "chat": "chat"
+    } %}
+    {% set help_context = help_context_by_endpoint.get(request.endpoint, "") %}
+    {% if not help_context and request.endpoint and request.endpoint.startswith("recruiter_") %}
+        {% set help_context = "recruiter" %}
+    {% elif not help_context and request.endpoint and request.endpoint.startswith("admin") %}
+        {% set help_context = "admin" %}
+    {% endif %}
+    {% set help_url = url_for("help", context=help_context) if help_context else url_for("help") %}
     <div class="app-layout">
         <aside class="sidebar" id="app-sidebar">
             {{ brand_logo(url_for(home_endpoint), "sidebar-brand-logo") }}
@@ -53,7 +71,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="#bantuan"><span class="nav-icon help-icon"></span>Bantuan</a>
+                <a class="{% if request.endpoint == 'help' %}active{% endif %}" href="{{ help_url }}"><span class="nav-icon help-icon"></span>Bantuan</a>
             </div>
         </aside>
         <div class="sidebar-overlay" data-sidebar-overlay hidden></div>
@@ -90,7 +108,7 @@
                         <div class="popover-panel">
                             <strong>Pengaturan Cepat</strong>
                             <a href="{% if user_role == 'jobseeker' %}{{ url_for('profile') }}{% else %}{{ url_for('recruiter_dashboard') }}{% endif %}">Preferensi akun</a>
-                            <a href="#bantuan">Pusat bantuan</a>
+                            <a href="{{ help_url }}">Pusat bantuan</a>
                         </div>
                     </details>
                     <details class="topbar-popover profile-popover">
