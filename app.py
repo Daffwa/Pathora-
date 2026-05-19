@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import sqlite3
 
@@ -107,4 +108,5 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
+    app.run(debug=debug_mode, use_reloader=False)

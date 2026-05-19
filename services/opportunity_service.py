@@ -200,6 +200,80 @@ def is_valid_date(date_text):
     return True
 
 
+# ── Shared CRUD helpers (used by both admin & recruiter routes) ──
+
+EMPTY_OPPORTUNITY_FORM = {
+    "title": "", "type": "internship", "provider": "", "location": "",
+    "deadline": "", "description": "", "requirements": "",
+    "official_link": "", "required_skills": "",
+}
+
+
+def list_role_opportunities(user_id=None):
+    query = "SELECT * FROM opportunities"
+    params = []
+    if user_id is not None:
+        query += " WHERE created_by = ?"
+        params.append(user_id)
+    query += " ORDER BY deadline ASC"
+    return get_db().execute(query, params).fetchall()
+
+
+def create_opportunity(opportunity, user_id=None, company_name=None):
+    get_db().execute(
+        """
+        INSERT INTO opportunities
+        (title, provider, type, description, requirements, official_link,
+         required_skills, location, deadline, created_by, company_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            opportunity["title"], opportunity["provider"], opportunity["type"],
+            opportunity["description"], opportunity["requirements"],
+            opportunity["official_link"], opportunity["required_skills"],
+            opportunity["location"], opportunity["deadline"],
+            user_id, company_name or "",
+        ),
+    )
+    get_db().commit()
+
+
+def update_opportunity(opportunity_id, opportunity, company_name=None):
+    get_db().execute(
+        """
+        UPDATE opportunities
+        SET title = ?, provider = ?, type = ?, description = ?,
+            requirements = ?, official_link = ?, required_skills = ?,
+            location = ?, deadline = ?, company_name = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (
+            opportunity["title"], opportunity["provider"], opportunity["type"],
+            opportunity["description"], opportunity["requirements"],
+            opportunity["official_link"], opportunity["required_skills"],
+            opportunity["location"], opportunity["deadline"],
+            company_name or "", opportunity_id,
+        ),
+    )
+    get_db().commit()
+
+
+def delete_opportunity_with_cascade(opportunity_id, user_id=None):
+    params = [opportunity_id]
+    owner_check = ""
+    if user_id is not None:
+        owner_check = " AND created_by = ?"
+        params.append(user_id)
+
+    get_db().execute("DELETE FROM bookmarks WHERE opportunity_id = ?", (opportunity_id,))
+    get_db().execute("DELETE FROM applications WHERE opportunity_id = ?", (opportunity_id,))
+    get_db().execute(
+        f"DELETE FROM opportunities WHERE id = ?{owner_check}", params
+    )
+    get_db().commit()
+
+
 def get_opportunity_form_data():
     opportunity_type = request.form.get(
         "opportunity_type", request.form.get("type", "")

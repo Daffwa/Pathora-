@@ -2,10 +2,22 @@ import sqlite3
 
 from flask import flash, redirect, render_template, request, session, url_for
 
-from services.auth_service import get_current_role, get_current_user, recruiter_or_admin_required, recruiter_required
+from services.auth_service import (
+    get_current_role,
+    get_current_user,
+    recruiter_or_admin_required_decorator,
+    recruiter_required_decorator,
+)
 from services.constants import APPLICANT_SORT_RECENT, RECRUITER_APPLICATION_STATUSES
 from services.database_service import get_db
-from services.opportunity_service import get_opportunity_form_data, validate_opportunity_form
+from services.opportunity_service import (
+    EMPTY_OPPORTUNITY_FORM,
+    create_opportunity,
+    delete_opportunity_with_cascade,
+    get_opportunity_form_data,
+    update_opportunity,
+    validate_opportunity_form,
+)
 from services.recruiter_service import (
     get_applicant_list_url,
     get_recruiter_applicant_rows,
@@ -17,13 +29,45 @@ from services.recruiter_service import (
 )
 
 
+def _recruiter_opportunity_form(opportunity=None, form_title="", action_url=""):
+    recruiter = get_current_user()
+    company_name = recruiter["company_name"] or ""
+    if opportunity is None:
+        opportunity = dict(EMPTY_OPPORTUNITY_FORM)
+        opportunity["provider"] = company_name
+
+    if request.method == "POST":
+        opportunity = get_opportunity_form_data()
+        errors = validate_opportunity_form(opportunity)
+        if errors:
+            for error in errors:
+                flash(error)
+            return render_template(
+                "recruiter/opportunity_form.html",
+                opportunity=opportunity,
+                form_title=form_title,
+                action_url=action_url,
+            ), 400
+
+        try:
+            create_opportunity(opportunity, session["user_id"], company_name)
+            flash("Lowongan berhasil dibuat.")
+            return redirect(url_for("recruiter_opportunities"))
+        except sqlite3.Error:
+            flash("Lowongan belum bisa dibuat. Silakan coba lagi.")
+
+    return render_template(
+        "recruiter/opportunity_form.html",
+        opportunity=opportunity,
+        form_title=form_title,
+        action_url=action_url,
+    )
+
+
 def register(app):
     @app.route("/recruiter/dashboard")
+    @recruiter_required_decorator
     def recruiter_dashboard():
-        recruiter_redirect = recruiter_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         recruiter = get_current_user()
         total_opportunities = get_db().execute(
             "SELECT COUNT(*) FROM opportunities WHERE created_by = ?",
@@ -63,11 +107,8 @@ def register(app):
 
 
     @app.route("/recruiter/opportunities")
+    @recruiter_required_decorator
     def recruiter_opportunities():
-        recruiter_redirect = recruiter_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         rows = get_db().execute(
             """
             SELECT opportunities.*, COUNT(applications.id) AS applicant_count
@@ -84,81 +125,17 @@ def register(app):
 
 
     @app.route("/recruiter/opportunities/create", methods=["GET", "POST"])
+    @recruiter_required_decorator
     def recruiter_create_opportunity():
-        recruiter_redirect = recruiter_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
-        recruiter = get_current_user()
-        company_name = recruiter["company_name"] or ""
-        opportunity = {
-            "title": "",
-            "type": "internship",
-            "provider": company_name,
-            "location": "",
-            "deadline": "",
-            "description": "",
-            "requirements": "",
-            "official_link": "",
-            "required_skills": "",
-        }
-
-        if request.method == "POST":
-            opportunity = get_opportunity_form_data()
-            errors = validate_opportunity_form(opportunity)
-            if errors:
-                for error in errors:
-                    flash(error)
-                return render_template(
-                    "recruiter/opportunity_form.html",
-                    opportunity=opportunity,
-                    form_title="Tambah Lowongan",
-                    action_url=url_for("recruiter_create_opportunity"),
-                ), 400
-
-            try:
-                get_db().execute(
-                    """
-                    INSERT INTO opportunities
-                    (title, provider, type, description, requirements, official_link,
-                     required_skills, location, deadline, created_by, company_name)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        opportunity["title"],
-                        opportunity["provider"],
-                        opportunity["type"],
-                        opportunity["description"],
-                        opportunity["requirements"],
-                        opportunity["official_link"],
-                        opportunity["required_skills"],
-                        opportunity["location"],
-                        opportunity["deadline"],
-                        session["user_id"],
-                        company_name,
-                    ),
-                )
-                get_db().commit()
-                flash("Lowongan berhasil dibuat.")
-                return redirect(url_for("recruiter_opportunities"))
-            except sqlite3.Error:
-                flash("Lowongan belum bisa dibuat. Silakan coba lagi.")
-
-        return render_template(
-            "recruiter/opportunity_form.html",
-            opportunity=opportunity,
+        return _recruiter_opportunity_form(
             form_title="Tambah Lowongan",
             action_url=url_for("recruiter_create_opportunity"),
         )
 
 
     @app.route("/recruiter/opportunities/<int:opportunity_id>/edit", methods=["GET", "POST"])
+    @recruiter_required_decorator
     def recruiter_edit_opportunity(opportunity_id):
-        recruiter_redirect = recruiter_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
-        recruiter = get_current_user()
         row = get_recruiter_opportunity_or_404(opportunity_id)
         opportunity = dict(row)
 
@@ -172,37 +149,14 @@ def register(app):
                     "recruiter/opportunity_form.html",
                     opportunity=opportunity,
                     form_title="Edit Lowongan",
-                    action_url=url_for(
-                        "recruiter_edit_opportunity", opportunity_id=opportunity_id
-                    ),
+                    action_url=url_for("recruiter_edit_opportunity", opportunity_id=opportunity_id),
                 ), 400
 
             try:
-                get_db().execute(
-                    """
-                    UPDATE opportunities
-                    SET title = ?, provider = ?, type = ?, description = ?,
-                        requirements = ?, official_link = ?, required_skills = ?,
-                        location = ?, deadline = ?, company_name = ?,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ? AND created_by = ?
-                    """,
-                    (
-                        opportunity["title"],
-                        opportunity["provider"],
-                        opportunity["type"],
-                        opportunity["description"],
-                        opportunity["requirements"],
-                        opportunity["official_link"],
-                        opportunity["required_skills"],
-                        opportunity["location"],
-                        opportunity["deadline"],
-                        recruiter["company_name"] or "",
-                        opportunity_id,
-                        session["user_id"],
-                    ),
+                update_opportunity(
+                    opportunity_id, opportunity,
+                    company_name=get_current_user()["company_name"] or "",
                 )
-                get_db().commit()
                 flash("Lowongan berhasil diperbarui.")
                 return redirect(url_for("recruiter_opportunities"))
             except sqlite3.Error:
@@ -217,25 +171,12 @@ def register(app):
 
 
     @app.route("/recruiter/opportunities/<int:opportunity_id>/delete", methods=["POST"])
+    @recruiter_required_decorator
     def recruiter_delete_opportunity(opportunity_id):
-        recruiter_redirect = recruiter_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         get_recruiter_opportunity_or_404(opportunity_id)
 
         try:
-            get_db().execute(
-                "DELETE FROM bookmarks WHERE opportunity_id = ?", (opportunity_id,)
-            )
-            get_db().execute(
-                "DELETE FROM applications WHERE opportunity_id = ?", (opportunity_id,)
-            )
-            get_db().execute(
-                "DELETE FROM opportunities WHERE id = ? AND created_by = ?",
-                (opportunity_id, session["user_id"]),
-            )
-            get_db().commit()
+            delete_opportunity_with_cascade(opportunity_id, session["user_id"])
             flash("Lowongan berhasil dihapus.")
         except sqlite3.Error:
             flash("Lowongan belum bisa dihapus. Silakan coba lagi.")
@@ -244,11 +185,8 @@ def register(app):
 
 
     @app.route("/recruiter/applicants")
+    @recruiter_or_admin_required_decorator
     def recruiter_applicants():
-        recruiter_redirect = recruiter_or_admin_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         current_sort = normalize_applicant_sort(request.args.get("sort", APPLICANT_SORT_RECENT))
         return render_template(
             "recruiter/applicants.html",
@@ -260,11 +198,8 @@ def register(app):
 
 
     @app.route("/recruiter/opportunities/<int:opportunity_id>/applicants")
+    @recruiter_or_admin_required_decorator
     def recruiter_opportunity_applicants(opportunity_id):
-        recruiter_redirect = recruiter_or_admin_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         opportunity = get_recruiter_opportunity_or_404(opportunity_id)
         current_sort = normalize_applicant_sort(request.args.get("sort", APPLICANT_SORT_RECENT))
         return render_template(
@@ -277,11 +212,8 @@ def register(app):
 
 
     @app.route("/recruiter/applicants/export.csv")
+    @recruiter_or_admin_required_decorator
     def recruiter_applicants_export():
-        recruiter_redirect = recruiter_or_admin_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         opportunity_id = parse_positive_int(request.args.get("opportunity_id"))
         opportunity = get_recruiter_opportunity_or_404(opportunity_id) if opportunity_id else None
         current_sort = normalize_applicant_sort(request.args.get("sort", APPLICANT_SORT_RECENT))
@@ -290,11 +222,8 @@ def register(app):
 
 
     @app.route("/recruiter/applicants/bulk-action", methods=["POST"])
+    @recruiter_or_admin_required_decorator
     def recruiter_bulk_update_applicants():
-        recruiter_redirect = recruiter_or_admin_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         opportunity_id = parse_positive_int(request.form.get("opportunity_id"))
         if opportunity_id is not None:
             get_recruiter_opportunity_or_404(opportunity_id)
@@ -357,11 +286,8 @@ def register(app):
 
 
     @app.route("/recruiter/applicants/<int:application_id>")
+    @recruiter_or_admin_required_decorator
     def recruiter_applicant_detail(application_id):
-        recruiter_redirect = recruiter_or_admin_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         application = get_recruiter_application_or_404(application_id)
         documents = get_db().execute(
             """
@@ -382,11 +308,8 @@ def register(app):
 
 
     @app.route("/recruiter/applications/<int:application_id>/status", methods=["POST"])
+    @recruiter_or_admin_required_decorator
     def recruiter_update_application_status(application_id):
-        recruiter_redirect = recruiter_or_admin_required()
-        if recruiter_redirect is not None:
-            return recruiter_redirect
-
         get_recruiter_application_or_404(application_id)
         status = request.form.get("status", "").strip()
 

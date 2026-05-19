@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -106,233 +107,181 @@ def close_db(error=None):
             pass
 
 
-def init_database():
+# ── Database initialisation (split into focused steps) ──────────
+
+def _create_storage_dirs():
+    for key in ("UPLOAD_FOLDER", "AVATAR_UPLOAD_FOLDER", "CHAT_UPLOAD_FOLDER"):
+        Path(current_app.config[key]).mkdir(parents=True, exist_ok=True)
     Path(current_app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
-    Path(current_app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
-    Path(current_app.config["AVATAR_UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
-    Path(current_app.config["CHAT_UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
+
+
+def _run_schema(db):
+    with open(current_app.config["SCHEMA"], "r", encoding="utf-8") as schema:
+        db.executescript(schema.read())
+
+
+def _migrate_documents(db):
+    columns = {row[1] for row in db.execute("PRAGMA table_info(documents)").fetchall()}
+    if "file_path" not in columns:
+        db.execute("ALTER TABLE documents ADD COLUMN file_path TEXT DEFAULT ''")
+
+
+def _migrate_chat_messages(db):
+    columns = {row[1] for row in db.execute("PRAGMA table_info(chat_messages)").fetchall()}
+    for col, definition in {
+        "attachment_path": "TEXT DEFAULT ''",
+        "attachment_type": "TEXT DEFAULT ''",
+        "attachment_name": "TEXT DEFAULT ''",
+    }.items():
+        if col not in columns:
+            db.execute(f"ALTER TABLE chat_messages ADD COLUMN {col} {definition}")
+
+
+def _migrate_users(db):
+    columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
+    if "role" not in columns:
+        db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'jobseeker'")
+    if "company_name" not in columns:
+        db.execute("ALTER TABLE users ADD COLUMN company_name TEXT DEFAULT ''")
+    if "company_position" not in columns:
+        db.execute("ALTER TABLE users ADD COLUMN company_position TEXT DEFAULT ''")
+    for col, definition in USER_PROFILE_COLUMN_DEFINITIONS.items():
+        if col not in columns:
+            db.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
+
+    db.execute(
+        """
+        UPDATE users
+        SET role = 'jobseeker'
+        WHERE role = 'student' OR role IS NULL OR role = ''
+           OR role NOT IN ('jobseeker', 'recruiter', 'admin')
+        """
+    )
+
+    info = {row[1]: row for row in db.execute("PRAGMA table_info(users)").fetchall()}
+    if info["role"][4] not in {"'jobseeker'", '"jobseeker"', "jobseeker"}:
+        _rebuild_users_table(db)
+
+
+def _rebuild_users_table(db):
+    db.execute("PRAGMA foreign_keys = OFF")
+    db.execute("DROP TABLE IF EXISTS users_new")
+    db.execute(
+        """
+        CREATE TABLE users_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL, email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'jobseeker'
+                CHECK (role IN ('jobseeker', 'recruiter', 'admin')),
+            skills TEXT DEFAULT '', company_name TEXT DEFAULT '',
+            company_position TEXT DEFAULT '', nickname TEXT DEFAULT '',
+            phone TEXT DEFAULT '', birth_date TEXT DEFAULT '',
+            gender TEXT DEFAULT '', domicile TEXT DEFAULT '', bio TEXT DEFAULT '',
+            university TEXT DEFAULT '', faculty TEXT DEFAULT '', major TEXT DEFAULT '',
+            degree TEXT DEFAULT '', semester TEXT DEFAULT '', gpa TEXT DEFAULT '',
+            entry_year TEXT DEFAULT '', desired_positions TEXT DEFAULT '',
+            preferred_program TEXT DEFAULT '', preferred_locations TEXT DEFAULT '',
+            work_arrangement TEXT DEFAULT '', interests TEXT DEFAULT '',
+            linkedin TEXT DEFAULT '', github TEXT DEFAULT '',
+            portfolio_url TEXT DEFAULT '', avatar_path TEXT DEFAULT '',
+            updated_at TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    db.execute(
+        """
+        INSERT INTO users_new
+        (id, name, email, password_hash, role, skills,
+         company_name, company_position, nickname, phone, birth_date,
+         gender, domicile, bio, university, faculty, major, degree,
+         semester, gpa, entry_year, desired_positions, preferred_program,
+         preferred_locations, work_arrangement, interests, linkedin,
+         github, portfolio_url, avatar_path, updated_at, created_at)
+        SELECT id, name, email, password_hash,
+               CASE WHEN role IN ('jobseeker','recruiter','admin') THEN role ELSE 'jobseeker' END,
+               COALESCE(skills,''), COALESCE(company_name,''), COALESCE(company_position,''),
+               COALESCE(nickname,''), COALESCE(phone,''), COALESCE(birth_date,''),
+               COALESCE(gender,''), COALESCE(domicile,''), COALESCE(bio,''),
+               COALESCE(university,''), COALESCE(faculty,''), COALESCE(major,''),
+               COALESCE(degree,''), COALESCE(semester,''), COALESCE(gpa,''),
+               COALESCE(entry_year,''), COALESCE(desired_positions,''),
+               COALESCE(preferred_program,''), COALESCE(preferred_locations,''),
+               COALESCE(work_arrangement,''), COALESCE(interests,''),
+               COALESCE(linkedin,''), COALESCE(github,''),
+               COALESCE(portfolio_url,''), COALESCE(avatar_path,''),
+               COALESCE(updated_at,''), created_at
+        FROM users
+        """
+    )
+    db.execute("DROP TABLE users")
+    db.execute("ALTER TABLE users_new RENAME TO users")
+    db.execute("PRAGMA foreign_keys = ON")
+
+
+def _migrate_opportunities(db):
+    columns = {row[1] for row in db.execute("PRAGMA table_info(opportunities)").fetchall()}
+    if "official_link" not in columns:
+        db.execute("ALTER TABLE opportunities ADD COLUMN official_link TEXT DEFAULT ''")
+    if "created_by" not in columns:
+        db.execute("ALTER TABLE opportunities ADD COLUMN created_by INTEGER")
+    if "company_name" not in columns:
+        db.execute("ALTER TABLE opportunities ADD COLUMN company_name TEXT DEFAULT ''")
+
+
+def _seed_admin(db):
+    email = os.getenv("ADMIN_EMAIL", "admin@example.com")
+    password = os.getenv("ADMIN_PASSWORD", "admin12345")
+    admin = db.execute(
+        "SELECT id FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    if admin is None:
+        db.execute(
+            "INSERT INTO users (name, email, password_hash, role, skills) VALUES (?, ?, ?, ?, ?)",
+            ("Admin", email, generate_password_hash(password), "admin", ""),
+        )
+    else:
+        db.execute("UPDATE users SET role = ? WHERE email = ?", ("admin", email))
+
+
+def _seed_sample_opportunities(db):
+    count = db.execute("SELECT COUNT(*) FROM opportunities").fetchone()[0]
+    if count > 0:
+        return
+    db.executemany(
+        """
+        INSERT INTO opportunities
+        (title, provider, type, description, requirements, required_skills, location, deadline)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            ("Data Analyst Internship", "Nusantara Tech", "internship",
+             "Program magang untuk mahasiswa yang ingin belajar analisis data bisnis.",
+             "Mahasiswa aktif, memahami dasar statistik, dan mampu bekerja dalam tim.",
+             "python,sql,excel", "Jakarta / Hybrid", "2026-06-15"),
+            ("Beasiswa Data Science Muda", "Yayasan Sains Indonesia", "scholarship",
+             "Beasiswa untuk mahasiswa yang tertarik pada proyek data science terapan.",
+             "IPK minimal 3.00, esai motivasi, dan transkrip nilai.",
+             "python,statistics,communication", "Indonesia", "2026-07-01"),
+            ("Business Intelligence Intern", "Bright Retail Group", "internship",
+             "Kesempatan magang membuat dashboard dan laporan performa penjualan.",
+             "Terbiasa dengan spreadsheet dan visualisasi data sederhana.",
+             "excel,sql,tableau", "Bandung", "2026-05-30"),
+        ],
+    )
+
+
+def init_database():
+    _create_storage_dirs()
 
     with closing(open_database_connection()) as db:
-        with open(current_app.config["SCHEMA"], "r", encoding="utf-8") as schema:
-            db.executescript(schema.read())
-
-        document_columns = [
-            row[1] for row in db.execute("PRAGMA table_info(documents)").fetchall()
-        ]
-        if "file_path" not in document_columns:
-            db.execute("ALTER TABLE documents ADD COLUMN file_path TEXT DEFAULT ''")
-
-        chat_message_columns = [
-            row[1] for row in db.execute("PRAGMA table_info(chat_messages)").fetchall()
-        ]
-        chat_attachment_columns = {
-            "attachment_path": "TEXT DEFAULT ''",
-            "attachment_type": "TEXT DEFAULT ''",
-            "attachment_name": "TEXT DEFAULT ''",
-        }
-        for column_name, column_definition in chat_attachment_columns.items():
-            if column_name not in chat_message_columns:
-                db.execute(
-                    f"ALTER TABLE chat_messages ADD COLUMN {column_name} {column_definition}"
-                )
-
-        user_columns = [
-            row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()
-        ]
-        if "role" not in user_columns:
-            db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'jobseeker'")
-        if "company_name" not in user_columns:
-            db.execute("ALTER TABLE users ADD COLUMN company_name TEXT DEFAULT ''")
-        if "company_position" not in user_columns:
-            db.execute("ALTER TABLE users ADD COLUMN company_position TEXT DEFAULT ''")
-        for column_name, column_definition in USER_PROFILE_COLUMN_DEFINITIONS.items():
-            if column_name not in user_columns:
-                db.execute(
-                    f"ALTER TABLE users ADD COLUMN {column_name} {column_definition}"
-                )
-
-        db.execute(
-            """
-            UPDATE users
-            SET role = 'jobseeker'
-            WHERE role = 'student'
-               OR role IS NULL
-               OR role = ''
-               OR role NOT IN ('jobseeker', 'recruiter', 'admin')
-            """
-        )
-        user_column_info = db.execute("PRAGMA table_info(users)").fetchall()
-        user_column_map = {row[1]: row for row in user_column_info}
-        role_default = user_column_map["role"][4]
-        if role_default not in {"'jobseeker'", '"jobseeker"', "jobseeker"}:
-            db.execute("PRAGMA foreign_keys = OFF")
-            db.execute("DROP TABLE IF EXISTS users_new")
-            db.execute(
-                """
-                CREATE TABLE users_new (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    email TEXT NOT NULL UNIQUE,
-                    password_hash TEXT NOT NULL,
-                    role TEXT NOT NULL DEFAULT 'jobseeker'
-                        CHECK (role IN ('jobseeker', 'recruiter', 'admin')),
-                    skills TEXT DEFAULT '',
-                    company_name TEXT DEFAULT '',
-                    company_position TEXT DEFAULT '',
-                    nickname TEXT DEFAULT '',
-                    phone TEXT DEFAULT '',
-                    birth_date TEXT DEFAULT '',
-                    gender TEXT DEFAULT '',
-                    domicile TEXT DEFAULT '',
-                    bio TEXT DEFAULT '',
-                    university TEXT DEFAULT '',
-                    faculty TEXT DEFAULT '',
-                    major TEXT DEFAULT '',
-                    degree TEXT DEFAULT '',
-                    semester TEXT DEFAULT '',
-                    gpa TEXT DEFAULT '',
-                    entry_year TEXT DEFAULT '',
-                    desired_positions TEXT DEFAULT '',
-                    preferred_program TEXT DEFAULT '',
-                    preferred_locations TEXT DEFAULT '',
-                    work_arrangement TEXT DEFAULT '',
-                    interests TEXT DEFAULT '',
-                    linkedin TEXT DEFAULT '',
-                    github TEXT DEFAULT '',
-                    portfolio_url TEXT DEFAULT '',
-                    avatar_path TEXT DEFAULT '',
-                    updated_at TEXT DEFAULT '',
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )
-                """
-            )
-            db.execute(
-                """
-                INSERT INTO users_new
-                (id, name, email, password_hash, role, skills,
-                 company_name, company_position, nickname, phone, birth_date,
-                 gender, domicile, bio, university, faculty, major, degree,
-                 semester, gpa, entry_year, desired_positions, preferred_program,
-                 preferred_locations, work_arrangement, interests, linkedin,
-                 github, portfolio_url, avatar_path, updated_at, created_at)
-                SELECT
-                    id,
-                    name,
-                    email,
-                    password_hash,
-                    CASE
-                        WHEN role IN ('jobseeker', 'recruiter', 'admin') THEN role
-                        ELSE 'jobseeker'
-                    END,
-                    COALESCE(skills, ''),
-                    COALESCE(company_name, ''),
-                    COALESCE(company_position, ''),
-                    COALESCE(nickname, ''),
-                    COALESCE(phone, ''),
-                    COALESCE(birth_date, ''),
-                    COALESCE(gender, ''),
-                    COALESCE(domicile, ''),
-                    COALESCE(bio, ''),
-                    COALESCE(university, ''),
-                    COALESCE(faculty, ''),
-                    COALESCE(major, ''),
-                    COALESCE(degree, ''),
-                    COALESCE(semester, ''),
-                    COALESCE(gpa, ''),
-                    COALESCE(entry_year, ''),
-                    COALESCE(desired_positions, ''),
-                    COALESCE(preferred_program, ''),
-                    COALESCE(preferred_locations, ''),
-                    COALESCE(work_arrangement, ''),
-                    COALESCE(interests, ''),
-                    COALESCE(linkedin, ''),
-                    COALESCE(github, ''),
-                    COALESCE(portfolio_url, ''),
-                    COALESCE(avatar_path, ''),
-                    COALESCE(updated_at, ''),
-                    created_at
-                FROM users
-                """
-            )
-            db.execute("DROP TABLE users")
-            db.execute("ALTER TABLE users_new RENAME TO users")
-            db.execute("PRAGMA foreign_keys = ON")
-
-        opportunity_columns = [
-            row[1] for row in db.execute("PRAGMA table_info(opportunities)").fetchall()
-        ]
-        if "official_link" not in opportunity_columns:
-            db.execute("ALTER TABLE opportunities ADD COLUMN official_link TEXT DEFAULT ''")
-        if "created_by" not in opportunity_columns:
-            db.execute("ALTER TABLE opportunities ADD COLUMN created_by INTEGER")
-        if "company_name" not in opportunity_columns:
-            db.execute("ALTER TABLE opportunities ADD COLUMN company_name TEXT DEFAULT ''")
-
-        admin = db.execute(
-            "SELECT id FROM users WHERE email = ?", ("admin@example.com",)
-        ).fetchone()
-        if admin is None:
-            db.execute(
-                """
-                INSERT INTO users (name, email, password_hash, role, skills)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    "Admin",
-                    "admin@example.com",
-                    generate_password_hash("admin12345"),
-                    "admin",
-                    "",
-                ),
-            )
-        else:
-            db.execute(
-                "UPDATE users SET role = ? WHERE email = ?",
-                ("admin", "admin@example.com"),
-            )
-
-        count = db.execute("SELECT COUNT(*) FROM opportunities").fetchone()[0]
-        if count == 0:
-            db.executemany(
-                """
-                INSERT INTO opportunities
-                (title, provider, type, description, requirements, required_skills, location, deadline)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    (
-                        "Data Analyst Internship",
-                        "Nusantara Tech",
-                        "internship",
-                        "Program magang untuk mahasiswa yang ingin belajar analisis data bisnis.",
-                        "Mahasiswa aktif, memahami dasar statistik, dan mampu bekerja dalam tim.",
-                        "python,sql,excel",
-                        "Jakarta / Hybrid",
-                        "2026-06-15",
-                    ),
-                    (
-                        "Beasiswa Data Science Muda",
-                        "Yayasan Sains Indonesia",
-                        "scholarship",
-                        "Beasiswa untuk mahasiswa yang tertarik pada proyek data science terapan.",
-                        "IPK minimal 3.00, esai motivasi, dan transkrip nilai.",
-                        "python,statistics,communication",
-                        "Indonesia",
-                        "2026-07-01",
-                    ),
-                    (
-                        "Business Intelligence Intern",
-                        "Bright Retail Group",
-                        "internship",
-                        "Kesempatan magang membuat dashboard dan laporan performa penjualan.",
-                        "Terbiasa dengan spreadsheet dan visualisasi data sederhana.",
-                        "excel,sql,tableau",
-                        "Bandung",
-                        "2026-05-30",
-                    ),
-                ],
-            )
-
+        _run_schema(db)
+        _migrate_documents(db)
+        _migrate_chat_messages(db)
+        _migrate_users(db)
+        _migrate_opportunities(db)
+        _seed_admin(db)
+        _seed_sample_opportunities(db)
         db.commit()
 
 

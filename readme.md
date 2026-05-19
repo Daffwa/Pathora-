@@ -1,12 +1,14 @@
-# Smart Internship & Scholarship Tracker
+# Pathora — Smart Internship & Scholarship Tracker
 
-Aplikasi web lokal berbasis Flask untuk membantu mahasiswa mencari peluang internship/scholarship, menyimpan peluang, melacak status lamaran, mengelola dokumen, dan melihat priority score sederhana.
+Aplikasi web Flask untuk membantu mahasiswa menemukan peluang magang/beasiswa, melacak lamaran, mengelola dokumen, dan mendapatkan rekomendasi berbasis skor prioritas. Juga menyediakan dashboard rekruter untuk mengelola pelamar.
 
 ## Teknologi
 
-- Python
-- Flask
+- Python 3.12
+- Flask 3.0
 - SQLite
+- Google Gemini API (AI Assistant)
+- Gunicorn (deploy production)
 - HTML, CSS, JavaScript
 - Jinja Template
 
@@ -23,94 +25,155 @@ Buka:
 http://127.0.0.1:5000
 ```
 
-Database SQLite akan dibuat/di-update otomatis melalui `init_database()` saat `python app.py` dijalankan.
+Database SQLite dan folder `uploads/documents/` akan dibuat otomatis saat pertama kali dijalankan.
 
-## Akun Admin
+## Akun Bawaan
 
-```text
-Email: admin@example.com
-Password: admin12345
-```
+| Role      | Email              | Password    |
+|-----------|--------------------|-------------|
+| Admin     | admin@example.com  | admin12345 |
+| Student   | (register sendiri) |             |
+| Recruiter | (register sendiri) |             |
 
 Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 
 ## Role dan Akses
 
-Student dapat:
+### Student
 - Register, login, logout
-- Melihat, mencari, filter, dan sort peluang
-- Menyimpan peluang
+- Melihat, mencari, filter, sort peluang
+- Menyimpan peluang (bookmark)
 - Melacak status lamaran
-- Upload dan reset dokumen
-- Melihat dashboard dan priority score personal
+- Upload/reset dokumen (CV, transkrip, portofolio)
+- Dashboard personal dengan priority score
+- Chat dengan recruiter
+- AI Assistant untuk rekomendasi dan pertanyaan
 
-Admin dapat:
-- Mengakses dashboard admin
-- Tambah, edit, dan hapus opportunities
+### Recruiter
+- Dashboard rekruter dengan ringkasan pelamar
+- Mengelola lowongan (CRUD)
+- Melihat daftar pelamar per lowongan
+- Mengubah status lamaran (Ditinjau/Diterima/Ditolak)
+- Chat dengan pelamar
+- Melihat profil dan dokumen pelamar
+
+### Admin
+- Semua akses recruiter
+- Mengelola seluruh lowongan dari semua recruiter
 - Melihat ringkasan jumlah internship/scholarship
+- Menghapus lowongan dengan cascade
 
 ## Fitur Utama
 
 - Authentication dengan Flask session
-- Opportunity discovery
-- Saved opportunities
+- Role-based access control (decorator guards)
+- Opportunity discovery dengan filter dan sort
+- Saved opportunities (bookmark)
 - Application tracker
 - Document tracker dengan upload lokal
-- Smart priority score
-- Dashboard ringkasan
-- Admin CRUD opportunities
-- Error page 404 dan 403
+- Smart priority score (deadline + skill match + dokumen)
+- Dashboard ringkasan personal & recruiter
+- Chat real-time antar pengguna
+- AI Assistant (Gemini API)
+- Admin & Recruiter CRUD opportunities
+- Error page 404, 403, 413
+- Mobile responsive
 
-## Struktur Singkat
-
-```text
-app.py
-config.py
-database/schema.sql
-models/
-services/
-templates/
-static/css/style.css
-uploads/documents/
-```
-
-## Dokumentasi OOP
-
-Model sederhana berada di folder `models/`:
-- `User`
-- `Opportunity`
-- `Document`
-
-Model dipakai untuk merepresentasikan data aplikasi agar struktur data lebih mudah dibaca dan dijelaskan.
-
-## Dokumentasi FP
-
-Fungsi scoring berada di:
+## Struktur Proyek
 
 ```text
-services/scoring_service.py
+app.py                          # Entry point + factory create_app()
+config.py                       # Konfigurasi (upload folder, db path, dll)
+requirements.txt                # Dependencies Python
+
+database/
+    schema.sql                  # DDL SQLite
+
+models/                         # Data classes
+    user.py
+    opportunity.py
+    document.py
+
+services/                       # Business logic layer
+    auth_service.py             #   Decorator guards, login/logout
+    database_service.py         #   Init DB, migrasi, seed
+    scoring_service.py          #   Fungsi scoring FP murni
+    opportunity_service.py      #   Shared CRUD helpers
+    application_service.py      #   Lamaran logic
+    document_service.py         #   Dokumen logic
+    chat_service.py             #   Chat logic
+    ai_service.py               #   Google Gemini integration
+    profile_service.py          #   Profil logic
+    recruiter_service.py        #   Recruiter-specific logic
+    storage_service.py          #   File upload/download
+    template_context_service.py #   Global template variables
+    constants.py                #   Constants
+
+routes/                         # Blueprint-style route modules
+    auth_routes.py
+    public_routes.py
+    dashboard_routes.py
+    opportunity_routes.py
+    application_routes.py
+    document_routes.py
+    profile_routes.py
+    chat_routes.py
+    recruiter_routes.py
+    admin_routes.py
+    ai_routes.py
+
+templates/                      # Jinja templates
+    base.html                   #   Layout utama
+    partials/                   #   Partial components
+    auth/
+    student/
+    recruiter/
+    admin/
+
+static/
+    css/
+        style.css               #   Entrypoint (imports partials)
+        partials/               #   34 modular CSS partials
+    js/
+        app.js                  #   Global handlers (data-confirm, data-pct, dll)
+        chat.js                 #   Chat logic
+    img/                        #   Gambar dan ilustrasi
+
+uploads/documents/              # File upload (git-ignored)
+tests/                          # Unit tests
+tools/                          # Utility scripts
+deploy/                         # Deployment config
 ```
 
-Fungsi utama:
-- `calculate_days_left`
-- `calculate_deadline_score`
-- `calculate_skill_match_score`
-- `calculate_document_score`
-- `calculate_priority_score`
-- `get_priority_label`
+## Refactoring Highlights
 
-Fungsi ini dibuat terpisah agar mudah dites dan tidak bergantung langsung pada route Flask.
+Proyek telah melalui refactoring untuk menghilangkan spaghetti code:
+
+- **Auth guards**: 25+ inline 3-line guard checks diganti dengan 5 decorator reusable di `services/auth_service.py`
+- **CRUD helpers**: Fungsi shared `create_opportunity`, `update_opportunity`, `delete_opportunity_with_cascade` di `services/opportunity_service.py` — mengurangi duplikasi di admin dan recruiter routes
+- **Database init**: `init_database()` 230 baris dipecah jadi 8 sub-fungsi
+- **Frontend JS**: 514 baris inline `<script>` dari `chat.html` diekstrak ke `static/js/chat.js`
+- **Inline handlers**: Semua `onsubmit`, `onclick`, `onchange` diganti data attributes (`data-confirm`, `data-sync-select`, `data-set-value`)
+- **Inline styles**: Semua `style="width: X%"` dan `style="--percent: X%"` diganti `data-pct` + CSS variable `--pct`
 
 ## Route Penting Untuk Diuji
 
 Student:
-- `/register`
-- `/login`
+- `/register`, `/login`, `/logout`
 - `/dashboard`
-- `/opportunities`
+- `/opportunities`, `/opportunities/<id>`
 - `/bookmarks`
 - `/applications`
 - `/documents`
+- `/profile`
+- `/chat`
+- `/ai-assistant`
+
+Recruiter:
+- `/recruiter/dashboard`
+- `/recruiter/opportunities`
+- `/recruiter/applicants`
+- `/recruiter/applicants/<id>`
 
 Admin:
 - `/admin`
@@ -123,34 +186,22 @@ Error handling:
 
 ## Upload Dokumen
 
-File dokumen disimpan lokal di:
+File disimpan di:
 
 ```text
 uploads/documents/
 ```
 
-File upload user tidak ikut commit karena sudah diatur di `.gitignore`.
+Format: `pdf, doc, docx, png, jpg, jpeg` — Maks 5 MB per file.
 
-Format yang didukung:
-
-```text
-pdf, doc, docx, png, jpg, jpeg
-```
-
-Ukuran maksimal file: 5 MB.
+File upload tidak ikut commit (diatur `.gitignore`).
 
 ## Troubleshooting
 
-Jika menjalankan dari VS Code Debug dan muncul error socket/reloader di Windows, jalankan langsung dari terminal:
+Jika error socket/reloader di Windows, jalankan langsung dari terminal:
 
 ```powershell
 python app.py
 ```
 
-Project sudah memakai:
-
-```python
-app.run(debug=True, use_reloader=False)
-```
-
-agar lebih stabil untuk eksekusi lokal di Windows.
+Proyek sudah memakai `use_reloader=False` agar stabil untuk eksekusi lokal di Windows.

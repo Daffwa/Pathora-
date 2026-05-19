@@ -95,7 +95,7 @@
     border-radius: 50%;
     background:
         radial-gradient(circle, #FFFFFF 0 58%, transparent 59%),
-        conic-gradient(var(--primary) var(--percent), #E5E7EB 0);
+        conic-gradient(var(--primary) var(--pct), #E5E7EB 0);
 }
 
 .score-ring {

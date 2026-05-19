@@ -3,7 +3,7 @@ import sqlite3
 from flask import flash, redirect, render_template, request, session, url_for
 
 from models.opportunity import Opportunity
-from services.auth_service import get_current_role, jobseeker_required
+from services.auth_service import get_current_role, jobseeker_required_decorator
 from services.database_service import DatabaseAccessError, build_database_error_message, get_db
 from services.opportunity_service import (
     apply_priority_score,
@@ -94,11 +94,8 @@ def register(app):
 
 
     @app.route("/opportunities/<int:opportunity_id>/bookmark", methods=["POST"])
+    @jobseeker_required_decorator
     def bookmark_opportunity(opportunity_id):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         get_opportunity_or_404(opportunity_id)
 
         try:
@@ -120,11 +117,8 @@ def register(app):
 
 
     @app.route("/bookmarks/<int:opportunity_id>/remove", methods=["POST"])
+    @jobseeker_required_decorator
     def remove_bookmark(opportunity_id):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         try:
             get_db().execute(
                 """
@@ -142,12 +136,9 @@ def register(app):
 
 
     @app.route("/bookmarks")
+    @jobseeker_required_decorator
     def bookmarks():
         try:
-            login_redirect = jobseeker_required()
-            if login_redirect is not None:
-                return login_redirect
-
             saved_opportunities = get_saved_profile_opportunities(session["user_id"])
         except DatabaseAccessError:
             raise

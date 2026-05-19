@@ -4,7 +4,7 @@ from pathlib import Path
 from flask import abort, flash, redirect, render_template, request, send_from_directory, session, url_for
 
 from models.document import Document
-from services.auth_service import jobseeker_required
+from services.auth_service import jobseeker_required_decorator
 from services.constants import DOCUMENT_TYPES
 from services.database_service import get_db
 from services.document_service import get_document_for_user
@@ -19,11 +19,8 @@ from services.storage_service import (
 
 def register(app):
     @app.route("/documents")
+    @jobseeker_required_decorator
     def documents():
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         rows = get_db().execute(
             """
             SELECT * FROM documents
@@ -56,11 +53,8 @@ def register(app):
 
 
     @app.route("/documents/<path:doc_type>/update", methods=["POST"])
+    @jobseeker_required_decorator
     def update_document(doc_type):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         if doc_type not in DOCUMENT_TYPES:
             abort(404)
 
@@ -118,11 +112,8 @@ def register(app):
 
 
     @app.route("/documents/<path:doc_type>/reset", methods=["POST"])
+    @jobseeker_required_decorator
     def reset_document(doc_type):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         if doc_type not in DOCUMENT_TYPES:
             abort(404)
 
@@ -154,11 +145,8 @@ def register(app):
 
 
     @app.route("/documents/<path:doc_type>/download")
+    @jobseeker_required_decorator
     def download_document(doc_type):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         if doc_type not in DOCUMENT_TYPES:
             abort(404)
 

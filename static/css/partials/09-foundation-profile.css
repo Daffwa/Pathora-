@@ -445,7 +445,7 @@
     border-radius: 50%;
     background:
         radial-gradient(circle, var(--surface-strong) 0 58%, transparent 59%),
-        conic-gradient(var(--primary-bright) var(--percent), rgba(255, 255, 255, 0.08) 0);
+        conic-gradient(var(--primary-bright) var(--pct), rgba(255, 255, 255, 0.08) 0);
 }
 
 .profile-ring.small {

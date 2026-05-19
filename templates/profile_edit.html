@@ -31,7 +31,7 @@
         {% endif %}
 
         <div class="edit-progress-card">
-            <div class="profile-ring small" style="--percent: {{ profile_completion.percent }}%">
+            <div class="profile-ring small" data-pct="{{ profile_completion.percent }}">
                 <span>{{ profile_completion.percent }}%</span>
             </div>
             <div>

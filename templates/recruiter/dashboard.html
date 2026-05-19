@@ -80,7 +80,7 @@
                         <strong>{{ applicant.applicant_name }}</strong>
                         <small>Melamar {{ applicant.opportunity_title }}</small>
                     </span>
-                    <span class="match-bar"><i style="width: {{ 92 - loop.index0 * 7 }}%"></i></span>
+                    <span class="match-bar"><i data-pct="{{ 92 - loop.index0 * 7 }}"></i></span>
                     <b>{{ 92 - loop.index0 * 7 }}%</b>
                     <em>{{ applicant.status }}</em>
                 </a>

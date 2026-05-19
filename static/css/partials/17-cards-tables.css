@@ -195,6 +195,7 @@
 .dual-bar i {
     display: block;
     height: 100%;
+    width: var(--pct, 0%);
     background: var(--primary);
     border-radius: inherit;
 }

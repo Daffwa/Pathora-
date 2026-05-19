@@ -19,6 +19,10 @@
     --radius: 12px;
     --radius-lg: 16px;
     --sidebar-width: 260px;
+    --sidebar: 260px;
+    --container: 1200px;
+    --muted: #6B7280;
+    --line: #E5E7EB;
 }
 
 * {
@@ -33,7 +37,7 @@ body {
     margin: 0;
     color: var(--text);
     background: var(--bg);
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
     line-height: 1.5;
 }
 

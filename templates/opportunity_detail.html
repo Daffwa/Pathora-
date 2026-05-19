@@ -23,7 +23,7 @@
             {% if can_use_jobseeker_actions %}
             <span>Match Score</span>
             <strong>{{ opportunity.priority_score }}%</strong>
-            <div class="progress-bar"><span style="width: {{ opportunity.priority_score }}%"></span></div>
+            <div class="progress-bar"><span data-pct="{{ opportunity.priority_score }}"></span></div>
             <p>{{ opportunity.priority_label }}</p>
             <div class="inline-actions">
                 <form class="inline-form" method="post" action="{{ url_for('track_opportunity', opportunity_id=opportunity.id) }}">

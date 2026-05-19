@@ -121,7 +121,7 @@
                                 <span>{{ opportunity.application_status or "Kecocokan Profil" }}</span>
                                 <strong>{{ opportunity.priority_score or 0 }}%</strong>
                             </div>
-                            <div class="mini-progress"><span style="width: {{ opportunity.priority_score or 0 }}%"></span></div>
+                            <div class="mini-progress"><span data-pct="{{ opportunity.priority_score or 0 }}"></span></div>
                         </div>
 
                         <div class="saved-card-actions">
@@ -147,7 +147,7 @@
             </section>
 
             <section class="profile-glass-card profile-completion-panel">
-                <div class="profile-ring" style="--percent: {{ profile_completion.percent }}%">
+                <div class="profile-ring" data-pct="{{ profile_completion.percent }}">
                     <span>{{ profile_completion.percent }}%</span>
                 </div>
                 <div>

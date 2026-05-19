@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import abort, flash, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from services.auth_service import jobseeker_required
+from services.auth_service import jobseeker_required_decorator
 from services.constants import PROFILE_FORM_FIELDS
 from services.database_service import get_db
 from services.document_service import get_document_progress_for_user
@@ -40,11 +40,8 @@ def register(app):
 
 
     @app.route("/profile")
+    @jobseeker_required_decorator
     def profile():
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         user = get_current_user_profile()
         document_progress = get_document_progress_for_user(session["user_id"])
         profile_completion = get_profile_completion(user, document_progress)
@@ -62,11 +59,8 @@ def register(app):
 
 
     @app.route("/profile/edit", methods=["GET", "POST"])
+    @jobseeker_required_decorator
     def edit_profile():
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         user = get_current_user_profile()
         if user is None:
             abort(404)

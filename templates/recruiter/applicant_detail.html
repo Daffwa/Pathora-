@@ -107,14 +107,14 @@
         {% endif %}
         <label>
             <span class="sr-only">Status lamaran</span>
-            <select name="status_select" onchange="document.getElementById('application-status-input').value = this.value">
+            <select name="status_select" data-sync-select="application-status-input">
                 {% for status in statuses %}
                 <option value="{{ status }}" {% if display_status == status %}selected{% endif %}>{{ status }}</option>
                 {% endfor %}
             </select>
         </label>
-        <button type="submit" class="danger-button" onclick="document.getElementById('application-status-input').value = 'Ditolak'">Tolak Lamaran</button>
-        <button type="submit" class="success-button" onclick="document.getElementById('application-status-input').value = 'Diterima'">Terima Lamaran</button>
+        <button type="submit" class="danger-button" data-set-value="application-status-input|Ditolak">Tolak Lamaran</button>
+        <button type="submit" class="success-button" data-set-value="application-status-input|Diterima">Terima Lamaran</button>
     </form>
 </article>
 {% endblock %}

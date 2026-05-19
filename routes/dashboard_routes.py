@@ -1,6 +1,6 @@
 from flask import render_template, session
 
-from services.auth_service import jobseeker_required
+from services.auth_service import jobseeker_required_decorator
 from services.opportunity_service import (
     get_dashboard_summary,
     get_recent_applications,
@@ -12,11 +12,8 @@ from services.opportunity_service import (
 
 def register(app):
     @app.route("/dashboard")
+    @jobseeker_required_decorator
     def dashboard():
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         user_id = session["user_id"]
         summary = get_dashboard_summary(user_id)
         progress_percent = 0

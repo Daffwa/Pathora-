@@ -1,9 +1,9 @@
 import sqlite3
 
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, session, url_for
 
 from services.application_service import get_application_for_user_or_404
-from services.auth_service import get_current_role, jobseeker_required, require_login
+from services.auth_service import jobseeker_required_decorator
 from services.constants import APPLICATION_STATUS_APPLIED
 from services.database_service import get_db
 from services.opportunity_service import get_opportunity_or_404
@@ -11,11 +11,8 @@ from services.opportunity_service import get_opportunity_or_404
 
 def register(app):
     @app.route("/opportunities/<int:opportunity_id>/track", methods=["POST"])
+    @jobseeker_required_decorator
     def track_opportunity(opportunity_id):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         get_opportunity_or_404(opportunity_id)
 
         try:
@@ -38,11 +35,8 @@ def register(app):
 
 
     @app.route("/applications")
+    @jobseeker_required_decorator
     def applications():
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         rows = get_db().execute(
             """
             SELECT
@@ -71,27 +65,9 @@ def register(app):
         )
 
 
-    @app.route("/applications/<int:application_id>/update", methods=["POST"])
-    def update_application(application_id):
-        login_redirect = require_login()
-        if login_redirect is not None:
-            return login_redirect
-
-        current_role = get_current_role()
-        if current_role == "jobseeker":
-            flash("Kamu tidak memiliki izin untuk mengubah status lamaran.")
-            return redirect(url_for("applications"))
-
-        flash("Kamu tidak memiliki izin untuk mengubah status lamaran.")
-        abort(403)
-
-
     @app.route("/applications/<int:application_id>/remove", methods=["POST"])
+    @jobseeker_required_decorator
     def remove_application(application_id):
-        login_redirect = jobseeker_required()
-        if login_redirect is not None:
-            return login_redirect
-
         get_application_for_user_or_404(application_id)
 
         try:

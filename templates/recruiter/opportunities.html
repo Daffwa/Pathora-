@@ -66,7 +66,7 @@
                             <div class="action-menu-panel">
                                 <a href="{{ url_for('recruiter_opportunity_applicants', opportunity_id=opportunity.id) }}">Lihat Pelamar</a>
                                 <a href="{{ url_for('recruiter_edit_opportunity', opportunity_id=opportunity.id) }}">Edit</a>
-                                <form method="post" action="{{ url_for('recruiter_delete_opportunity', opportunity_id=opportunity.id) }}" onsubmit="return confirm('Hapus peluang ini?')">
+                                <form method="post" action="{{ url_for('recruiter_delete_opportunity', opportunity_id=opportunity.id) }}" data-confirm="Hapus peluang ini?">
                                     <button type="submit" class="danger-link-button">Hapus</button>
                                 </form>
                             </div>
@@ -89,8 +89,8 @@
 </section>
 
 <section class="recruiter-visibility-card">
-    <h2>Boost your recruitment visibility</h2>
-    <p>Featured posting membantu lowongan tampil lebih tinggi di hasil pencarian mahasiswa.</p>
+    <h2>Tingkatkan Visibilitas Rekrutmen</h2>
+    <p>Lowongan unggulan membantu lowongan tampil lebih tinggi di hasil pencarian mahasiswa.</p>
     <button type="button" class="secondary-button">Pelajari Premium</button>
 </section>
 {% endblock %}

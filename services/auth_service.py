@@ -1,4 +1,5 @@
 import sqlite3
+from functools import wraps
 
 from flask import abort, flash, redirect, session, url_for
 
@@ -6,13 +7,7 @@ from services.constants import VALID_ROLES
 from services.database_service import DatabaseAccessError, build_database_error_message, get_db
 
 
-def require_login(message="Silakan login terlebih dahulu."):
-    if "user_id" not in session:
-        flash(message)
-        return redirect(url_for("login"))
-
-    return None
-
+# ── Pure helpers (no side effects) ──────────────────────────────
 
 def normalize_role(role):
     normalized_role = (role or "").strip().lower()
@@ -39,18 +34,16 @@ def get_current_user():
 
 
 def get_current_role():
-    try:
-        user = get_current_user()
-    except DatabaseAccessError:
-        raise
+    return session.get("user_role")
 
-    if user is None:
-        return None
 
-    current_role = normalize_role(user["role"])
-    session["user_name"] = user["name"]
-    session["user_role"] = current_role
-    return current_role
+# ── Functional guards (for routes that need JSON / custom response) ──
+
+def require_login(message="Silakan login terlebih dahulu."):
+    if "user_id" not in session:
+        flash(message)
+        return redirect(url_for("login"))
+    return None
 
 
 def role_required(*roles, message="Silakan login terlebih dahulu."):
@@ -64,7 +57,6 @@ def role_required(*roles, message="Silakan login terlebih dahulu."):
     if current_role not in allowed_roles:
         flash("Akses ditolak. Role akun kamu tidak memiliki izin untuk halaman ini.")
         abort(403)
-
     return None
 
 
@@ -86,3 +78,43 @@ def recruiter_or_admin_required():
 
 def admin_required():
     return role_required("admin", message="Silakan login sebagai admin.")
+
+
+# ── Decorator guards (clean @decorator syntax) ─────────────────
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        result = require_login()
+        if result is not None:
+            return result
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def _role_decorator(*roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            result = role_required(*roles)
+            if result is not None:
+                return result
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def jobseeker_required_decorator(f):
+    return _role_decorator("jobseeker")(f)
+
+
+def recruiter_required_decorator(f):
+    return _role_decorator("recruiter")(f)
+
+
+def recruiter_or_admin_required_decorator(f):
+    return _role_decorator("recruiter", "admin")(f)
+
+
+def admin_required_decorator(f):
+    return _role_decorator("admin")(f)

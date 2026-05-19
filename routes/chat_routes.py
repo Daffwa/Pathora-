@@ -2,7 +2,7 @@ import sqlite3
 
 from flask import abort, flash, jsonify, render_template, request, send_from_directory, session
 
-from services.auth_service import get_current_role, require_login
+from services.auth_service import get_current_role, login_required
 from services.chat_service import (
     chat_message_payload,
     get_chat_contact_payload,
@@ -56,11 +56,8 @@ def register(app):
 
 
     @app.route("/chat")
+    @login_required
     def chat():
-        login_redirect = require_login()
-        if login_redirect is not None:
-            return login_redirect
-
         current_role = get_current_role()
         selected_contact_id = parse_positive_int(
             request.args.get("user_id")

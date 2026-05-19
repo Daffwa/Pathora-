@@ -11,13 +11,13 @@
 
 <section class="document-dashboard-grid">
     <article class="profile-strength-card">
-        <div class="profile-ring-large" style="--percent: {{ percent }}%">
+        <div class="profile-ring-large" data-pct="{{ percent }}">
             <strong>{{ percent }}%</strong>
             <span>Lengkap</span>
         </div>
         <h2>Kekuatan Profil</h2>
         <p>Lengkapi semua dokumen agar profil Anda lebih mudah diprioritaskan recruiter.</p>
-        <div class="progress-bar"><span style="width: {{ percent }}%"></span></div>
+        <div class="progress-bar"><span data-pct="{{ percent }}"></span></div>
         <small>{{ complete_count }} dari {{ total_count }} dokumen terunggah</small>
     </article>
 
@@ -79,7 +79,7 @@
                     </form>
 
                     {% if document.is_uploaded %}
-                    <form method="post" action="{{ url_for('reset_document', doc_type=document.doc_type) }}" onsubmit="return confirm('Reset dokumen ini?')">
+                    <form method="post" action="{{ url_for('reset_document', doc_type=document.doc_type) }}" data-confirm="Reset dokumen ini?">
                         <button type="submit" class="ghost-danger-button">Reset</button>
                     </form>
                     {% endif %}

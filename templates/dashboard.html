@@ -30,7 +30,7 @@
                 <span class="soft-pill">Tinggi</span>
             </div>
             <div class="score-row">
-                <div class="score-ring" style="--percent: {{ top_priority.priority_score if top_priority else 75 }}%">
+                <div class="score-ring" data-pct="{{ top_priority.priority_score if top_priority else 75 }}">
                     <span>{{ top_priority.priority_score if top_priority else 75 }}%</span>
                 </div>
                 <p>Profil Anda cocok untuk {{ top_priority.title if top_priority else "peluang prioritas" }}. <a href="{{ url_for('documents') }}">Tingkatkan skor</a></p>
@@ -44,12 +44,12 @@
             <div class="progress-stack">
                 <div>
                     <div class="progress-label"><span>Kelengkapan Dokumen</span><strong>{{ progress_percent }}%</strong></div>
-                    <div class="progress-bar"><span style="width: {{ progress_percent }}%"></span></div>
+                    <div class="progress-bar"><span data-pct="{{ progress_percent }}"></span></div>
                     <small class="success-text">Resume dan dokumen utama siap.</small>
                 </div>
                 <div>
                     <div class="progress-label"><span>Keaktifan Lamaran</span><strong>{{ 40 if summary.total_applications < 3 else 80 }}%</strong></div>
-                    <div class="progress-bar warning"><span style="width: {{ 40 if summary.total_applications < 3 else 80 }}%"></span></div>
+                    <div class="progress-bar warning"><span data-pct="{{ 40 if summary.total_applications < 3 else 80 }}"></span></div>
                     <small class="warning-text">Tambah tracker agar progres mudah dipantau.</small>
                 </div>
             </div>
@@ -104,7 +104,7 @@
         <article class="panel-card">
             <h2>Kelengkapan Profil</h2>
             <div class="progress-label"><span>{{ summary.completed_documents }} dari {{ summary.total_documents }} dokumen lengkap</span><strong>{{ progress_percent }}%</strong></div>
-            <div class="progress-bar"><span style="width: {{ progress_percent }}%"></span></div>
+            <div class="progress-bar"><span data-pct="{{ progress_percent }}"></span></div>
             <p class="muted-text">Tambahkan dokumen dan skill utama agar peluang rekomendasi makin relevan.</p>
         </article>
     </section>

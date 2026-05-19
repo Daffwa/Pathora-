@@ -1,23 +1,55 @@
 import sqlite3
 
-from flask import flash, redirect, render_template, url_for
+from flask import flash, redirect, render_template, request, url_for
 
-from services.auth_service import admin_required
+from services.auth_service import admin_required_decorator
 from services.database_service import get_db
 from services.opportunity_service import (
+    EMPTY_OPPORTUNITY_FORM,
+    create_opportunity,
+    delete_opportunity_with_cascade,
     get_opportunity_form_data,
     get_opportunity_or_404,
+    list_role_opportunities,
+    update_opportunity,
     validate_opportunity_form,
 )
 
 
+def _handle_form(submit_label, form_title, action_url, opportunity=None):
+    if request.method == "POST":
+        opportunity = get_opportunity_form_data()
+        errors = validate_opportunity_form(opportunity)
+        if errors:
+            for error in errors:
+                flash(error)
+            return render_template(
+                "admin/opportunity_form.html",
+                opportunity=opportunity,
+                form_title=form_title,
+                action_url=action_url,
+            ), 400
+
+        try:
+            create_opportunity(opportunity)
+            flash(f"Peluang berhasil {submit_label}.")
+        except sqlite3.Error:
+            flash(f"Peluang belum bisa di-{submit_label}. Silakan coba lagi.")
+        else:
+            return redirect(url_for("admin_opportunities"))
+
+    return render_template(
+        "admin/opportunity_form.html",
+        opportunity=opportunity or EMPTY_OPPORTUNITY_FORM,
+        form_title=form_title,
+        action_url=action_url,
+    )
+
+
 def register(app):
     @app.route("/admin")
+    @admin_required_decorator
     def admin_dashboard():
-        admin_redirect = admin_required()
-        if admin_redirect is not None:
-            return admin_redirect
-
         total_opportunities = get_db().execute(
             "SELECT COUNT(*) FROM opportunities"
         ).fetchone()[0]
@@ -37,91 +69,24 @@ def register(app):
 
 
     @app.route("/admin/opportunities")
+    @admin_required_decorator
     def admin_opportunities():
-        admin_redirect = admin_required()
-        if admin_redirect is not None:
-            return admin_redirect
-
-        rows = get_db().execute(
-            "SELECT * FROM opportunities ORDER BY deadline ASC"
-        ).fetchall()
+        rows = list_role_opportunities()
         return render_template("admin/opportunities.html", opportunities=rows)
 
 
     @app.route("/admin/opportunities/create", methods=["GET", "POST"])
+    @admin_required_decorator
     def admin_create_opportunity():
-        admin_redirect = admin_required()
-        if admin_redirect is not None:
-            return admin_redirect
-
-        opportunity = {
-            "title": "",
-            "type": "internship",
-            "provider": "",
-            "location": "",
-            "deadline": "",
-            "description": "",
-            "requirements": "",
-            "official_link": "",
-            "required_skills": "",
-        }
-
-        if request.method == "POST":
-            opportunity = get_opportunity_form_data()
-            errors = validate_opportunity_form(opportunity)
-            if errors:
-                for error in errors:
-                    flash(error)
-                return render_template(
-                    "admin/opportunity_form.html",
-                    opportunity=opportunity,
-                    form_title="Tambah Peluang",
-                    action_url=url_for("admin_create_opportunity"),
-                ), 400
-
-            try:
-                get_db().execute(
-                    """
-                    INSERT INTO opportunities
-                    (title, provider, type, description, requirements, official_link,
-                     required_skills, location, deadline)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        opportunity["title"],
-                        opportunity["provider"],
-                        opportunity["type"],
-                        opportunity["description"],
-                        opportunity["requirements"],
-                        opportunity["official_link"],
-                        opportunity["required_skills"],
-                        opportunity["location"],
-                        opportunity["deadline"],
-                    ),
-                )
-                get_db().commit()
-                flash("Peluang berhasil ditambahkan.")
-                return redirect(url_for("admin_opportunities"))
-            except sqlite3.Error:
-                flash("Peluang belum bisa ditambahkan. Silakan coba lagi.")
-
-        return render_template(
-            "admin/opportunity_form.html",
-            opportunity=opportunity,
-            form_title="Tambah Peluang",
-            action_url=url_for("admin_create_opportunity"),
+        return _handle_form(
+            "ditambahkan", "Tambah Peluang", url_for("admin_create_opportunity")
         )
 
 
     @app.route("/admin/opportunities/<int:opportunity_id>/edit", methods=["GET", "POST"])
+    @admin_required_decorator
     def admin_edit_opportunity(opportunity_id):
-        admin_redirect = admin_required()
-        if admin_redirect is not None:
-            return admin_redirect
-
         row = get_opportunity_or_404(opportunity_id)
-        opportunity = dict(row)
-
         if request.method == "POST":
             opportunity = get_opportunity_form_data()
             errors = validate_opportunity_form(opportunity)
@@ -136,32 +101,13 @@ def register(app):
                 ), 400
 
             try:
-                get_db().execute(
-                    """
-                    UPDATE opportunities
-                    SET title = ?, provider = ?, type = ?, description = ?,
-                        requirements = ?, official_link = ?, required_skills = ?,
-                        location = ?, deadline = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                    """,
-                    (
-                        opportunity["title"],
-                        opportunity["provider"],
-                        opportunity["type"],
-                        opportunity["description"],
-                        opportunity["requirements"],
-                        opportunity["official_link"],
-                        opportunity["required_skills"],
-                        opportunity["location"],
-                        opportunity["deadline"],
-                        opportunity_id,
-                    ),
-                )
-                get_db().commit()
+                update_opportunity(opportunity_id, opportunity)
                 flash("Peluang berhasil diperbarui.")
                 return redirect(url_for("admin_opportunities"))
             except sqlite3.Error:
                 flash("Peluang belum bisa diperbarui. Silakan coba lagi.")
+        else:
+            opportunity = dict(row)
 
         return render_template(
             "admin/opportunity_form.html",
@@ -172,24 +118,12 @@ def register(app):
 
 
     @app.route("/admin/opportunities/<int:opportunity_id>/delete", methods=["POST"])
+    @admin_required_decorator
     def admin_delete_opportunity(opportunity_id):
-        admin_redirect = admin_required()
-        if admin_redirect is not None:
-            return admin_redirect
-
         get_opportunity_or_404(opportunity_id)
 
         try:
-            get_db().execute(
-                "DELETE FROM bookmarks WHERE opportunity_id = ?", (opportunity_id,)
-            )
-            get_db().execute(
-                "DELETE FROM applications WHERE opportunity_id = ?", (opportunity_id,)
-            )
-            get_db().execute(
-                "DELETE FROM opportunities WHERE id = ?", (opportunity_id,)
-            )
-            get_db().commit()
+            delete_opportunity_with_cascade(opportunity_id)
             flash("Peluang berhasil dihapus.")
         except sqlite3.Error:
             flash("Peluang belum bisa dihapus. Silakan coba lagi.")

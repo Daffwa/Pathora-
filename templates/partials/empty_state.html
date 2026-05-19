@@ -1,0 +1,10 @@
+{% macro empty_state(icon="", title="", message="", action_url="", action_text="") %}
+<div class="empty-inline">
+    {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+    {% if title %}<strong>{{ title }}</strong>{% endif %}
+    {% if message %}<span>{{ message }}</span>{% endif %}
+    {% if action_url and action_text %}
+    <a href="{{ action_url }}">{{ action_text }}</a>
+    {% endif %}
+</div>
+{% endmacro %}
