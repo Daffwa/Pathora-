@@ -289,10 +289,6 @@ def _score_article(article, query=None, context=None, role=None):
     return score
 
 
-def get_help_articles():
-    return [_copy_article(article) for article in HELP_ARTICLES]
-
-
 def get_help_categories():
     return list(HELP_CATEGORIES)
 

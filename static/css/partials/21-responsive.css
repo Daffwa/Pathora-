@@ -551,6 +551,13 @@ button {
         justify-content: end;
     }
 
+    .auth-visual::before {
+        top: 96px;
+        right: -80px;
+        width: min(430px, 76%);
+        opacity: 0.34;
+    }
+
     .auth-brand {
         top: 24px;
         left: 20px;
@@ -996,6 +1003,13 @@ button {
     .auth-visual {
         min-height: 190px;
         padding: 70px 18px 22px;
+    }
+
+    .auth-visual::before {
+        top: 82px;
+        right: -120px;
+        width: min(360px, 86%);
+        opacity: 0.26;
     }
 
     .auth-quote,

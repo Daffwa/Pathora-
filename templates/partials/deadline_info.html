@@ -1,10 +1,10 @@
 <div class="deadline-info">
     {% if opportunity.deadline_status == "Closed" %}
-    <span class="status-label closed">Closed</span>
+    <span class="status-label closed">Ditutup</span>
     {% elif opportunity.deadline_status == "Urgent" %}
-    <span class="status-label urgent">Urgent</span>
+    <span class="status-label urgent">Mendesak</span>
     {% else %}
-    <span class="status-label open">Open</span>
+    <span class="status-label open">Terbuka</span>
     {% endif %}
 
     {% if opportunity.days_left is not none %}

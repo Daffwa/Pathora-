@@ -1,0 +1,57 @@
+<svg width="760" height="520" viewBox="0 0 760 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="card" x1="140" y1="84" x2="602" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.88"/>
+      <stop offset="1" stop-color="#DCEBFF" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="122" y1="144" x2="624" y2="384" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A9D8FF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.58"/>
+    </linearGradient>
+    <filter id="softShadow" x="62" y="58" width="626" height="414" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#003D75" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <path d="M610 66c55 41 78 111 56 174-28 80-105 79-147 148-28 45-32 93-99 111-84 23-191-35-262-102C85 328 49 244 86 165 128 75 252 47 350 38c86-8 194-22 260 28Z" fill="#FFFFFF" opacity="0.08"/>
+  <path d="M148 402c-45-24-78-59-84-104-5-41 16-83 51-101 45-23 97 1 124 30 31 34 48 91 25 133-22 40-75 68-116 42Z" fill="#FFFFFF" opacity="0.1"/>
+
+  <g filter="url(#softShadow)">
+    <rect x="118" y="92" width="514" height="324" rx="34" fill="url(#card)" opacity="0.72"/>
+    <rect x="143" y="118" width="464" height="272" rx="24" fill="#0A66B7" opacity="0.2"/>
+    <rect x="162" y="140" width="426" height="228" rx="18" fill="#FFFFFF" opacity="0.28"/>
+  </g>
+
+  <g opacity="0.84">
+    <rect x="201" y="179" width="188" height="128" rx="18" fill="#FFFFFF" opacity="0.7"/>
+    <rect x="220" y="199" width="78" height="10" rx="5" fill="#005BAA" opacity="0.62"/>
+    <rect x="220" y="224" width="128" height="8" rx="4" fill="#005BAA" opacity="0.28"/>
+    <rect x="220" y="246" width="102" height="8" rx="4" fill="#005BAA" opacity="0.24"/>
+    <circle cx="347" cy="206" r="20" fill="#005BAA" opacity="0.36"/>
+    <path d="M333 247h32c16 0 29 13 29 29v7h-90v-7c0-16 13-29 29-29Z" fill="#005BAA" opacity="0.28"/>
+  </g>
+
+  <g opacity="0.9">
+    <rect x="426" y="164" width="135" height="164" rx="20" fill="#FFFFFF" opacity="0.62"/>
+    <path d="M453 210h82M453 238h62M453 266h72" stroke="#005BAA" stroke-width="10" stroke-linecap="round" opacity="0.3"/>
+    <circle cx="493" cy="188" r="15" fill="#A9D8FF"/>
+    <path d="M484 188l6 6 14-16" stroke="#005BAA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.78"/>
+  </g>
+
+  <g opacity="0.92">
+    <path d="M263 350h229" stroke="url(#accent)" stroke-width="14" stroke-linecap="round"/>
+    <rect x="297" y="326" width="159" height="40" rx="12" fill="#FFFFFF" opacity="0.58"/>
+    <path d="M328 346h97" stroke="#005BAA" stroke-width="8" stroke-linecap="round" opacity="0.34"/>
+  </g>
+
+  <g opacity="0.86">
+    <circle cx="190" cy="334" r="34" fill="#FFFFFF" opacity="0.52"/>
+    <path d="M174 341c7-16 25-22 40-11" stroke="#005BAA" stroke-width="8" stroke-linecap="round" opacity="0.34"/>
+    <circle cx="548" cy="358" r="42" fill="#FFFFFF" opacity="0.45"/>
+    <path d="M530 359h36M548 341v36" stroke="#005BAA" stroke-width="8" stroke-linecap="round" opacity="0.32"/>
+  </g>
+
+  <path d="M110 132h54M137 105v54M609 108h34M626 91v34M632 427h46" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.18"/>
+  <circle cx="106" cy="420" r="9" fill="#FFFFFF" opacity="0.18"/>
+  <circle cx="674" cy="300" r="12" fill="#FFFFFF" opacity="0.15"/>
+</svg>

@@ -26,26 +26,22 @@
     overflow: hidden;
     color: #FFFFFF;
     background:
-        linear-gradient(90deg, rgba(0, 91, 170, 0.96), rgba(0, 91, 170, 0.78)),
+        linear-gradient(100deg, rgba(0, 91, 170, 0.98) 0%, rgba(0, 91, 170, 0.9) 48%, rgba(0, 91, 170, 0.72) 100%),
         radial-gradient(circle at 14% 82%, rgba(255, 255, 255, 0.22), transparent 13rem),
-        #005BAA;
-}
-
-.register-auth .auth-visual {
-    background:
-        linear-gradient(90deg, rgba(0, 91, 170, 0.96), rgba(0, 91, 170, 0.78)),
-        radial-gradient(circle at 14% 82%, rgba(255, 255, 255, 0.22), transparent 13rem),
+        radial-gradient(circle at 92% 18%, rgba(135, 198, 255, 0.2), transparent 15rem),
         #005BAA;
 }
 
 .auth-visual::before {
     content: "";
     position: absolute;
-    inset: auto 6% 13% auto;
-    width: min(520px, 72%);
-    aspect-ratio: 1.85;
-    opacity: 0.14;
-    background: url("../../img/pathora-recruitment-boost.png") center / contain no-repeat;
+    top: clamp(220px, 38vh, 340px);
+    right: clamp(-110px, -7vw, -34px);
+    width: min(720px, 82%);
+    aspect-ratio: 1.46;
+    opacity: 0.42;
+    background: url("../../img/auth-career-visual.svg") center / contain no-repeat;
+    z-index: 0;
 }
 
 .auth-visual::after {
@@ -53,8 +49,9 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 15% 85%, rgba(255, 255, 255, 0.2), transparent 14rem),
-        linear-gradient(90deg, rgba(0, 91, 170, 0.2), rgba(0, 91, 170, 0.5));
+        linear-gradient(90deg, rgba(0, 91, 170, 0.58) 0%, rgba(0, 91, 170, 0.22) 50%, rgba(0, 91, 170, 0.34) 100%),
+        radial-gradient(circle at 15% 85%, rgba(255, 255, 255, 0.2), transparent 14rem);
+    z-index: 0;
 }
 
 .auth-visual > * {

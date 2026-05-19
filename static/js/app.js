@@ -44,31 +44,4 @@
         });
     });
 
-    var roleRadios = document.querySelectorAll('input[name="role"]');
-    var companyGroup = document.getElementById("company-group");
-    var recruiterPositionSelect = document.getElementById("recruiter-position-select");
-    var otherPositionGroup = document.getElementById("other-position-group");
-
-    function toggleRecruiterFields() {
-        if (!companyGroup) return;
-        var isRecruiter = Array.from(roleRadios).some(function (r) { return r.checked && r.value === "recruiter"; });
-        companyGroup.hidden = !isRecruiter;
-        if (recruiterPositionSelect) recruiterPositionSelect.hidden = !isRecruiter;
-        if (otherPositionGroup) {
-            var sel = document.getElementById("company_position");
-            otherPositionGroup.hidden = !isRecruiter || !sel || sel.value !== "Other";
-        }
-    }
-
-    roleRadios.forEach(function (r) { r.addEventListener("change", toggleRecruiterFields); });
-    toggleRecruiterFields();
-
-    var positionSelect = document.getElementById("company_position");
-    if (positionSelect) {
-        positionSelect.addEventListener("change", function () {
-            if (otherPositionGroup) {
-                otherPositionGroup.hidden = this.value !== "Other";
-            }
-        });
-    }
 })();

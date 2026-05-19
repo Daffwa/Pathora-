@@ -72,9 +72,9 @@
             <h2>Priority Score</h2>
             {% if can_use_jobseeker_actions %}
             <div class="score-list">
-                <p><span>Final score</span><strong>{{ opportunity.priority_score }}</strong></p>
-                <p><span>Days left</span><strong>{{ opportunity.days_left if opportunity.days_left is not none else "Tidak tersedia" }}</strong></p>
-                <p><span>Skill match</span><strong>{{ opportunity.skill_match_score }}</strong></p>
+                <p><span>Skor Akhir</span><strong>{{ opportunity.priority_score }}</strong></p>
+                <p><span>Sisa Hari</span><strong>{{ opportunity.days_left if opportunity.days_left is not none else "Tidak tersedia" }}</strong></p>
+                <p><span>Kecocokan Skill</span><strong>{{ opportunity.skill_match_score }}</strong></p>
                 <p><span>Dokumen</span><strong>{{ opportunity.document_score }}</strong></p>
             </div>
             {% else %}
