@@ -355,7 +355,11 @@
             formData.append("message", message);
             if (image) formData.append("image", image.file);
 
-            var response = await fetch(sendMessageUrl, { method: "POST", body: formData });
+            var response = await fetch(sendMessageUrl, {
+                method: "POST",
+                headers: window.Pathora ? window.Pathora.withCsrfHeaders() : undefined,
+                body: formData,
+            });
             var data = await response.json().catch(function () { return ({}); });
 
             if (!response.ok) throw new Error(data.error || "Pesan belum bisa dikirim.");

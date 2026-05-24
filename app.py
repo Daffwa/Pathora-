@@ -25,6 +25,7 @@ from routes import (
     recruiter_routes,
 )
 from services.ai_service import log_google_client_init_error
+from services.csrf_service import register_csrf
 from services.database_service import (
     DatabaseAccessError,
     build_database_error_message,
@@ -32,6 +33,7 @@ from services.database_service import (
     initialize_application_storage,
     register_database_teardown,
 )
+from services.security_headers_service import register_security_headers
 from services.template_context_service import inject_template_options
 
 
@@ -98,6 +100,8 @@ def create_app():
     app.config.from_object(Config)
     configure_database_paths(app, APP_ROOT)
     register_database_teardown(app)
+    register_csrf(app)
+    register_security_headers(app)
     register_context_processors(app)
     register_routes(app)
     register_error_handlers(app)

@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Pathora{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=responsive-20260517c">
+    <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
+    <script src="{{ asset_url('js/app.js') }}" defer></script>
 </head>
 {% set is_auth_page = request.endpoint in ["login", "register"] %}
 {% set has_app_shell = session.get("user_id") and not is_auth_page %}
@@ -127,7 +129,10 @@
                             {% if user_role == "jobseeker" %}
                             <a href="{{ url_for('profile') }}">Lihat Profil</a>
                             {% endif %}
-                            <a href="{{ url_for('logout') }}">Logout</a>
+                            <form class="profile-logout-form" method="post" action="{{ url_for('logout') }}">
+                                {{ csrf_field() }}
+                                <button type="submit">Logout</button>
+                            </form>
                         </div>
                     </details>
                 </div>
@@ -163,11 +168,11 @@
     {% if has_app_shell %}
         </div>
     </div>
-    <script src="{{ url_for('static', filename='js/topbar_popovers.js') }}" defer></script>
+    <script src="{{ asset_url('js/topbar_popovers.js') }}" defer></script>
     {% set ai_endpoints = ["dashboard", "opportunities", "bookmarks", "applications", "documents", "recruiter_dashboard"] %}
     {% if user_role in ["jobseeker", "recruiter"] and request.endpoint in ai_endpoints %}
     {% include "partials/ai_assistant.html" %}
-    <script src="{{ url_for('static', filename='js/ai_assistant.js') }}" defer></script>
+    <script src="{{ asset_url('js/ai_assistant.js') }}" defer></script>
     {% endif %}
     {% else %}
         {% if not is_auth_page %}

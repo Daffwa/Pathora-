@@ -8,7 +8,8 @@
         <h1>{{ form_title }}</h1>
 
         <form method="post" action="{{ action_url }}">
-        <label for="title">Judul Peluang</label>
+            {{ csrf_field() }}
+            <label for="title">Judul Peluang</label>
             <input id="title" name="title" type="text" value="{{ opportunity.title }}" required>
 
             <label for="opportunity_type">Tipe Peluang</label>

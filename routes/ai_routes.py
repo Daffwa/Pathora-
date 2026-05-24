@@ -1,5 +1,4 @@
 from datetime import datetime
-from time import sleep
 
 from flask import current_app, jsonify, request, session
 
@@ -14,7 +13,52 @@ from services.ai_service import (
     google_client,
     redact_sensitive_log_text,
 )
-from services.auth_service import get_current_user
+from services.auth_service import get_current_role, get_current_user
+from services.rate_limit_service import check_rate_limit
+
+
+def _require_authenticated_user():
+    if "user_id" not in session:
+        return jsonify({"error": "Silakan login terlebih dahulu."}), 401
+
+    if get_current_user() is None:
+        session.clear()
+        return jsonify({"error": "Sesi akun tidak ditemukan. Silakan login ulang."}), 401
+
+    return None
+
+
+def _require_admin_user():
+    auth_error = _require_authenticated_user()
+    if auth_error is not None:
+        return auth_error
+
+    if get_current_role() != "admin":
+        return jsonify({"error": "Akses ditolak."}), 403
+
+    return None
+
+
+def _require_ai_rate_limit():
+    allowed, retry_after = check_rate_limit(
+        "ai-assistant",
+        current_app.config["AI_RATE_LIMIT"],
+        current_app.config["AI_RATE_LIMIT_WINDOW_SECONDS"],
+    )
+    if allowed:
+        return None
+
+    response = jsonify(
+        {
+            "error": (
+                "Terlalu banyak permintaan AI Assistant. "
+                f"Coba lagi dalam {retry_after} detik."
+            )
+        }
+    )
+    response.status_code = 429
+    response.headers["Retry-After"] = str(retry_after)
+    return response
 
 
 def _validate_and_generate(user_message):
@@ -34,19 +78,10 @@ def _validate_and_generate(user_message):
         return None, "Konfigurasi AI Assistant belum tersedia.", 500
 
     try:
-        response = None
-        for attempt in range(2):
-            try:
-                response = google_client.models.generate_content(
-                    model=GOOGLE_MODEL,
-                    contents=build_google_assistant_prompt(user_message),
-                )
-                break
-            except Exception:
-                if attempt == 0:
-                    sleep(1)
-                    continue
-                raise
+        response = google_client.models.generate_content(
+            model=GOOGLE_MODEL,
+            contents=build_google_assistant_prompt(user_message),
+        )
 
         try:
             answer = (getattr(response, "text", "") or "").strip()
@@ -74,6 +109,10 @@ def _validate_and_generate(user_message):
 def register(app):
     @app.get("/api/assistant/health")
     def api_assistant_health():
+        auth_error = _require_admin_user()
+        if auth_error is not None:
+            return auth_error
+
         google_genai_imported = genai is not None
         api_key_configured = bool(GOOGLE_API_KEY)
         endpoint_ready = bool(
@@ -91,12 +130,13 @@ def register(app):
 
     @app.post("/api/assistant")
     def api_assistant():
-        if "user_id" not in session:
-            return jsonify({"error": "Silakan login terlebih dahulu."}), 401
+        auth_error = _require_authenticated_user()
+        if auth_error is not None:
+            return auth_error
 
-        if get_current_user() is None:
-            session.clear()
-            return jsonify({"error": "Sesi akun tidak ditemukan. Silakan login ulang."}), 401
+        rate_limit_error = _require_ai_rate_limit()
+        if rate_limit_error is not None:
+            return rate_limit_error
 
         payload = request.get_json(silent=True) or {}
         user_message = (payload.get("message") or "").strip()
@@ -109,12 +149,13 @@ def register(app):
 
     @app.route("/ai-assistant/chat", methods=["POST"])
     def ai_assistant_chat():
-        if "user_id" not in session:
-            return jsonify({"error": "Silakan login terlebih dahulu."}), 401
+        auth_error = _require_authenticated_user()
+        if auth_error is not None:
+            return auth_error
 
-        if get_current_user() is None:
-            session.clear()
-            return jsonify({"error": "Sesi akun tidak ditemukan. Silakan login ulang."}), 401
+        rate_limit_error = _require_ai_rate_limit()
+        if rate_limit_error is not None:
+            return rate_limit_error
 
         payload = request.get_json(silent=True) or {}
         user_message = (payload.get("message") or "").strip()

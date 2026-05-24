@@ -43,6 +43,7 @@
 </section>
 
 <form id="applicant-bulk-form" class="applicant-bulk-form" method="post" action="{{ url_for('recruiter_bulk_update_applicants') }}">
+    {{ csrf_field() }}
     {% if opportunity %}
     <input type="hidden" name="opportunity_id" value="{{ opportunity.id }}">
     {% endif %}
@@ -155,30 +156,5 @@
         <p>Jangkauan Regional <strong>14 Kota</strong></p>
     </article>
 </section>
-<script>
-(() => {
-    const form = document.getElementById("applicant-bulk-form");
-    const selectAll = document.getElementById("select-all-applicants");
-    if (!form || !selectAll) {
-        return;
-    }
-
-    const checkboxes = Array.from(form.querySelectorAll('input[name="application_ids"]'));
-    const syncSelectAll = () => {
-        const selectedCount = checkboxes.filter((checkbox) => checkbox.checked).length;
-        selectAll.checked = checkboxes.length > 0 && selectedCount === checkboxes.length;
-        selectAll.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
-    };
-
-    selectAll.addEventListener("change", () => {
-        checkboxes.forEach((checkbox) => {
-            checkbox.checked = selectAll.checked;
-        });
-        syncSelectAll();
-    });
-
-    checkboxes.forEach((checkbox) => checkbox.addEventListener("change", syncSelectAll));
-    syncSelectAll();
-})();
-</script>
+<script src="{{ asset_url('js/applicant_bulk.js') }}" defer></script>
 {% endblock %}

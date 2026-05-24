@@ -69,6 +69,7 @@
                     {% endif %}
 
                     <form method="post" action="{{ url_for('update_document', doc_type=document.doc_type) }}" enctype="multipart/form-data" class="document-upload-form">
+                        {{ csrf_field() }}
                         {% if document.is_uploaded %}
                         <input type="hidden" name="is_uploaded" value="on">
                         {% endif %}
@@ -80,6 +81,7 @@
 
                     {% if document.is_uploaded %}
                     <form method="post" action="{{ url_for('reset_document', doc_type=document.doc_type) }}" data-confirm="Reset dokumen ini?">
+                        {{ csrf_field() }}
                         <button type="submit" class="ghost-danger-button">Reset</button>
                     </form>
                     {% endif %}

@@ -32,7 +32,14 @@ gunicorn app:app
 `Procfile` di project juga sudah berisi:
 
 ```text
-web: gunicorn app:app
+web: python tools/build_frontend_assets.py && gunicorn app:app
+```
+
+Perintah ini membuat asset production di `static/dist/` sebelum server Flask
+dijalankan. Aktifkan built asset dengan variable:
+
+```text
+USE_BUILT_ASSETS=true
 ```
 
 ## 4. Environment variables Railway
@@ -42,13 +49,16 @@ Isi variable berikut di Railway dashboard, bukan di repository:
 ```text
 DATA_DIR=/app/data
 SECRET_KEY=<random panjang>
+ADMIN_PASSWORD=<password admin kuat>
 GOOGLE_API_KEY=<isi di Railway dashboard, jangan commit>
 GOOGLE_MODEL=gemma-4-26b-a4b-it
 GOOGLE_TIMEOUT_SECONDS=120
+USE_BUILT_ASSETS=true
 ```
 
 Catatan:
 - `SECRET_KEY` harus string random panjang untuk session Flask.
+- `ADMIN_PASSWORD` wajib di production; jangan gunakan password demo.
 - `GOOGLE_API_KEY` hanya disimpan di Railway Variables.
 - Jika model Google yang dipakai project berubah, sesuaikan `GOOGLE_MODEL`.
 

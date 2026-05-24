@@ -3,6 +3,7 @@ import sqlite3
 from flask import session
 
 from services.application_service import application_status_badge_class, application_status_label
+from services.asset_service import asset_url
 from services.constants import RECRUITER_POSITION_OPTIONS
 from services.database_service import DatabaseAccessError, get_db
 
@@ -25,6 +26,7 @@ def inject_template_options():
     return {
         "application_status_badge_class": application_status_badge_class,
         "application_status_label": application_status_label,
+        "asset_url": asset_url,
         "recruiter_position_options": RECRUITER_POSITION_OPTIONS,
         "sidebar_user": sidebar_user,
     }

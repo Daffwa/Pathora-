@@ -97,6 +97,7 @@
     </section>
 
     <form class="applicant-action-bar" method="post" action="{{ url_for('recruiter_update_application_status', application_id=application.application_id) }}">
+        {{ csrf_field() }}
         <input id="application-status-input" type="hidden" name="status" value="{{ display_status }}">
         <div>
             <span>Status: {{ display_status }}</span>

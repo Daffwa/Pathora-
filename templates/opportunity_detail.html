@@ -27,9 +27,11 @@
             <p>{{ opportunity.priority_label }}</p>
             <div class="inline-actions">
                 <form class="inline-form" method="post" action="{{ url_for('track_opportunity', opportunity_id=opportunity.id) }}">
+                    {{ csrf_field() }}
                     <button type="submit" class="primary-button compact">Lamar Sekarang</button>
                 </form>
                 <form class="inline-form" method="post" action="{{ url_for('bookmark_opportunity', opportunity_id=opportunity.id) }}">
+                    {{ csrf_field() }}
                     <button type="submit" class="bookmark-button" aria-label="Simpan peluang"><span class="bookmark-icon"></span></button>
                 </form>
             </div>

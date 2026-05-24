@@ -303,9 +303,9 @@
         try {
             const response = await fetch(chatUrl, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: window.Pathora
+                    ? window.Pathora.withCsrfHeaders({ "Content-Type": "application/json" })
+                    : { "Content-Type": "application/json" },
                 credentials: "same-origin",
                 body: JSON.stringify({ message: userMessage }),
             });

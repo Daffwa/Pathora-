@@ -77,6 +77,7 @@
             <a class="primary-button compact" href="{{ url_for('opportunity_detail', opportunity_id=opportunity.id) }}">Lihat Detail</a>
             {% if can_use_jobseeker_actions %}
             <form class="inline-form" method="post" action="{{ url_for('bookmark_opportunity', opportunity_id=opportunity.id) }}">
+                {{ csrf_field() }}
                 <button type="submit" class="bookmark-button" aria-label="Simpan {{ opportunity.title }}"><span class="bookmark-icon"></span></button>
             </form>
             {% else %}

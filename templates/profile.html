@@ -88,6 +88,7 @@
                 {% for opportunity in saved_opportunities %}
                 <article class="saved-profile-card">
                     <form class="saved-bookmark-form" method="post" action="{{ url_for('remove_bookmark', opportunity_id=opportunity.id) }}">
+                        {{ csrf_field() }}
                         <button type="submit" class="saved-bookmark-button" aria-label="Hapus {{ opportunity.title }} dari bookmark"><span class="bookmark-icon"></span></button>
                     </form>
 
@@ -130,6 +131,7 @@
                             <a class="primary-button compact" href="{{ url_for('applications') }}">Lanjutkan</a>
                             {% else %}
                             <form method="post" action="{{ url_for('track_opportunity', opportunity_id=opportunity.id) }}">
+                                {{ csrf_field() }}
                                 <button type="submit" class="primary-button compact">Track</button>
                             </form>
                             {% endif %}

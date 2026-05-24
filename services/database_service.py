@@ -9,8 +9,36 @@ from werkzeug.security import generate_password_hash
 from services.constants import SQLITE_TIMEOUT_SECONDS, USER_PROFILE_COLUMN_DEFINITIONS
 
 
+DEFAULT_ADMIN_PASSWORD = "admin12345"
+
+
 class DatabaseAccessError(RuntimeError):
     pass
+
+
+def is_production_environment():
+    return any(
+        os.getenv(name)
+        for name in (
+            "RAILWAY_ENVIRONMENT",
+            "RAILWAY_PROJECT_ID",
+            "RAILWAY_SERVICE_ID",
+        )
+    ) or os.getenv("FLASK_ENV") == "production"
+
+
+def get_admin_seed_credentials():
+    email = os.getenv("ADMIN_EMAIL", "admin@example.com")
+    password = os.getenv("ADMIN_PASSWORD")
+
+    if not password:
+        if is_production_environment():
+            raise RuntimeError(
+                "ADMIN_PASSWORD environment variable is required in production."
+            )
+        password = DEFAULT_ADMIN_PASSWORD
+
+    return email, password
 
 
 def resolve_app_path(path_value, app_root):
@@ -230,8 +258,7 @@ def _migrate_opportunities(db):
 
 
 def _seed_admin(db):
-    email = os.getenv("ADMIN_EMAIL", "admin@example.com")
-    password = os.getenv("ADMIN_PASSWORD", "admin12345")
+    email, password = get_admin_seed_credentials()
     admin = db.execute(
         "SELECT id FROM users WHERE email = ?", (email,)
     ).fetchone()

@@ -1,0 +1,101 @@
+(function () {
+    "use strict";
+
+    var legalModal = document.getElementById("legalModal");
+
+    if (!legalModal) {
+        return;
+    }
+
+    var legalModalCard = legalModal.querySelector(".legal-modal__card");
+    var legalModalTitle = document.getElementById("legalModalTitle");
+    var legalModalBody = document.getElementById("legalModalBody");
+    var legalContent = {
+        privacy: {
+            hash: "privasi",
+            title: "Kebijakan Privasi Pathora",
+            templateId: "privacyLegalContent",
+        },
+        terms: {
+            hash: "ketentuan",
+            title: "Syarat & Ketentuan Pathora",
+            templateId: "termsLegalContent",
+        },
+    };
+
+    function updateLegalHash(type) {
+        var content = legalContent[type];
+
+        if (content) {
+            history.replaceState(null, "", "#" + content.hash);
+        }
+    }
+
+    function clearLegalHash() {
+        if (["#privasi", "#ketentuan"].includes(window.location.hash)) {
+            history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+    }
+
+    function openLegalModal(type, shouldSyncHash) {
+        var content = legalContent[type];
+        var template = content ? document.getElementById(content.templateId) : null;
+
+        if (!content || !template || !legalModalTitle || !legalModalBody) {
+            return;
+        }
+
+        legalModalTitle.textContent = content.title;
+        legalModalBody.replaceChildren(template.content.cloneNode(true));
+        legalModal.hidden = false;
+        legalModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("legal-modal-open");
+
+        if (shouldSyncHash !== false) {
+            updateLegalHash(type);
+        }
+
+        if (legalModalCard) {
+            legalModalCard.focus({ preventScroll: true });
+        }
+    }
+
+    function closeLegalModal() {
+        legalModal.hidden = true;
+        legalModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("legal-modal-open");
+        clearLegalHash();
+    }
+
+    function openLegalModalFromHash() {
+        if (window.location.hash === "#privasi") {
+            openLegalModal("privacy", false);
+        } else if (window.location.hash === "#ketentuan") {
+            openLegalModal("terms", false);
+        }
+    }
+
+    document.querySelectorAll("[data-legal-open]").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            openLegalModal(link.dataset.legalOpen);
+        });
+    });
+
+    document.querySelectorAll("[data-legal-close]").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            closeLegalModal();
+        });
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !legalModal.hidden) {
+            closeLegalModal();
+        }
+    });
+
+    window.addEventListener("hashchange", openLegalModalFromHash);
+    openLegalModalFromHash();
+})();

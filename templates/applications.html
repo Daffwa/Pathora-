@@ -92,6 +92,7 @@
                             <div class="action-menu-panel">
                                 <a href="{{ url_for('opportunity_detail', opportunity_id=application.opportunity_id) }}">Lihat Detail</a>
                                 <form method="post" action="{{ url_for('remove_application', application_id=application.application_id) }}" data-confirm="Hapus tracker lamaran ini?">
+                                    {{ csrf_field() }}
                                     <button type="submit" class="danger-link-button">Hapus</button>
                                 </form>
                             </div>

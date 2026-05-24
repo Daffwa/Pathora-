@@ -4,6 +4,7 @@
 
 {% block content %}
 <form class="profile-edit-page" method="post" action="{{ url_for('edit_profile') }}" enctype="multipart/form-data">
+    {{ csrf_field() }}
     <aside class="edit-profile-summary profile-glass-card">
         <div class="profile-avatar-xl">
             {% if user.avatar_path %}

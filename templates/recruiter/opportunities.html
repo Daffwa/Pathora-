@@ -67,6 +67,7 @@
                                 <a href="{{ url_for('recruiter_opportunity_applicants', opportunity_id=opportunity.id) }}">Lihat Pelamar</a>
                                 <a href="{{ url_for('recruiter_edit_opportunity', opportunity_id=opportunity.id) }}">Edit</a>
                                 <form method="post" action="{{ url_for('recruiter_delete_opportunity', opportunity_id=opportunity.id) }}" data-confirm="Hapus peluang ini?">
+                                    {{ csrf_field() }}
                                     <button type="submit" class="danger-link-button">Hapus</button>
                                 </form>
                             </div>

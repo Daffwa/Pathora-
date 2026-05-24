@@ -184,3 +184,17 @@
     color: var(--primary);
 }
 
+.profile-logout-form {
+    margin: 0;
+}
+
+.profile-logout-form button {
+    padding: 0;
+    color: var(--primary);
+    font: inherit;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+

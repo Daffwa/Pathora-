@@ -31,7 +31,9 @@ def app(temp_data_dir, app_root):
 
     with application.app_context():
         from services.database_service import init_database
+        from services.rate_limit_service import reset_rate_limits
 
+        reset_rate_limits()
         init_database()
 
     yield application

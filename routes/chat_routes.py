@@ -1,6 +1,6 @@
 import sqlite3
 
-from flask import abort, flash, jsonify, render_template, request, send_from_directory, session
+from flask import abort, current_app, flash, jsonify, render_template, request, send_from_directory, session
 
 from services.auth_service import get_current_role, login_required
 from services.chat_service import (
@@ -13,6 +13,7 @@ from services.chat_service import (
 from services.constants import CHAT_MESSAGE_MAX_LENGTH
 from services.database_service import get_db
 from services.recruiter_service import parse_positive_int
+from services.rate_limit_service import check_rate_limit
 from services.storage_service import (
     CHAT_IMAGE_MAX_BYTES,
     delete_file_if_exists,
@@ -88,6 +89,24 @@ def register(app):
     def send_chat_message():
         if "user_id" not in session:
             return jsonify({"error": "Silakan login terlebih dahulu."}), 401
+
+        allowed, retry_after = check_rate_limit(
+            "chat-message",
+            current_app.config["CHAT_RATE_LIMIT"],
+            current_app.config["CHAT_RATE_LIMIT_WINDOW_SECONDS"],
+        )
+        if not allowed:
+            response = jsonify(
+                {
+                    "error": (
+                        "Terlalu banyak pesan dikirim. "
+                        f"Coba lagi dalam {retry_after} detik."
+                    )
+                }
+            )
+            response.status_code = 429
+            response.headers["Retry-After"] = str(retry_after)
+            return response
 
         current_role = get_current_role()
         payload = request.get_json(silent=True) or {}

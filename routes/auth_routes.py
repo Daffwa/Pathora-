@@ -1,15 +1,28 @@
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import current_app, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from services.auth_service import normalize_role
 from services.constants import PUBLIC_REGISTER_ROLES, RECRUITER_POSITION_OPTIONS
 from services.database_service import get_db
+from services.rate_limit_service import check_rate_limit
 
 
 def register(app):
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "POST":
+            allowed, retry_after = check_rate_limit(
+                "login",
+                current_app.config["LOGIN_RATE_LIMIT"],
+                current_app.config["LOGIN_RATE_LIMIT_WINDOW_SECONDS"],
+            )
+            if not allowed:
+                flash(
+                    "Terlalu banyak percobaan login. "
+                    f"Coba lagi dalam {retry_after} detik."
+                )
+                return render_template("login.html"), 429
+
             email = request.form.get("email", "").strip().lower()
             password = request.form.get("password", "")
 
@@ -156,7 +169,12 @@ def register(app):
         return render_template("register.html", form_data=form_data)
 
 
-    @app.route("/logout")
+    @app.get("/logout")
+    def logout_get():
+        return redirect(url_for("login"))
+
+
+    @app.post("/logout")
     def logout():
         session.clear()
         flash("Kamu sudah logout.")

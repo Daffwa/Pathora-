@@ -20,6 +20,7 @@
         <div class="card-topline">
             <span class="company-mark">{{ opportunity.provider[:1] }}</span>
             <form class="inline-form" method="post" action="{{ url_for('remove_bookmark', opportunity_id=opportunity.id) }}">
+                {{ csrf_field() }}
                 <button type="submit" class="bookmark-button active" aria-label="Hapus {{ opportunity.title }} dari bookmark"><span class="bookmark-icon"></span></button>
             </form>
         </div>
@@ -46,6 +47,7 @@
             <a class="primary-button compact" href="{{ url_for('applications') }}">Lihat Tracker</a>
             {% else %}
             <form class="inline-form" method="post" action="{{ url_for('track_opportunity', opportunity_id=opportunity.id) }}">
+                {{ csrf_field() }}
                 <button type="submit" class="primary-button compact">Lamar Sekarang</button>
             </form>
             {% endif %}

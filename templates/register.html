@@ -23,6 +23,7 @@
             <p>Lengkapi data di bawah untuk bergabung dengan ekosistem Pathora.</p>
 
             <form method="post" action="{{ url_for('register') }}">
+                {{ csrf_field() }}
                 <label for="name">Nama Lengkap</label>
                 <input id="name" name="name" type="text" value="{{ form_data.name }}" placeholder="Contoh: Budi Santoso" required>
 
@@ -97,37 +98,5 @@
 
 {% include "partials/legal_modal.html" %}
 
-<script>
-    const roleRadios = document.querySelectorAll('input[name="role"]');
-    const jobseekerFields = document.querySelector('[data-role-fields="jobseeker"]');
-    const recruiterFields = document.querySelector('[data-role-fields="recruiter"]');
-    const companyNameInput = document.getElementById("company_name");
-    const companyPositionInput = document.getElementById("company_position");
-    const otherPositionFields = document.querySelector("[data-other-position]");
-    const otherPositionInput = document.getElementById("company_position_other");
-
-    function selectedRole() {
-        return document.querySelector('input[name="role"]:checked')?.value || "jobseeker";
-    }
-
-    function syncRoleFields() {
-        const isRecruiter = selectedRole() === "recruiter";
-        jobseekerFields.hidden = isRecruiter;
-        recruiterFields.hidden = !isRecruiter;
-        companyNameInput.required = isRecruiter;
-        companyPositionInput.required = isRecruiter;
-        syncOtherPosition();
-    }
-
-    function syncOtherPosition() {
-        const isRecruiter = selectedRole() === "recruiter";
-        const isOther = companyPositionInput.value === "Other";
-        otherPositionFields.hidden = !isRecruiter || !isOther;
-        otherPositionInput.required = isRecruiter && isOther;
-    }
-
-    roleRadios.forEach((radio) => radio.addEventListener("change", syncRoleFields));
-    companyPositionInput.addEventListener("change", syncOtherPosition);
-    syncRoleFields();
-</script>
+<script src="{{ asset_url('js/register.js') }}" defer></script>
 {% endblock %}

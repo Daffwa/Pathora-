@@ -27,6 +27,28 @@ http://127.0.0.1:5000
 
 Database SQLite dan folder `uploads/documents/` akan dibuat otomatis saat pertama kali dijalankan.
 
+## Build Asset Frontend
+
+Untuk production, gabungkan dan compact CSS/JS terlebih dahulu:
+
+```powershell
+python tools\build_frontend_assets.py
+```
+
+Script ini membuat file hasil build di `static/dist/`, source map `.map`, dan
+manifest di `static/dist/asset-manifest.json`. Set `USE_BUILT_ASSETS=true` agar
+template memakai file hasil build. Jika manifest belum ada, aplikasi otomatis
+fallback ke file `static/css` dan `static/js` biasa.
+
+Untuk cek kualitas frontend:
+
+```powershell
+python tools\lint_frontend_assets.py
+```
+
+Di Railway, `Procfile` sudah menjalankan build sebelum Gunicorn, jadi deploy
+tidak bergantung pada file `static/dist/` lama.
+
 ## Akun Bawaan
 
 | Role      | Email              | Password    |
@@ -67,6 +89,9 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 
 - Authentication dengan Flask session
 - Role-based access control (decorator guards)
+- CSRF protection untuk form dan request AJAX
+- Security headers dan cookie hardening untuk production
+- Rate limiting untuk login, AI Assistant, dan chat
 - Opportunity discovery dengan filter dan sort
 - Saved opportunities (bookmark)
 - Application tracker
@@ -75,9 +100,28 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 - Dashboard ringkasan personal & recruiter
 - Chat real-time antar pengguna
 - AI Assistant (Gemini API)
+- Frontend asset build dengan hash filename, source map, dan lint ringan
 - Admin & Recruiter CRUD opportunities
 - Error page 404, 403, 413
 - Mobile responsive
+
+## Konfigurasi Production Penting
+
+Set environment variable berikut sebelum deploy:
+
+```text
+SECRET_KEY=<random panjang>
+ADMIN_PASSWORD=<password admin yang kuat>
+DATA_DIR=/app/data
+USE_BUILT_ASSETS=true
+GOOGLE_API_KEY=<isi lewat dashboard hosting>
+```
+
+Catatan:
+- `SECRET_KEY` wajib di production untuk menjaga session tetap aman.
+- `ADMIN_PASSWORD` wajib di production; fallback `admin12345` hanya untuk development/test.
+- `USE_BUILT_ASSETS=true` membuat template memakai file di `static/dist/`.
+- Jika memakai Railway, `Procfile` sudah menjalankan build asset sebelum Gunicorn.
 
 ## Struktur Proyek
 
@@ -96,7 +140,11 @@ models/                         # Data classes
 
 services/                       # Business logic layer
     auth_service.py             #   Decorator guards, login/logout
+    csrf_service.py             #   CSRF token dan validasi request POST
     database_service.py         #   Init DB, migrasi, seed
+    security_headers_service.py #   Header keamanan response
+    rate_limit_service.py       #   Rate limit login, AI, dan chat
+    asset_service.py            #   Resolusi asset dev/production manifest
     scoring_service.py          #   Fungsi scoring FP murni
     opportunity_service.py      #   Shared CRUD helpers
     application_service.py      #   Lamaran logic
@@ -134,6 +182,7 @@ static/
     css/
         style.css               #   Entrypoint (imports partials)
         partials/               #   34 modular CSS partials
+    dist/                       #   Hasil build production + source map
     js/
         app.js                  #   Global handlers (data-confirm, data-pct, dll)
         chat.js                 #   Chat logic
@@ -155,6 +204,18 @@ Proyek telah melalui refactoring untuk menghilangkan spaghetti code:
 - **Frontend JS**: 514 baris inline `<script>` dari `chat.html` diekstrak ke `static/js/chat.js`
 - **Inline handlers**: Semua `onsubmit`, `onclick`, `onchange` diganti data attributes (`data-confirm`, `data-sync-select`, `data-set-value`)
 - **Inline styles**: Semua `style="width: X%"` dan `style="--percent: X%"` diganti `data-pct` + CSS variable `--pct`
+- **Security hardening**: CSRF, admin-only health endpoint, logout POST-only, security headers, dan cookie hardening
+- **Asset pipeline**: CSS/JS production dibuild ke `static/dist/` dengan hash filename, source map, lint ringan, dan build otomatis di deploy
+
+## Validasi Lokal
+
+Jalankan sebelum push/deploy:
+
+```powershell
+python tools\lint_frontend_assets.py
+python tools\build_frontend_assets.py
+python -m pytest -q
+```
 
 ## Route Penting Untuk Diuji
 

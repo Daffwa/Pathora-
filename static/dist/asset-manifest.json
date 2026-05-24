@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-05-24T16:21:18+00:00",
+  "assets": {
+    "css/style.css": "dist/css/style.4c60ede90c9d.min.css",
+    "js/ai_assistant.js": "dist/js/ai_assistant.85c9fe7d003c.min.js",
+    "js/app.js": "dist/js/app.5e55ef9672b0.min.js",
+    "js/applicant_bulk.js": "dist/js/applicant_bulk.de6fbf8650e1.min.js",
+    "js/chat.js": "dist/js/chat.bc18d35c9839.min.js",
+    "js/legal_modal.js": "dist/js/legal_modal.f784032e4cf1.min.js",
+    "js/register.js": "dist/js/register.e3331874b2a2.min.js",
+    "js/topbar_popovers.js": "dist/js/topbar_popovers.06fd53f63875.min.js"
+  },
+  "source_maps": {
+    "css/style.css": "dist/css/style.4c60ede90c9d.min.css.map",
+    "js/ai_assistant.js": "dist/js/ai_assistant.85c9fe7d003c.min.js.map",
+    "js/app.js": "dist/js/app.5e55ef9672b0.min.js.map",
+    "js/applicant_bulk.js": "dist/js/applicant_bulk.de6fbf8650e1.min.js.map",
+    "js/chat.js": "dist/js/chat.bc18d35c9839.min.js.map",
+    "js/legal_modal.js": "dist/js/legal_modal.f784032e4cf1.min.js.map",
+    "js/register.js": "dist/js/register.e3331874b2a2.min.js.map",
+    "js/topbar_popovers.js": "dist/js/topbar_popovers.06fd53f63875.min.js.map"
+  },
+  "tree_shaking": {
+    "js/ai_assistant.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    },
+    "js/app.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    },
+    "js/applicant_bulk.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    },
+    "js/chat.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    },
+    "js/legal_modal.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    },
+    "js/register.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    },
+    "js/topbar_popovers.js": {
+      "strategy": "conservative-unused-function-pruning",
+      "removed_unused_functions": []
+    }
+  }
+}

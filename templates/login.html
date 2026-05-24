@@ -27,6 +27,7 @@
             <div class="auth-divider"><span>Atau gunakan email</span></div>
 
             <form method="post" action="{{ url_for('login') }}">
+                {{ csrf_field() }}
                 <label for="email">Email atau Username</label>
                 <input id="email" name="email" type="text" placeholder="contoh@mahasiswa.ac.id" required>
 

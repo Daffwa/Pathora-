@@ -1,6 +1,25 @@
 (function () {
     "use strict";
 
+    function getCsrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute("content") || "" : "";
+    }
+
+    function withCsrfHeaders(headers) {
+        var nextHeaders = new Headers(headers || {});
+        var token = getCsrfToken();
+        if (token) {
+            nextHeaders.set("X-CSRF-Token", token);
+        }
+        return nextHeaders;
+    }
+
+    window.Pathora = Object.assign(window.Pathora || {}, {
+        getCsrfToken: getCsrfToken,
+        withCsrfHeaders: withCsrfHeaders,
+    });
+
     document.querySelectorAll("[data-pct]").forEach(function (el) {
         el.style.setProperty("--pct", el.dataset.pct + "%");
     });
