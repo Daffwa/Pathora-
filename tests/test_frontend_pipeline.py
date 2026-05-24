@@ -3,6 +3,7 @@ from pathlib import Path
 from tools.build_frontend_assets import (
     SourceLine,
     build_source_map,
+    collect_css_lines,
     tree_shake_unused_functions,
 )
 
@@ -50,3 +51,20 @@ def test_tree_shaking_removes_unreferenced_function():
     assert removed == ["unusedHelper"]
     assert "unusedHelper" not in output
     assert "usedHelper" in output
+
+
+def test_css_build_strips_utf8_bom_from_imported_selectors(tmp_path):
+    css_dir = tmp_path / "static" / "css"
+    partials_dir = css_dir / "partials"
+    partials_dir.mkdir(parents=True)
+    entry = css_dir / "style.css"
+    partial = partials_dir / "layout.css"
+
+    entry.write_text('@import url("./partials/layout.css");\n', encoding="utf-8")
+    partial.write_text("\ufeff.site-header {\n    display: flex;\n}\n", encoding="utf-8")
+
+    lines = collect_css_lines(entry)
+    output = "\n".join(line.content for line in lines)
+
+    assert "\ufeff" not in output
+    assert ".site-header{" in output

@@ -191,6 +191,39 @@ class TestSecurityHardening:
         with pytest.raises(RuntimeError):
             get_admin_seed_credentials()
 
+    def test_ai_assistant_falls_back_when_google_client_missing(self, app, monkeypatch):
+        from routes import ai_routes
+
+        monkeypatch.setattr(ai_routes, "GOOGLE_API_KEY", "configured")
+        monkeypatch.setattr(ai_routes, "google_client", None)
+
+        with app.app_context():
+            answer, error, status = ai_routes._validate_and_generate("cara upload dokumen")
+
+        assert error is None
+        assert status is None
+        assert "Kelola Dokumen" in answer
+
+    def test_ai_assistant_falls_back_when_google_request_fails(self, app, monkeypatch):
+        from routes import ai_routes
+
+        class BrokenModels:
+            def generate_content(self, **kwargs):
+                raise RuntimeError("provider down")
+
+        class BrokenClient:
+            models = BrokenModels()
+
+        monkeypatch.setattr(ai_routes, "GOOGLE_API_KEY", "configured")
+        monkeypatch.setattr(ai_routes, "google_client", BrokenClient())
+
+        with app.app_context():
+            answer, error, status = ai_routes._validate_and_generate("test")
+
+        assert error is None
+        assert status is None
+        assert "Pathora" in answer
+
 
 class TestAuthFlow:
     def test_register_jobseeker(self, client):

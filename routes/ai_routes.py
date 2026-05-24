@@ -5,9 +5,9 @@ from flask import current_app, jsonify, request, session
 from services.ai_service import (
     GOOGLE_API_KEY,
     GOOGLE_MODEL,
-    AI_ASSISTANT_GENERIC_ERROR,
     AI_ASSISTANT_MAX_MESSAGE_LENGTH,
     build_google_assistant_prompt,
+    build_local_assistant_reply,
     contains_sensitive_ai_content,
     genai,
     google_client,
@@ -75,7 +75,8 @@ def _validate_and_generate(user_message):
         ), 400
 
     if not GOOGLE_API_KEY or google_client is None:
-        return None, "Konfigurasi AI Assistant belum tersedia.", 500
+        current_app.logger.warning("Google AI Assistant unavailable; using local fallback.")
+        return build_local_assistant_reply(user_message), None, None
 
     try:
         response = google_client.models.generate_content(
@@ -103,7 +104,7 @@ def _validate_and_generate(user_message):
             error.__class__.__name__,
             redact_sensitive_log_text(error),
         )
-        return None, AI_ASSISTANT_GENERIC_ERROR, 500
+        return build_local_assistant_reply(user_message), None, None
 
 
 def register(app):

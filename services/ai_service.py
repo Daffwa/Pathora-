@@ -94,5 +94,77 @@ def contains_sensitive_ai_content(message):
     )
 
 
+def build_local_assistant_reply(user_message):
+    message = (user_message or "").lower()
+    topics = [
+        (
+            ("daftar", "register", "akun"),
+            (
+                "Untuk daftar akun, buka halaman Daftar, pilih role Jobseeker "
+                "atau Recruiter, isi data yang diminta, lalu submit form. "
+                "Setelah berhasil, kamu akan langsung masuk ke dashboard."
+            ),
+        ),
+        (
+            ("login", "masuk"),
+            (
+                "Untuk login, buka halaman Masuk, isi email dan password, lalu "
+                "tekan tombol masuk. Jika role akun valid, Pathora akan membuka "
+                "dashboard sesuai role kamu."
+            ),
+        ),
+        (
+            ("apply", "lamar", "lamaran", "daftar peluang"),
+            (
+                "Untuk melamar atau melacak peluang, buka halaman Peluang, pilih "
+                "detail peluang yang sesuai, lalu gunakan tombol lacak/daftar. "
+                "Statusnya bisa dipantau dari halaman Pelacakan Lamaran."
+            ),
+        ),
+        (
+            ("dokumen", "upload", "cv", "transkrip", "sertifikat"),
+            (
+                "Untuk upload dokumen, buka Kelola Dokumen, pilih jenis dokumen, "
+                "unggah file yang sesuai, lalu simpan. Dokumen yang lengkap ikut "
+                "membantu skor prioritas kamu."
+            ),
+        ),
+        (
+            ("status", "tracking", "tracker", "progres"),
+            (
+                "Status lamaran bisa dicek di halaman Pelacakan Lamaran. Recruiter "
+                "dapat memperbarui status seperti Sedang Direview, Interview, "
+                "Diterima, atau Ditolak."
+            ),
+        ),
+        (
+            ("rekomendasi", "peluang", "skor", "priority", "prioritas"),
+            (
+                "Rekomendasi peluang diprioritaskan dari kecocokan skill, deadline, "
+                "dan kesiapan dokumen. Lengkapi profil, skill, dan dokumen agar "
+                "skor prioritas lebih akurat."
+            ),
+        ),
+        (
+            ("chat", "pesan", "recruiter"),
+            (
+                "Fitur chat dipakai untuk komunikasi antara jobseeker dan recruiter "
+                "yang terhubung lewat lamaran. Buka menu Chat untuk melihat kontak "
+                "yang tersedia."
+            ),
+        ),
+    ]
+
+    for keywords, reply in topics:
+        if any(keyword in message for keyword in keywords):
+            return reply
+
+    return (
+        "Saya siap membantu seputar Pathora: cara daftar, login, mencari peluang, "
+        "melacak lamaran, upload dokumen, chat recruiter, dan meningkatkan skor "
+        "prioritas. Coba tanyakan salah satu topik itu."
+    )
+
+
 def build_google_assistant_prompt(user_message):
     return f"{AI_ASSISTANT_SYSTEM_PROMPT}\n\nPertanyaan user:\n{user_message}"

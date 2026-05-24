@@ -17,6 +17,7 @@ CSS_IMPORT_RE = re.compile(r'^\s*@import\s+url\(["\']?([^"\')]+)["\']?\);\s*$')
 JS_FUNCTION_RE = re.compile(r"\bfunction\s+([A-Za-z_$][\w$]*)\s*\(")
 SOURCE_MAP_VERSION = 3
 BASE64_DIGITS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+UTF8_BOM = "\ufeff"
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ class SourceLine:
 
 
 def read_text(path):
-    return path.read_text(encoding="utf-8")
+    return path.read_text(encoding="utf-8").lstrip(UTF8_BOM)
 
 
 def write_text(path, content):
@@ -53,6 +54,7 @@ def strip_css_comments_preserve_lines(content):
 
 
 def compact_css_line(line):
+    line = line.replace(UTF8_BOM, "")
     line = compact_whitespace(line)
     line = re.sub(r"\s*([{}:;,>+~])\s*", r"\1", line)
     return line.replace(";}", "}")
