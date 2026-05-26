@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Recruiter - Pathora{% endblock %}
+
+{% block content %}
+<section class="profile-page recruiter-profile-page">
+    <div class="profile-grid recruiter-profile-grid">
+        <aside class="profile-rail" aria-label="Ringkasan profil recruiter">
+            <article class="profile-glass-card profile-identity-card">
+                <div class="profile-avatar-xl">
+                    {% if recruiter.avatar_path %}
+                    <img src="{{ url_for('profile_avatar', filename=recruiter.avatar_path) }}" alt="Foto profil {{ recruiter.name }}">
+                    {% else %}
+                    <span>{{ recruiter.name[:1] }}</span>
+                    {% endif %}
+                </div>
+
+                <h1>{{ recruiter.name or "Recruiter" }}</h1>
+                <p>{{ recruiter.company_position or "Recruiter" }}{% if recruiter.company_name %} di {{ recruiter.company_name }}{% endif %}</p>
+
+                <div class="profile-chip-row">
+                    <span>Recruiter</span>
+                    <span>{{ recruiter.account_status|capitalize }}</span>
+                </div>
+
+                <div class="profile-contact-list">
+                    <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-email-pintar.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Email</strong><em>{{ recruiter.email or "Belum diisi" }}</em></p>
+                    <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-handphone.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Telepon</strong><em>{{ recruiter.phone or "Belum diisi" }}</em></p>
+                    <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-lokasi.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Lokasi</strong><em>{{ recruiter.domicile or "Belum diisi" }}</em></p>
+                </div>
+
+                <a class="primary-button profile-edit-main" href="{{ url_for('recruiter_opportunities') }}">Kelola Lowongan</a>
+            </article>
+
+            <article class="profile-glass-card profile-detail-card">
+                <section>
+                    <h2>Perusahaan</h2>
+                    <div class="profile-timeline">
+                        <strong>{{ recruiter.company_name or "Belum diisi" }}</strong>
+                        <span>{{ recruiter.company_position or "Posisi recruiter belum diisi" }}</span>
+                        <small>Terdaftar sebagai recruiter Pathora</small>
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Ringkasan Akun</h2>
+                    <div class="compact-chip-list">
+                        <span>{{ total_opportunities }} lowongan</span>
+                        <span>{{ total_applicants }} pelamar</span>
+                        <span>{{ recruiter.account_status|capitalize }}</span>
+                    </div>
+                </section>
+            </article>
+        </aside>
+
+        <div class="profile-main-column">
+            <section class="profile-header-row">
+                <div>
+                    <h1>Profil Recruiter</h1>
+                    <p>Informasi akun recruiter dan aktivitas lowongan yang dikelola di Pathora.</p>
+                </div>
+                <div class="profile-header-actions">
+                    <a class="secondary-button compact" href="{{ url_for('recruiter_dashboard') }}">Dashboard</a>
+                    <a class="primary-button compact" href="{{ url_for('recruiter_create_opportunity') }}">+ Buat Lowongan</a>
+                </div>
+            </section>
+
+            <section class="recruiter-profile-stats" aria-label="Statistik recruiter">
+                <article class="profile-glass-card">
+                    <small>Lowongan Aktif</small>
+                    <strong>{{ total_opportunities }}</strong>
+                    <span>{{ recruiter.company_name or "Perusahaan belum diisi" }}</span>
+                </article>
+                <article class="profile-glass-card">
+                    <small>Total Pelamar</small>
+                    <strong>{{ total_applicants }}</strong>
+                    <span>Semua lowongan milik recruiter ini</span>
+                </article>
+            </section>
+
+            <section class="profile-glass-card recruiter-profile-list">
+                <div class="table-header">
+                    <h2>Lowongan Terbaru</h2>
+                    <a href="{{ url_for('recruiter_opportunities') }}">Lihat Semua</a>
+                </div>
+
+                <div class="recruiter-profile-opportunities">
+                    {% for opportunity in recent_opportunities %}
+                    <a href="{{ url_for('recruiter_edit_opportunity', opportunity_id=opportunity.id) }}">
+                        <span class="company-mark">{{ opportunity.title[:1] }}</span>
+                        <span>
+                            <strong>{{ opportunity.title }}</strong>
+                            <small>{{ opportunity.location }} - {{ opportunity.applicant_count }} pelamar</small>
+                        </span>
+                        <em>{{ "Magang" if opportunity.type == "internship" else "Beasiswa" }}</em>
+                    </a>
+                    {% else %}
+                    <div class="empty-inline">
+                        <strong>Belum ada lowongan</strong>
+                        <span>Buat lowongan pertama untuk mulai menerima kandidat.</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}

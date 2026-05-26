@@ -72,6 +72,45 @@ def _recruiter_opportunity_form(opportunity=None, form_title="", action_url=""):
 
 
 def register(app):
+    @app.route("/recruiter/profile")
+    @recruiter_required_decorator
+    def recruiter_profile():
+        recruiter = get_current_user()
+        total_opportunities = get_db().execute(
+            "SELECT COUNT(*) FROM opportunities WHERE created_by = ?",
+            (session["user_id"],),
+        ).fetchone()[0]
+        total_applicants = get_db().execute(
+            """
+            SELECT COUNT(*)
+            FROM applications
+            JOIN opportunities ON opportunities.id = applications.opportunity_id
+            WHERE opportunities.created_by = ?
+            """,
+            (session["user_id"],),
+        ).fetchone()[0]
+        recent_opportunities = get_db().execute(
+            """
+            SELECT opportunities.*, COUNT(applications.id) AS applicant_count
+            FROM opportunities
+            LEFT JOIN applications ON applications.opportunity_id = opportunities.id
+            WHERE opportunities.created_by = ?
+            GROUP BY opportunities.id
+            ORDER BY opportunities.updated_at DESC
+            LIMIT 4
+            """,
+            (session["user_id"],),
+        ).fetchall()
+
+        return render_template(
+            "recruiter/profile.html",
+            recruiter=recruiter,
+            total_opportunities=total_opportunities,
+            total_applicants=total_applicants,
+            recent_opportunities=recent_opportunities,
+        )
+
+
     @app.route("/recruiter/dashboard")
     @recruiter_required_decorator
     def recruiter_dashboard():

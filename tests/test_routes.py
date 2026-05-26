@@ -108,6 +108,7 @@ class TestProtectedRoutesRedirect:
         "/applications",
         "/chat",
         "/recruiter/dashboard",
+        "/recruiter/profile",
         "/recruiter/opportunities",
         "/recruiter/applicants",
         "/admin",
@@ -370,6 +371,11 @@ class TestRoleAccess:
         resp = client.get("/recruiter/dashboard", follow_redirects=False)
         assert resp.status_code == 403
 
+    def test_jobseeker_cannot_access_recruiter_profile(self, client):
+        register_jobseeker(client, "js-profile@test.com", "JS Profile")
+        resp = client.get("/recruiter/profile", follow_redirects=False)
+        assert resp.status_code == 403
+
     def test_jobseeker_cannot_access_admin(self, client):
         register_jobseeker(client, "js2@test.com", "JS User")
         resp = client.get("/admin", follow_redirects=False)
@@ -389,6 +395,19 @@ class TestRoleAccess:
         login_admin(client)
         resp = client.get("/recruiter/applicants")
         assert resp.status_code == 200
+
+    def test_recruiter_can_view_profile_from_avatar_menu(self, client, app):
+        register_approved_recruiter(client, app, "profile-rec@test.com", "Profile Rec")
+
+        dashboard_resp = client.get("/recruiter/dashboard")
+        assert dashboard_resp.status_code == 200
+        assert b"/recruiter/profile" in dashboard_resp.data
+        assert b"Lihat Profil" in dashboard_resp.data
+
+        profile_resp = client.get("/recruiter/profile")
+        assert profile_resp.status_code == 200
+        assert b"Profil Recruiter" in profile_resp.data
+        assert b"PT Test" in profile_resp.data
 
     def test_new_recruiter_is_auto_approved_and_can_access_features(self, client, app):
         resp = register_recruiter(client, "auto-rec@test.com", "Auto Recruiter")

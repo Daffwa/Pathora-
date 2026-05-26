@@ -406,6 +406,94 @@
     box-shadow: inset 0 0 0 3px #FFFFFF;
 }
 
+.recruiter-profile-page .recruiter-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.recruiter-profile-page .recruiter-profile-stats article {
+    min-height: 160px;
+    padding: 24px;
+    display: grid;
+    align-content: center;
+    gap: 8px;
+}
+
+.recruiter-profile-page .recruiter-profile-stats small {
+    color: #64748B;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.recruiter-profile-page .recruiter-profile-stats strong {
+    color: var(--text);
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.recruiter-profile-page .recruiter-profile-stats span {
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+.recruiter-profile-page .recruiter-profile-list {
+    padding: 24px;
+}
+
+.recruiter-profile-page .profile-contact-list p {
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+}
+
+.recruiter-profile-page .profile-contact-list strong,
+.recruiter-profile-page .profile-contact-list em {
+    grid-column: 2;
+}
+
+.recruiter-profile-page .profile-contact-list em {
+    margin-top: -8px;
+}
+
+.recruiter-profile-page .recruiter-profile-opportunities {
+    display: grid;
+    gap: 12px;
+}
+
+.recruiter-profile-page .recruiter-profile-opportunities a {
+    min-height: 74px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text);
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+.recruiter-profile-page .recruiter-profile-opportunities a:hover {
+    border-color: #BFDBFE;
+    box-shadow: 0 12px 28px rgba(0, 91, 170, 0.12);
+}
+
+.recruiter-profile-page .recruiter-profile-opportunities small {
+    display: block;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.recruiter-profile-page .recruiter-profile-opportunities em {
+    margin-left: auto;
+    padding: 5px 10px;
+    color: var(--primary);
+    background: #EAF2FF;
+    border-radius: 999px;
+    font-style: normal;
+    font-weight: 800;
+    font-size: 0.78rem;
+}
+
 @media (max-width: 1180px) {
     .profile-page .profile-grid {
         grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
@@ -451,5 +539,16 @@
     .profile-page .profile-header-actions {
         display: grid;
     }
-}
 
+    .recruiter-profile-page .recruiter-profile-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .recruiter-profile-page .recruiter-profile-opportunities a {
+        align-items: flex-start;
+    }
+
+    .recruiter-profile-page .recruiter-profile-opportunities em {
+        margin-left: 0;
+    }
+}
