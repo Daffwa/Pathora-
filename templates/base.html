@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
     <script src="{{ asset_url('js/app.js') }}" defer></script>
 </head>
-{% set is_auth_page = request.endpoint in ["login", "register"] %}
+{% set is_auth_page = request.endpoint in ["login", "register", "forgot_password", "reset_password"] %}
 {% set has_app_shell = session.get("user_id") and not is_auth_page %}
 {% from "partials/brand_logo.html" import brand_logo %}
 <body class="{% if has_app_shell %}app-shell{% elif is_auth_page %}auth-shell{% else %}public-shell{% endif %}">
