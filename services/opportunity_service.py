@@ -220,7 +220,7 @@ def list_role_opportunities(user_id=None):
 
 
 def create_opportunity(opportunity, user_id=None, company_name=None):
-    get_db().execute(
+    cursor = get_db().execute(
         """
         INSERT INTO opportunities
         (title, provider, type, description, requirements, official_link,
@@ -236,42 +236,59 @@ def create_opportunity(opportunity, user_id=None, company_name=None):
         ),
     )
     get_db().commit()
+    return cursor.lastrowid
 
 
-def update_opportunity(opportunity_id, opportunity, company_name=None):
-    get_db().execute(
-        """
+def update_opportunity(opportunity_id, opportunity, company_name=None, user_id=None):
+    params = [
+        opportunity["title"], opportunity["provider"], opportunity["type"],
+        opportunity["description"], opportunity["requirements"],
+        opportunity["official_link"], opportunity["required_skills"],
+        opportunity["location"], opportunity["deadline"],
+        company_name or "", opportunity_id,
+    ]
+    owner_check = ""
+    if user_id is not None:
+        owner_check = " AND created_by = ?"
+        params.append(user_id)
+
+    cursor = get_db().execute(
+        f"""
         UPDATE opportunities
         SET title = ?, provider = ?, type = ?, description = ?,
             requirements = ?, official_link = ?, required_skills = ?,
             location = ?, deadline = ?, company_name = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
+        {owner_check}
         """,
-        (
-            opportunity["title"], opportunity["provider"], opportunity["type"],
-            opportunity["description"], opportunity["requirements"],
-            opportunity["official_link"], opportunity["required_skills"],
-            opportunity["location"], opportunity["deadline"],
-            company_name or "", opportunity_id,
-        ),
+        params,
     )
     get_db().commit()
+    return cursor.rowcount
 
 
 def delete_opportunity_with_cascade(opportunity_id, user_id=None):
-    params = [opportunity_id]
-    owner_check = ""
     if user_id is not None:
-        owner_check = " AND created_by = ?"
-        params.append(user_id)
+        owned_opportunity = get_db().execute(
+            """
+            SELECT id
+            FROM opportunities
+            WHERE id = ? AND created_by = ?
+            """,
+            (opportunity_id, user_id),
+        ).fetchone()
+        if owned_opportunity is None:
+            return 0
 
     get_db().execute("DELETE FROM bookmarks WHERE opportunity_id = ?", (opportunity_id,))
     get_db().execute("DELETE FROM applications WHERE opportunity_id = ?", (opportunity_id,))
-    get_db().execute(
-        f"DELETE FROM opportunities WHERE id = ?{owner_check}", params
+    cursor = get_db().execute(
+        "DELETE FROM opportunities WHERE id = ?",
+        (opportunity_id,),
     )
     get_db().commit()
+    return cursor.rowcount
 
 
 def get_opportunity_form_data():

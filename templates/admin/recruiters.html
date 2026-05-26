@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Recruiter - Pathora{% endblock %}
+
+{% block content %}
+<section class="section-heading">
+    <h1>Kelola Recruiter</h1>
+    <p>Kelola status akun recruiter yang sudah terdaftar.</p>
+</section>
+
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Perusahaan</th>
+                <th>Posisi</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recruiter in recruiters %}
+            <tr>
+                <td>{{ recruiter.name }}</td>
+                <td>{{ recruiter.email }}</td>
+                <td>{{ recruiter.company_name }}</td>
+                <td>{{ recruiter.company_position }}</td>
+                <td>{{ account_status_labels.get(recruiter.account_status, recruiter.account_status) }}</td>
+                <td>
+                    <form class="inline-form" method="post" action="{{ url_for('admin_update_recruiter_status', user_id=recruiter.id) }}">
+                        {{ csrf_field() }}
+                        <select name="account_status" aria-label="Status {{ recruiter.name }}">
+                            {% for status, label in account_status_labels.items() %}
+                            <option value="{{ status }}" {% if recruiter.account_status == status %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="secondary-action">Simpan</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">Belum ada akun recruiter.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

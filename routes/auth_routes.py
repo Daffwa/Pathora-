@@ -1,8 +1,18 @@
 from flask import current_app, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from services.auth_service import normalize_role
-from services.constants import PUBLIC_REGISTER_ROLES, RECRUITER_POSITION_OPTIONS
+from services.audit_service import record_audit_event
+from services.auth_service import (
+    get_inactive_account_message,
+    is_user_account_active,
+    normalize_account_status,
+    normalize_role,
+)
+from services.constants import (
+    ACCOUNT_STATUS_APPROVED,
+    PUBLIC_REGISTER_ROLES,
+    RECRUITER_POSITION_OPTIONS,
+)
 from services.database_service import get_db, is_production_environment
 from services.email_service import (
     get_mail_configuration_error,
@@ -113,10 +123,32 @@ def register(app):
                 flash("Role akun tidak valid. Hubungi admin sistem.")
                 return render_template("login.html"), 403
 
+            account_status = normalize_account_status(
+                user["account_status"] if "account_status" in user.keys() else ACCOUNT_STATUS_APPROVED
+            )
+            if not is_user_account_active(user):
+                record_audit_event(
+                    "auth.login_blocked",
+                    target_type="user",
+                    target_id=user["id"],
+                    metadata={"role": current_role, "account_status": account_status},
+                    user_id=user["id"],
+                )
+                flash(get_inactive_account_message(user))
+                return render_template("login.html"), 403
+
             session.clear()
             session["user_id"] = user["id"]
             session["user_name"] = user["name"]
             session["user_role"] = current_role
+            session["account_status"] = account_status
+            record_audit_event(
+                "auth.login",
+                target_type="user",
+                target_id=user["id"],
+                metadata={"role": current_role},
+                user_id=user["id"],
+            )
             flash(f"Selamat datang, {user['name']}!")
             if current_role == "admin":
                 return redirect(url_for("admin_dashboard"))
@@ -269,11 +301,13 @@ def register(app):
                 return render_template("register.html", form_data=form_data), 409
 
             password_hash = generate_password_hash(password)
+            account_status = ACCOUNT_STATUS_APPROVED
             cursor = get_db().execute(
                 """
                 INSERT INTO users
-                (name, email, skills, password_hash, role, company_name, company_position)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (name, email, skills, password_hash, role, account_status,
+                 company_name, company_position)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     name,
@@ -281,16 +315,25 @@ def register(app):
                     skills,
                     password_hash,
                     requested_role,
+                    account_status,
                     company_name,
                     company_position,
                 ),
             )
             get_db().commit()
+            record_audit_event(
+                "account.register",
+                target_type="user",
+                target_id=cursor.lastrowid,
+                metadata={"role": requested_role, "account_status": account_status},
+                user_id=cursor.lastrowid,
+            )
 
             session.clear()
             session["user_id"] = cursor.lastrowid
             session["user_name"] = name
             session["user_role"] = requested_role
+            session["account_status"] = account_status
             flash(f"Selamat datang, {name}!")
             if requested_role == "recruiter":
                 return redirect(url_for("recruiter_dashboard"))

@@ -54,6 +54,18 @@ def register_recruiter(client, email, name="Test Recruiter"):
     )
 
 
+def login_user(client, email, password="secret1234"):
+    return post_form(
+        client,
+        "/login",
+        data={"email": email, "password": password},
+    )
+
+
+def register_approved_recruiter(client, app, email, name="Test Recruiter"):
+    return register_recruiter(client, email, name)
+
+
 def login_admin(client, password="admin12345"):
     return post_form(
         client,
@@ -363,8 +375,8 @@ class TestRoleAccess:
         resp = client.get("/admin", follow_redirects=False)
         assert resp.status_code == 403
 
-    def test_recruiter_cannot_access_admin(self, client):
-        register_recruiter(client, "rec@test.com", "Rec Test")
+    def test_recruiter_cannot_access_admin(self, client, app):
+        register_approved_recruiter(client, app, "rec@test.com", "Rec Test")
         resp = client.get("/admin", follow_redirects=False)
         assert resp.status_code == 403
 
@@ -377,6 +389,158 @@ class TestRoleAccess:
         login_admin(client)
         resp = client.get("/recruiter/applicants")
         assert resp.status_code == 200
+
+    def test_new_recruiter_is_auto_approved_and_can_access_features(self, client, app):
+        resp = register_recruiter(client, "auto-rec@test.com", "Auto Recruiter")
+        assert resp.status_code == 302
+        assert client.get("/recruiter/dashboard").status_code == 200
+
+        with app.app_context():
+            from services.database_service import get_db
+
+            recruiter = get_db().execute(
+                "SELECT account_status FROM users WHERE email = ?",
+                ("auto-rec@test.com",),
+            ).fetchone()
+            assert recruiter["account_status"] == "approved"
+
+    def test_admin_can_update_recruiter_status(self, client, app):
+        register_recruiter(client, "status-rec@test.com", "Status Rec")
+        with app.app_context():
+            from services.database_service import get_db
+
+            recruiter = get_db().execute(
+                "SELECT id FROM users WHERE email = ?",
+                ("status-rec@test.com",),
+            ).fetchone()
+
+        post_form(client, "/logout", csrf_url="/recruiter/dashboard")
+        login_admin(client)
+        resp = post_form(
+            client,
+            f"/admin/recruiters/{recruiter['id']}/status",
+            csrf_url="/admin/recruiters",
+            data={"account_status": "rejected"},
+            follow_redirects=False,
+        )
+        assert resp.status_code == 302
+
+        with app.app_context():
+            recruiter = get_db().execute(
+                "SELECT account_status FROM users WHERE email = ?",
+                ("status-rec@test.com",),
+            ).fetchone()
+            assert recruiter["account_status"] == "rejected"
+
+    def test_recruiter_cannot_manage_other_recruiter_opportunity(self, client, app):
+        register_approved_recruiter(client, app, "owner-rec@test.com", "Owner Rec")
+        create_resp = post_form(
+            client,
+            "/recruiter/opportunities/create",
+            data={
+                "title": "Private Owner Role",
+                "opportunity_type": "internship",
+                "provider": "PT Owner",
+                "location": "Jakarta",
+                "deadline": "2026-08-01",
+                "description": "Owner only",
+                "requirements": "Owner requirements",
+                "official_link": "https://example.com",
+                "required_skills": "python",
+            },
+            follow_redirects=False,
+        )
+        assert create_resp.status_code == 302
+
+        with app.app_context():
+            from services.database_service import get_db
+
+            opportunity = get_db().execute(
+                "SELECT id FROM opportunities WHERE title = ?",
+                ("Private Owner Role",),
+            ).fetchone()
+
+        post_form(client, "/logout", csrf_url="/recruiter/dashboard")
+        register_approved_recruiter(client, app, "other-rec@test.com", "Other Rec")
+
+        edit_resp = client.get(
+            f"/recruiter/opportunities/{opportunity['id']}/edit",
+            follow_redirects=False,
+        )
+        assert edit_resp.status_code == 404
+
+        delete_resp = post_form(
+            client,
+            f"/recruiter/opportunities/{opportunity['id']}/delete",
+            csrf_url="/recruiter/opportunities",
+            follow_redirects=False,
+        )
+        assert delete_resp.status_code == 404
+
+        with app.app_context():
+            from services.database_service import get_db
+
+            still_exists = get_db().execute(
+                "SELECT id FROM opportunities WHERE id = ?",
+                (opportunity["id"],),
+            ).fetchone()
+            assert still_exists is not None
+
+    def test_jobseeker_cannot_remove_other_jobseeker_application(self, client, app):
+        register_jobseeker(client, "owner-js@test.com", "Owner JS")
+        post_form(
+            client,
+            "/opportunities/1/track",
+            csrf_url="/opportunities/1",
+            follow_redirects=False,
+        )
+        with app.app_context():
+            from services.database_service import get_db
+
+            application = get_db().execute(
+                """
+                SELECT applications.id
+                FROM applications
+                JOIN users ON users.id = applications.user_id
+                WHERE users.email = ?
+                """,
+                ("owner-js@test.com",),
+            ).fetchone()
+
+        post_form(client, "/logout", csrf_url="/dashboard")
+        register_jobseeker(client, "other-js@test.com", "Other JS")
+        remove_resp = post_form(
+            client,
+            f"/applications/{application['id']}/remove",
+            csrf_url="/applications",
+            follow_redirects=False,
+        )
+        assert remove_resp.status_code == 404
+
+    def test_jobseeker_documents_page_only_shows_own_documents(self, client, app):
+        register_jobseeker(client, "doc-owner@test.com", "Doc Owner")
+        with app.app_context():
+            from services.database_service import get_db
+
+            owner = get_db().execute(
+                "SELECT id FROM users WHERE email = ?",
+                ("doc-owner@test.com",),
+            ).fetchone()
+            get_db().execute(
+                """
+                INSERT INTO documents
+                    (user_id, doc_type, file_name, file_path, is_uploaded, notes)
+                VALUES (?, ?, ?, ?, 1, ?)
+                """,
+                (owner["id"], "CV", "private-owner-cv.pdf", "owner.pdf", "private"),
+            )
+            get_db().commit()
+
+        post_form(client, "/logout", csrf_url="/dashboard")
+        register_jobseeker(client, "doc-other@test.com", "Doc Other")
+        resp = client.get("/documents")
+        assert resp.status_code == 200
+        assert b"private-owner-cv.pdf" not in resp.data
 
 
 class TestAuthenticatedRoutes:

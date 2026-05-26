@@ -83,6 +83,67 @@ ROLE_LABELS = {
     "recruiter": "Recruiter / HRD",
     "admin": "Admin",
 }
+ACCOUNT_STATUS_PENDING = "pending"
+ACCOUNT_STATUS_APPROVED = "approved"
+ACCOUNT_STATUS_REJECTED = "rejected"
+VALID_ACCOUNT_STATUSES = {
+    ACCOUNT_STATUS_PENDING,
+    ACCOUNT_STATUS_APPROVED,
+    ACCOUNT_STATUS_REJECTED,
+}
+ACCOUNT_STATUS_LABELS = {
+    ACCOUNT_STATUS_PENDING: "Menunggu persetujuan",
+    ACCOUNT_STATUS_APPROVED: "Disetujui",
+    ACCOUNT_STATUS_REJECTED: "Ditolak",
+}
+PERMISSIONS = {
+    "jobseeker.access",
+    "recruiter.access",
+    "admin.access",
+    "opportunities.view",
+    "opportunities.manage_own",
+    "opportunities.manage_all",
+    "applications.manage_self",
+    "applicants.manage_own",
+    "applicants.manage_all",
+    "bookmarks.manage_self",
+    "documents.manage_self",
+    "profile.manage_self",
+    "chat.use",
+    "ai.use",
+    "ai.health",
+    "recruiter_accounts.manage",
+    "audit.write",
+}
+ROLE_PERMISSION_MATRIX = {
+    "jobseeker": {
+        "jobseeker.access",
+        "opportunities.view",
+        "applications.manage_self",
+        "bookmarks.manage_self",
+        "documents.manage_self",
+        "profile.manage_self",
+        "chat.use",
+        "ai.use",
+    },
+    "recruiter": {
+        "recruiter.access",
+        "opportunities.view",
+        "opportunities.manage_own",
+        "applicants.manage_own",
+        "chat.use",
+        "ai.use",
+    },
+    "admin": {
+        "admin.access",
+        "opportunities.view",
+        "opportunities.manage_all",
+        "applicants.manage_all",
+        "ai.health",
+        "recruiter_accounts.manage",
+        "audit.write",
+    },
+}
 RECRUITER_POSITION_OPTIONS = [
     "HRD",
     "Human Resources Staff",

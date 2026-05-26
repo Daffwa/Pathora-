@@ -2,6 +2,63 @@
 
 {% block title %}Dashboard Recruiter - Pathora{% endblock %}
 
+{% macro recruiter_icon(name, extra_class="") %}
+<span class="recruiter-icon {{ extra_class }}" aria-hidden="true">
+    <svg viewBox="0 0 24 24" focusable="false">
+        {% if name == "create" %}
+        <path d="M7 3h6l4 4v11a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z"></path>
+        <path d="M13 3v5h5"></path>
+        <path d="M8 13h8"></path>
+        <path d="M12 9v8"></path>
+        {% elif name == "candidate" %}
+        <circle cx="10" cy="8" r="3"></circle>
+        <path d="M4 19a6 6 0 0 1 12 0"></path>
+        <path d="m17.5 6.5.8 1.7 1.9.3-1.4 1.3.3 1.9-1.6-.9-1.7.9.4-1.9-1.4-1.3 1.9-.3.8-1.7Z"></path>
+        {% elif name == "chat" %}
+        <path d="M4 6.5A4.5 4.5 0 0 1 8.5 2h4A4.5 4.5 0 0 1 17 6.5v1A4.5 4.5 0 0 1 12.5 12H9l-4 3v-3.5a4.5 4.5 0 0 1-1-3Z"></path>
+        <path d="M13 13h2.5A4.5 4.5 0 0 0 20 8.5v0"></path>
+        <path d="M8 7h5"></path>
+        <path d="M8 10h3"></path>
+        {% elif name == "analytics" %}
+        <path d="M4 19V5"></path>
+        <path d="M4 19h16"></path>
+        <path d="M8 16v-4"></path>
+        <path d="M12 16V9"></path>
+        <path d="M16 16v-6"></path>
+        <path d="m8 9 3-3 4 3 5-6"></path>
+        <path d="M18 3h2v2"></path>
+        {% elif name == "active" %}
+        <path d="M5 8h14a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-7a2 2 0 0 1 2-2Z"></path>
+        <path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+        <path d="M3 12h18"></path>
+        <path d="M10 12v2h4v-2"></path>
+        {% elif name == "applicants" %}
+        <circle cx="12" cy="7" r="3"></circle>
+        <circle cx="5.5" cy="9" r="2"></circle>
+        <circle cx="18.5" cy="9" r="2"></circle>
+        <path d="M7 20a5 5 0 0 1 10 0"></path>
+        <path d="M2 18a4 4 0 0 1 5-3.8"></path>
+        <path d="M17 14.2a4 4 0 0 1 5 3.8"></path>
+        {% elif name == "interview" %}
+        <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+        <path d="M8 2v4"></path>
+        <path d="M16 2v4"></path>
+        <path d="M4 9h16"></path>
+        <path d="M12 13v3l2 1"></path>
+        {% elif name == "review" %}
+        <path d="M8 4h8a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+        <path d="M9 4.5A3 3 0 0 1 12 2a3 3 0 0 1 3 2.5"></path>
+        <path d="m9 13 2 2 4-5"></path>
+        <path d="M8 18h8"></path>
+        {% elif name == "reply" %}
+        <path d="M5 6.5A4.5 4.5 0 0 1 9.5 2h5A4.5 4.5 0 0 1 19 6.5v4A4.5 4.5 0 0 1 14.5 15H11l-5 4v-4.2A4.5 4.5 0 0 1 5 12Z"></path>
+        <path d="M13 8H8"></path>
+        <path d="m10 5-3 3 3 3"></path>
+        {% endif %}
+    </svg>
+</span>
+{% endmacro %}
+
 {% block content %}
 <section class="dashboard-page recruiter-home">
     <div class="page-heading split-heading">
@@ -19,22 +76,22 @@
         <article class="panel-card quick-actions-card">
             <h2>Aksi Cepat</h2>
             <div class="quick-actions recruiter-actions">
-                <a href="{{ url_for('recruiter_create_opportunity') }}"><span class="doc-icon"></span>Buat Lowongan</a>
-                <a href="{{ url_for('recruiter_applicants') }}"><span class="calendar-icon"></span>Kandidat Pilihan</a>
-                <a href="{{ url_for('chat') }}"><span class="chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Chat</a>
-                <a href="{{ url_for('recruiter_opportunities') }}"><span class="chart-icon"></span>Analitik</a>
+                <a href="{{ url_for('recruiter_create_opportunity') }}">{{ recruiter_icon("create", "quick-action-icon") }}Buat Lowongan</a>
+                <a href="{{ url_for('recruiter_applicants') }}">{{ recruiter_icon("candidate", "quick-action-icon") }}Kandidat Pilihan</a>
+                <a href="{{ url_for('chat') }}">{{ recruiter_icon("chat", "quick-action-icon") }}Chat</a>
+                <a href="{{ url_for('recruiter_opportunities') }}">{{ recruiter_icon("analytics", "quick-action-icon") }}Analitik</a>
             </div>
         </article>
 
         <article class="summary-card compact-stat">
-            <span class="summary-icon briefcase-icon"></span>
+            {{ recruiter_icon("active", "stat-card-icon") }}
             <small>Lowongan Aktif</small>
             <strong>{{ total_opportunities }}</strong>
             <p>{{ recruiter.company_name or "Perusahaan belum diisi" }}</p>
         </article>
 
         <article class="summary-card compact-stat">
-            <span class="summary-icon user-icon"></span>
+            {{ recruiter_icon("applicants", "stat-card-icon") }}
             <small>Total Pelamar</small>
             <strong>{{ total_applicants }}</strong>
             <p>{{ recent_applicants|length }} menunggu review</p>
@@ -43,7 +100,7 @@
 
     <section class="recruiter-analytics-grid">
         <article class="summary-card compact-stat pending-card">
-            <span class="summary-icon calendar-icon"></span>
+            {{ recruiter_icon("interview", "stat-card-icon") }}
             <small>Interview Tertunda</small>
             <strong>{{ recent_applicants|length }}</strong>
             <p>Jadwalkan kandidat shortlist minggu ini.</p>
@@ -97,8 +154,8 @@
             <article class="panel-card action-required-card">
                 <h2>Perlu Aksi</h2>
                 <div class="action-list">
-                    <a href="{{ url_for('recruiter_applicants') }}"><span class="checklist-icon"></span>Review kandidat baru</a>
-                    <a href="{{ url_for('chat') }}"><span class="chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Balas pesan kandidat</a>
+                    <a href="{{ url_for('recruiter_applicants') }}">{{ recruiter_icon("review", "action-required-icon") }}Review kandidat baru</a>
+                    <a href="{{ url_for('chat') }}">{{ recruiter_icon("reply", "action-required-icon") }}Balas pesan kandidat</a>
                 </div>
             </article>
             <article class="blue-insight-card">

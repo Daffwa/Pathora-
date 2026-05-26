@@ -169,6 +169,14 @@ def _migrate_users(db):
     columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
     if "role" not in columns:
         db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'jobseeker'")
+    if "account_status" not in columns:
+        db.execute(
+            """
+            ALTER TABLE users
+            ADD COLUMN account_status TEXT NOT NULL DEFAULT 'approved'
+                CHECK (account_status IN ('pending', 'approved', 'rejected'))
+            """
+        )
     if "company_name" not in columns:
         db.execute("ALTER TABLE users ADD COLUMN company_name TEXT DEFAULT ''")
     if "company_position" not in columns:
@@ -183,6 +191,14 @@ def _migrate_users(db):
         SET role = 'jobseeker'
         WHERE role = 'student' OR role IS NULL OR role = ''
            OR role NOT IN ('jobseeker', 'recruiter', 'admin')
+        """
+    )
+    db.execute(
+        """
+        UPDATE users
+        SET account_status = 'approved'
+        WHERE account_status IS NULL OR account_status = ''
+           OR account_status NOT IN ('pending', 'approved', 'rejected')
         """
     )
 
@@ -202,6 +218,8 @@ def _rebuild_users_table(db):
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'jobseeker'
                 CHECK (role IN ('jobseeker', 'recruiter', 'admin')),
+            account_status TEXT NOT NULL DEFAULT 'approved'
+                CHECK (account_status IN ('pending', 'approved', 'rejected')),
             skills TEXT DEFAULT '', company_name TEXT DEFAULT '',
             company_position TEXT DEFAULT '', nickname TEXT DEFAULT '',
             phone TEXT DEFAULT '', birth_date TEXT DEFAULT '',
@@ -220,7 +238,7 @@ def _rebuild_users_table(db):
     db.execute(
         """
         INSERT INTO users_new
-        (id, name, email, password_hash, role, skills,
+        (id, name, email, password_hash, role, account_status, skills,
          company_name, company_position, nickname, phone, birth_date,
          gender, domicile, bio, university, faculty, major, degree,
          semester, gpa, entry_year, desired_positions, preferred_program,
@@ -228,6 +246,8 @@ def _rebuild_users_table(db):
          github, portfolio_url, avatar_path, updated_at, created_at)
         SELECT id, name, email, password_hash,
                CASE WHEN role IN ('jobseeker','recruiter','admin') THEN role ELSE 'jobseeker' END,
+               CASE WHEN account_status IN ('pending','approved','rejected')
+                    THEN account_status ELSE 'approved' END,
                COALESCE(skills,''), COALESCE(company_name,''), COALESCE(company_position,''),
                COALESCE(nickname,''), COALESCE(phone,''), COALESCE(birth_date,''),
                COALESCE(gender,''), COALESCE(domicile,''), COALESCE(bio,''),
@@ -264,11 +284,18 @@ def _seed_admin(db):
     ).fetchone()
     if admin is None:
         db.execute(
-            "INSERT INTO users (name, email, password_hash, role, skills) VALUES (?, ?, ?, ?, ?)",
-            ("Admin", email, generate_password_hash(password), "admin", ""),
+            """
+            INSERT INTO users
+                (name, email, password_hash, role, account_status, skills)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            ("Admin", email, generate_password_hash(password), "admin", "approved", ""),
         )
     else:
-        db.execute("UPDATE users SET role = ? WHERE email = ?", ("admin", email))
+        db.execute(
+            "UPDATE users SET role = ?, account_status = ? WHERE email = ?",
+            ("admin", "approved", email),
+        )
 
 
 def _seed_sample_opportunities(db):

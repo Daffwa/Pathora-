@@ -88,7 +88,9 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 ## Fitur Utama
 
 - Authentication dengan Flask session
-- Role-based access control (decorator guards)
+- Role-based access control (decorator guards) dengan permission matrix
+- Status akun recruiter untuk moderasi (`pending`, `approved`, `rejected`) dengan register default `approved`
+- Audit log untuk aksi penting seperti login, upload dokumen, lowongan, dan status applicant
 - CSRF protection untuk form dan request AJAX
 - Security headers dan cookie hardening untuk production
 - Rate limiting untuk login, AI Assistant, dan chat
@@ -193,6 +195,8 @@ tests/                          # Unit tests
 tools/                          # Utility scripts
 deploy/                         # Deployment config
 ```
+
+Detail aturan akses ada di `docs/access-control.md`.
 
 ## Refactoring Highlights
 

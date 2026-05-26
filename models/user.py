@@ -8,6 +8,7 @@ class User:
     email: str
     password_hash: str
     role: str = "jobseeker"
+    account_status: str = "approved"
     skills: str = ""
     company_name: str = ""
     company_position: str = ""
@@ -44,6 +45,7 @@ class User:
             email=row["email"],
             password_hash=row["password_hash"],
             role=row["role"],
+            account_status=row["account_status"] if "account_status" in row_keys else "approved",
             skills=row["skills"] or "",
             company_name=row["company_name"] if "company_name" in row_keys else "",
             company_position=row["company_position"] if "company_position" in row_keys else "",

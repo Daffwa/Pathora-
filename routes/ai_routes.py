@@ -13,7 +13,12 @@ from services.ai_service import (
     google_client,
     redact_sensitive_log_text,
 )
-from services.auth_service import get_current_role, get_current_user
+from services.auth_service import (
+    get_current_role,
+    get_current_user,
+    get_inactive_account_message,
+    is_user_account_active,
+)
 from services.rate_limit_service import check_rate_limit
 
 
@@ -21,9 +26,12 @@ def _require_authenticated_user():
     if "user_id" not in session:
         return jsonify({"error": "Silakan login terlebih dahulu."}), 401
 
-    if get_current_user() is None:
+    user = get_current_user()
+    if user is None:
         session.clear()
         return jsonify({"error": "Sesi akun tidak ditemukan. Silakan login ulang."}), 401
+    if not is_user_account_active(user):
+        return jsonify({"error": get_inactive_account_message(user)}), 403
 
     return None
 

@@ -2,7 +2,13 @@ import sqlite3
 
 from flask import abort, current_app, flash, jsonify, render_template, request, send_from_directory, session
 
-from services.auth_service import get_current_role, login_required
+from services.auth_service import (
+    get_current_role,
+    get_current_user,
+    get_inactive_account_message,
+    is_user_account_active,
+    login_required,
+)
 from services.chat_service import (
     chat_message_payload,
     get_chat_contact_payload,
@@ -29,6 +35,9 @@ def register(app):
     @app.route("/uploads/chat/<path:filename>")
     def chat_attachment_file(filename):
         if "user_id" not in session:
+            abort(404)
+        user = get_current_user()
+        if user is None or not is_user_account_active(user):
             abort(404)
 
         if not is_safe_stored_filename(filename):
@@ -89,6 +98,12 @@ def register(app):
     def send_chat_message():
         if "user_id" not in session:
             return jsonify({"error": "Silakan login terlebih dahulu."}), 401
+        user = get_current_user()
+        if user is None:
+            session.clear()
+            return jsonify({"error": "Silakan login terlebih dahulu."}), 401
+        if not is_user_account_active(user):
+            return jsonify({"error": get_inactive_account_message(user)}), 403
 
         allowed, retry_after = check_rate_limit(
             "chat-message",

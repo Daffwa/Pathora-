@@ -22,6 +22,63 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.recruiter-home .recruiter-icon {
+    width: 42px;
+    height: 42px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 42px;
+    color: #FFFFFF;
+    background: radial-gradient(circle at 32% 24%, #2F91D0 0 18%, #0B66C3 56%, #005BAA 100%);
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-radius: 50%;
+    box-shadow: 0 10px 24px rgba(0, 91, 170, 0.22);
+}
+
+.recruiter-home .recruiter-icon::before,
+.recruiter-home .recruiter-icon::after {
+    content: none !important;
+}
+
+.recruiter-home .recruiter-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.recruiter-home .quick-actions a > .recruiter-icon,
+.recruiter-home .action-list a > .recruiter-icon {
+    color: #FFFFFF;
+    background: radial-gradient(circle at 32% 24%, #2F91D0 0 18%, #0B66C3 56%, #005BAA 100%);
+    border-radius: 50%;
+}
+
+.recruiter-home .quick-actions a:hover > .recruiter-icon,
+.recruiter-home .action-list a:hover > .recruiter-icon {
+    background: radial-gradient(circle at 32% 24%, #3AA2E3 0 18%, #075FB6 56%, #004F94 100%);
+}
+
+.recruiter-home .stat-card-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    margin-bottom: 22px;
+}
+
+.recruiter-home .summary-card > .stat-card-icon {
+    color: #FFFFFF;
+}
+
+.recruiter-home .stat-card-icon svg {
+    width: 23px;
+    height: 23px;
+}
+
 .compact-stat {
     min-height: 180px;
     align-content: center;

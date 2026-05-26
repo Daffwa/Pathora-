@@ -4,6 +4,7 @@ from pathlib import Path
 from flask import abort, flash, redirect, render_template, request, send_from_directory, session, url_for
 
 from models.document import Document
+from services.audit_service import record_audit_event
 from services.auth_service import jobseeker_required_decorator
 from services.constants import DOCUMENT_TYPES
 from services.database_service import get_db
@@ -104,6 +105,12 @@ def register(app):
                 (session["user_id"], doc_type, file_name, file_path, is_uploaded, notes),
             )
             get_db().commit()
+            if uploaded_file and uploaded_file.filename:
+                record_audit_event(
+                    "document.upload",
+                    target_type="document",
+                    metadata={"doc_type": doc_type, "file_name": file_name},
+                )
             flash(f"Dokumen {doc_type} berhasil diperbarui.")
         except sqlite3.Error:
             flash("Dokumen belum bisa diperbarui. Silakan coba lagi.")

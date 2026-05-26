@@ -2,6 +2,7 @@ import sqlite3
 
 from flask import flash, redirect, render_template, request, session, url_for
 
+from services.audit_service import record_audit_event
 from services.auth_service import (
     get_current_role,
     get_current_user,
@@ -50,7 +51,13 @@ def _recruiter_opportunity_form(opportunity=None, form_title="", action_url=""):
             ), 400
 
         try:
-            create_opportunity(opportunity, session["user_id"], company_name)
+            opportunity_id = create_opportunity(opportunity, session["user_id"], company_name)
+            record_audit_event(
+                "opportunity.create",
+                target_type="opportunity",
+                target_id=opportunity_id,
+                metadata={"scope": "recruiter"},
+            )
             flash("Lowongan berhasil dibuat.")
             return redirect(url_for("recruiter_opportunities"))
         except sqlite3.Error:
@@ -156,6 +163,13 @@ def register(app):
                 update_opportunity(
                     opportunity_id, opportunity,
                     company_name=get_current_user()["company_name"] or "",
+                    user_id=session["user_id"],
+                )
+                record_audit_event(
+                    "opportunity.update",
+                    target_type="opportunity",
+                    target_id=opportunity_id,
+                    metadata={"scope": "recruiter"},
                 )
                 flash("Lowongan berhasil diperbarui.")
                 return redirect(url_for("recruiter_opportunities"))
@@ -177,6 +191,12 @@ def register(app):
 
         try:
             delete_opportunity_with_cascade(opportunity_id, session["user_id"])
+            record_audit_event(
+                "opportunity.delete",
+                target_type="opportunity",
+                target_id=opportunity_id,
+                metadata={"scope": "recruiter"},
+            )
             flash("Lowongan berhasil dihapus.")
         except sqlite3.Error:
             flash("Lowongan belum bisa dihapus. Silakan coba lagi.")
@@ -276,6 +296,15 @@ def register(app):
             )
             get_db().commit()
             if cursor.rowcount:
+                record_audit_event(
+                    "application_status.bulk_update",
+                    target_type="application",
+                    metadata={
+                        "status": status,
+                        "application_ids": selected_ids,
+                        "updated_count": cursor.rowcount,
+                    },
+                )
                 flash(f"{cursor.rowcount} applicant berhasil diperbarui menjadi {status}.")
             else:
                 flash("Tidak ada applicant yang dapat diperbarui.")
@@ -327,6 +356,12 @@ def register(app):
                 (status, application_id),
             )
             get_db().commit()
+            record_audit_event(
+                "application_status.update",
+                target_type="application",
+                target_id=application_id,
+                metadata={"status": status},
+            )
             flash("Status applicant berhasil diperbarui.")
         except sqlite3.Error:
             flash("Status applicant belum bisa diperbarui. Silakan coba lagi.")

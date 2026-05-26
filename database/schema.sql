@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'jobseeker' CHECK (role IN ('jobseeker', 'recruiter', 'admin')),
+    account_status TEXT NOT NULL DEFAULT 'approved' CHECK (account_status IN ('pending', 'approved', 'rejected')),
     skills TEXT DEFAULT '',
     company_name TEXT DEFAULT '',
     company_position TEXT DEFAULT '',
@@ -110,4 +111,17 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (thread_id) REFERENCES chat_threads (id),
     FOREIGN KEY (sender_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    action TEXT NOT NULL,
+    target_type TEXT DEFAULT '',
+    target_id INTEGER,
+    metadata TEXT DEFAULT '{}',
+    ip_address TEXT DEFAULT '',
+    user_agent TEXT DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
