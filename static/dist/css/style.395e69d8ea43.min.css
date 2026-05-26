@@ -4292,6 +4292,86 @@ grid-template-columns:minmax(0,1.35fr) minmax(300px,0.65fr);
 .recruiter-actions{
 grid-template-columns:repeat(2,minmax(0,1fr));
 }
+.recruiter-home .recruiter-icon{
+position:relative;
+width:42px;
+height:42px;
+min-width:42px;
+min-height:42px;
+max-width:42px;
+max-height:42px;
+display:inline-grid;
+place-items:center;
+flex:0 0 42px;
+color:#FFFFFF;
+font-size:0;
+line-height:0;
+background:radial-gradient(circle at 32% 24%,#2F91D0 0 18%,#0B66C3 56%,#005BAA 100%);
+border:1px solid rgba(255,255,255,0.26);
+border-radius:50%;
+box-shadow:0 10px 24px rgba(0,91,170,0.22);
+overflow:hidden;
+isolation:isolate;
+}
+.recruiter-home .recruiter-icon::before,
+.recruiter-home .recruiter-icon::after{
+content:none !important;
+}
+.recruiter-home .recruiter-icon svg,
+.recruiter-home .recruiter-icon .recruiter-icon-svg{
+width:24px !important;
+height:24px !important;
+min-width:24px;
+min-height:24px;
+max-width:24px !important;
+max-height:24px !important;
+display:block;
+flex:0 0 24px;
+color:#FFFFFF !important;
+fill:none !important;
+stroke:#FFFFFF !important;
+stroke-width:1.85;
+stroke-linecap:round;
+stroke-linejoin:round;
+overflow:visible;
+}
+.recruiter-home .recruiter-icon svg *,
+.recruiter-home .recruiter-icon .recruiter-icon-svg *{
+fill:none !important;
+stroke:#FFFFFF !important;
+vector-effect:non-scaling-stroke;
+}
+.recruiter-home .quick-actions a>.recruiter-icon,
+.recruiter-home .action-list a>.recruiter-icon{
+color:#FFFFFF;
+background:radial-gradient(circle at 32% 24%,#2F91D0 0 18%,#0B66C3 56%,#005BAA 100%);
+border-radius:50%;
+}
+.recruiter-home .quick-actions a:hover>.recruiter-icon,
+.recruiter-home .action-list a:hover>.recruiter-icon{
+background:radial-gradient(circle at 32% 24%,#3AA2E3 0 18%,#075FB6 56%,#004F94 100%);
+}
+.recruiter-home .stat-card-icon{
+width:46px;
+height:46px;
+min-width:46px;
+min-height:46px;
+max-width:46px;
+max-height:46px;
+flex-basis:46px;
+margin-bottom:22px;
+}
+.recruiter-home .summary-card>.stat-card-icon{
+color:#FFFFFF;
+font-size:0;
+line-height:0;
+}
+.recruiter-home .stat-card-icon svg{
+width:25px !important;
+height:25px !important;
+max-width:25px !important;
+max-height:25px !important;
+}
 .compact-stat{
 min-height:180px;
 align-content:center;
@@ -7505,4 +7585,4 @@ max-height:96px;
 width:100%;
 }
 }
-/*# sourceMappingURL=style.dcd38267f222.min.css.map */
+/*# sourceMappingURL=style.395e69d8ea43.min.css.map */
