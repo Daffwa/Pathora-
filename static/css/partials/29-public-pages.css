@@ -49,6 +49,38 @@
     border-color: var(--border);
 }
 
+.feature-image-icon {
+    width: 72px;
+    height: 72px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 72px;
+}
+
+.feature-image-icon img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.feature-card h3 {
+    margin-top: 22px;
+}
+
+@media (max-width: 760px) {
+    .feature-image-icon {
+        width: 60px;
+        height: 60px;
+        flex-basis: 60px;
+    }
+
+    .feature-card h3 {
+        margin-top: 18px;
+    }
+}
+
 .empty-state,
 .empty-inline {
     padding: 28px;

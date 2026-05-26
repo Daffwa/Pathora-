@@ -33,6 +33,21 @@
     color: var(--muted);
 }
 
+.tracker-summary .tracker-summary-icon {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tracker-summary .tracker-summary-icon img {
+    width: 52px;
+    height: 52px;
+    display: block;
+    object-fit: contain;
+}
+
 .table-card {
     padding: 0;
     overflow: visible;
@@ -245,5 +260,54 @@
 
 .priority-task-card h2 {
     margin: 0;
+}
+
+.quick-actions-card .action-list a {
+    min-height: 70px;
+}
+
+.quick-actions-card .action-list a > .quick-action-image {
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    color: inherit;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.quick-actions-card .action-list a:hover > .quick-action-image {
+    background: transparent;
+    box-shadow: none;
+}
+
+.quick-actions-card .quick-action-image img {
+    width: 54px;
+    height: 54px;
+    display: block;
+    object-fit: contain;
+}
+
+@media (max-width: 760px) {
+    .tracker-summary .tracker-summary-icon,
+    .tracker-summary .tracker-summary-icon img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .quick-actions-card .action-list a {
+        min-height: 68px;
+    }
+
+    .quick-actions-card .action-list a > .quick-action-image,
+    .quick-actions-card .quick-action-image img {
+        width: 52px;
+        height: 52px;
+    }
 }
 

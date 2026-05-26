@@ -4,6 +4,14 @@
 
 {% block content %}
 {% set percent = (complete_count / total_count * 100)|round if total_count else 0 %}
+{% set document_icon_map = {
+    "CV": "document-cv.png",
+    "Transkrip": "document-transkrip.png",
+    "Sertifikat": "document-sertifikat.png",
+    "Motivation Letter": "document-surat-rekomendasi.png",
+    "Portofolio": "document-portofolio.png",
+    "KTP/KTM": "document-ktp-ktm.png"
+} %}
 <section class="page-heading">
     <h1>Kelola Dokumen</h1>
     <p>{{ complete_count }} dari {{ total_count }} dokumen sudah tersedia untuk mendukung lamaran Anda.</p>
@@ -32,7 +40,9 @@
             <article class="document-row {% if not document.is_uploaded %}missing{% endif %}">
                 <div class="document-row-main">
                     <span class="document-check {% if document.is_uploaded %}checked{% endif %}"></span>
-                    <span class="document-icon doc-icon"></span>
+                    <span class="document-type-icon" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/' ~ document_icon_map.get(document.doc_type, 'document-cv.png')) }}" alt="" width="42" height="42" draggable="false">
+                    </span>
                     <div>
                         <h3>
                             {% if document.doc_type == "Transkrip" %}

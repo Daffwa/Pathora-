@@ -96,8 +96,8 @@
 
 .profile-page .profile-contact-list p {
     display: grid;
-    grid-template-columns: 20px minmax(84px, 0.4fr) minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 34px minmax(84px, 0.4fr) minmax(0, 1fr);
+    gap: 12px;
     align-items: center;
     color: var(--text);
     font-size: 0.9rem;
@@ -116,8 +116,20 @@
     overflow-wrap: anywhere;
 }
 
-.profile-page .tiny-icon {
-    color: var(--primary);
+.profile-page .profile-contact-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+.profile-page .profile-contact-icon img {
+    width: 34px;
+    height: 34px;
+    display: block;
+    object-fit: contain;
 }
 
 .profile-page .profile-edit-main {
@@ -423,7 +435,7 @@
 
 @media (max-width: 760px) {
     .profile-page .profile-contact-list p {
-        grid-template-columns: 20px minmax(0, 1fr);
+        grid-template-columns: 34px minmax(0, 1fr);
     }
 
     .profile-page .profile-contact-list strong {

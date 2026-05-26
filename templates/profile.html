@@ -30,9 +30,9 @@
                 </div>
 
                 <div class="profile-contact-list">
-                    <p><span class="tiny-icon mail-tiny"></span><strong>Email</strong><em>{{ user.email or "Belum diisi" }}</em></p>
-                    <p><span class="tiny-icon phone-tiny"></span><strong>Nomor telepon</strong><em>{{ user.phone or "Belum diisi" }}</em></p>
-                    <p><span class="tiny-icon pin-tiny"></span><strong>Lokasi</strong><em>{{ user.domicile or "Belum diisi" }}</em></p>
+                    <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-email-pintar.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Email</strong><em>{{ user.email or "Belum diisi" }}</em></p>
+                    <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-handphone.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Nomor telepon</strong><em>{{ user.phone or "Belum diisi" }}</em></p>
+                    <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-lokasi.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Lokasi</strong><em>{{ user.domicile or "Belum diisi" }}</em></p>
                 </div>
 
                 <a class="primary-button profile-edit-main" href="{{ url_for('edit_profile') }}">Edit Profil</a>

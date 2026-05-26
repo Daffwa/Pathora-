@@ -1,0 +1,28 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="160" rx="28" fill="#EEF3FB"/>
+
+  <!-- Hourglass top cap -->
+  <rect x="40" y="28" width="68" height="10" rx="4" fill="#1A3C9C" stroke="#1A3C9C" stroke-width="1.5"/>
+
+  <!-- Hourglass bottom cap -->
+  <rect x="40" y="108" width="68" height="10" rx="4" fill="#1A3C9C" stroke="#1A3C9C" stroke-width="1.5"/>
+
+  <!-- Hourglass glass outline -->
+  <path d="M46 38 L72 70 L46 108 M102 38 L76 70 L102 108" fill="none" stroke="#2456C8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="46" y1="38" x2="102" y2="38" stroke="#2456C8" stroke-width="2.5"/>
+  <line x1="46" y1="108" x2="102" y2="108" stroke="#2456C8" stroke-width="2.5"/>
+
+  <!-- Sand top (upper triangle fill) -->
+  <path d="M50 38 L74 68 L98 38 Z" fill="#9BB8E8" opacity="0.7"/>
+
+  <!-- Sand bottom (small pile) -->
+  <path d="M60 108 L74 88 L88 108 Z" fill="#9BB8E8" opacity="0.9"/>
+
+  <!-- Clock circle (overlapping bottom right) -->
+  <circle cx="108" cy="108" r="22" fill="#EEF3FB" stroke="#2456C8" stroke-width="2.5"/>
+  <circle cx="108" cy="108" r="18" fill="#DDEAFD"/>
+
+  <!-- Clock hands -->
+  <line x1="108" y1="108" x2="108" y2="96" stroke="#2456C8" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="108" y1="108" x2="118" y2="112" stroke="#2456C8" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

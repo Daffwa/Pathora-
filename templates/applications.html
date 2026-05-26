@@ -25,22 +25,30 @@
 
 <section class="summary-grid tracker-summary">
     <article class="summary-card">
-        <span class="summary-icon checklist-icon"></span>
+        <span class="tracker-summary-icon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/application-total-lamaran.svg') }}" alt="" width="52" height="52" draggable="false">
+        </span>
         <small>Total Lamaran</small>
         <strong>{{ applications|length }}</strong>
     </article>
     <article class="summary-card">
-        <span class="summary-icon calendar-icon"></span>
+        <span class="tracker-summary-icon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/application-interview.svg') }}" alt="" width="52" height="52" draggable="false">
+        </span>
         <small>Interview</small>
         <strong>{{ stats.interviews }}</strong>
     </article>
     <article class="summary-card">
-        <span class="summary-icon clock-icon"></span>
+        <span class="tracker-summary-icon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/application-menunggu-review.svg') }}" alt="" width="52" height="52" draggable="false">
+        </span>
         <small>Menunggu Review</small>
         <strong>{{ stats.pending }}</strong>
     </article>
     <article class="summary-card danger">
-        <span class="summary-icon danger-icon"></span>
+        <span class="tracker-summary-icon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/application-ditolak.svg') }}" alt="" width="52" height="52" draggable="false">
+        </span>
         <small>Ditolak</small>
         <strong>{{ stats.rejected }}</strong>
     </article>
@@ -127,9 +135,9 @@
     <article class="panel-card quick-actions-card">
         <h2>Aksi Cepat</h2>
         <div class="action-list">
-            <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Perbarui CV</a>
-            <a href="{{ url_for('applications') }}"><span class="clock-icon"></span>Track Follow-up</a>
-            <a href="{{ url_for('opportunities') }}"><span class="chart-icon"></span>Laporan Lamaran</a>
+            <a href="{{ url_for('documents') }}"><span class="quick-action-image" aria-hidden="true"><img src="{{ url_for('static', filename='img/quick-action-perbarui-cv.png') }}" alt="" width="54" height="54" draggable="false"></span>Perbarui CV</a>
+            <a href="{{ url_for('applications') }}"><span class="quick-action-image" aria-hidden="true"><img src="{{ url_for('static', filename='img/quick-action-track-followup.png') }}" alt="" width="54" height="54" draggable="false"></span>Track Follow-up</a>
+            <a href="{{ url_for('opportunities') }}"><span class="quick-action-image" aria-hidden="true"><img src="{{ url_for('static', filename='img/quick-action-laporan-lamaran.png') }}" alt="" width="54" height="54" draggable="false"></span>Laporan Lamaran</a>
         </div>
     </article>
 </section>

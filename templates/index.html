@@ -57,19 +57,25 @@
 
     <div class="feature-grid">
         <article class="feature-card">
-            <span class="feature-icon rocket-icon"></span>
+            <span class="feature-image-icon" aria-hidden="true">
+                <img src="{{ url_for('static', filename='img/feature-pelacak-pintar.png') }}" alt="" width="72" height="72" draggable="false">
+            </span>
             <h3>Pelacak Pintar</h3>
             <p>Monitoring semua status lamaran dalam satu dashboard interaktif dengan deadline yang mudah dibaca.</p>
             <a href="{{ url_for('opportunities') }}">Pelajari Selengkapnya</a>
         </article>
         <article class="feature-card">
-            <span class="feature-icon doc-icon"></span>
+            <span class="feature-image-icon" aria-hidden="true">
+                <img src="{{ url_for('static', filename='img/feature-checklist-dokumen.png') }}" alt="" width="72" height="72" draggable="false">
+            </span>
             <h3>Checklist Dokumen</h3>
             <p>Pastikan CV, transkrip, portofolio, dan motivation letter selalu siap saat peluang dibuka.</p>
             <a href="{{ url_for('register') }}">Siapkan Profil</a>
         </article>
         <article class="feature-card">
-            <span class="feature-icon gauge-icon"></span>
+            <span class="feature-image-icon" aria-hidden="true">
+                <img src="{{ url_for('static', filename='img/feature-skor-prioritas.png') }}" alt="" width="72" height="72" draggable="false">
+            </span>
             <h3>Skor Prioritas</h3>
             <p>Algoritma sederhana membantu menilai kecocokan deadline, skill, dan kesiapan dokumenmu.</p>
             <a href="{{ url_for('opportunities') }}">Lihat Skor</a>
