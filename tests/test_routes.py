@@ -113,6 +113,7 @@ class TestProtectedRoutesRedirect:
         "/recruiter/opportunities",
         "/recruiter/applicants",
         "/admin",
+        "/admin/audit-logs",
         "/admin/opportunities",
         "/admin/opportunities/create",
     ]
@@ -144,6 +145,156 @@ class TestSecurityHardening:
 
         assert "HttpOnly" in cookie_header
         assert "SameSite=Lax" in cookie_header
+
+    def test_ownership_and_audit_indexes_exist(self, app):
+        expected_indexes = {
+            "users": {
+                "idx_users_role_account_status",
+                "idx_users_account_status",
+            },
+            "opportunities": {
+                "idx_opportunities_created_by_updated_at",
+                "idx_opportunities_type",
+            },
+            "bookmarks": {
+                "idx_bookmarks_user_saved_at",
+                "idx_bookmarks_opportunity_id",
+            },
+            "applications": {
+                "idx_applications_user_updated_at",
+                "idx_applications_opportunity_id",
+            },
+            "documents": {
+                "idx_documents_user_uploaded",
+            },
+            "chat_threads": {
+                "idx_chat_threads_participant_one",
+                "idx_chat_threads_participant_two",
+            },
+            "chat_messages": {
+                "idx_chat_messages_thread_created_at",
+                "idx_chat_messages_sender_id",
+            },
+            "audit_logs": {
+                "idx_audit_logs_user_created_at",
+                "idx_audit_logs_created_at_id",
+                "idx_audit_logs_action_created_at",
+                "idx_audit_logs_target",
+            },
+        }
+
+        with app.app_context():
+            from services.database_service import get_db
+
+            for table_name, index_names in expected_indexes.items():
+                rows = get_db().execute(f"PRAGMA index_list({table_name})").fetchall()
+                actual_index_names = {row["name"] for row in rows}
+                assert index_names <= actual_index_names
+
+    def test_database_indexes_are_added_after_legacy_migrations(self, app, tmp_path):
+        import sqlite3
+
+        legacy_db = tmp_path / "legacy.db"
+        with sqlite3.connect(legacy_db) as connection:
+            connection.executescript(
+                """
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    skills TEXT DEFAULT '',
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE opportunities (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    provider TEXT NOT NULL,
+                    type TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    requirements TEXT NOT NULL,
+                    required_skills TEXT NOT NULL,
+                    location TEXT NOT NULL,
+                    deadline TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE bookmarks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    opportunity_id INTEGER NOT NULL,
+                    saved_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (user_id, opportunity_id)
+                );
+                CREATE TABLE applications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    opportunity_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Sudah Daftar',
+                    notes TEXT DEFAULT '',
+                    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (user_id, opportunity_id)
+                );
+                CREATE TABLE documents (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    doc_type TEXT NOT NULL,
+                    file_name TEXT DEFAULT '',
+                    is_uploaded INTEGER NOT NULL DEFAULT 0,
+                    notes TEXT DEFAULT '',
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (user_id, doc_type)
+                );
+                CREATE TABLE chat_threads (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    participant_one_id INTEGER NOT NULL,
+                    participant_two_id INTEGER NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (participant_one_id, participant_two_id)
+                );
+                CREATE TABLE chat_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    thread_id INTEGER NOT NULL,
+                    sender_id INTEGER NOT NULL,
+                    body TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE audit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    action TEXT NOT NULL,
+                    target_type TEXT DEFAULT '',
+                    target_id INTEGER,
+                    metadata TEXT DEFAULT '{}',
+                    ip_address TEXT DEFAULT '',
+                    user_agent TEXT DEFAULT '',
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+
+        app.config["DATABASE"] = str(legacy_db)
+        with app.app_context():
+            from services.database_service import init_database, get_db
+
+            init_database()
+            opportunity_columns = {
+                row["name"]
+                for row in get_db().execute("PRAGMA table_info(opportunities)")
+            }
+            audit_indexes = {
+                row["name"]
+                for row in get_db().execute("PRAGMA index_list(audit_logs)")
+            }
+
+        assert {"created_by", "company_name", "official_link"} <= opportunity_columns
+        assert {
+            "idx_audit_logs_created_at_id",
+            "idx_audit_logs_action_created_at",
+            "idx_audit_logs_target",
+        } <= audit_indexes
 
     def test_asset_url_uses_built_manifest(self, app, tmp_path):
         manifest_path = tmp_path / "asset-manifest.json"
@@ -396,6 +547,29 @@ class TestRoleAccess:
         login_admin(client)
         resp = client.get("/admin")
         assert resp.status_code == 200
+
+    def test_admin_dashboard_shows_actionable_overview(self, client):
+        login_admin(client)
+        resp = client.get("/admin")
+        assert resp.status_code == 200
+        assert b"Dashboard Admin" in resp.data
+        assert b"Kelola Recruiter" in resp.data
+        assert b"/admin/recruiters" in resp.data
+        assert b"/admin/audit-logs" in resp.data
+        assert b"Aktivitas Terbaru" in resp.data
+        assert b"Fokus Admin" in resp.data
+
+    def test_admin_can_view_audit_logs(self, client):
+        login_admin(client)
+        resp = client.get("/admin/audit-logs")
+        assert resp.status_code == 200
+        assert b"Audit Log" in resp.data
+        assert b"auth.login" in resp.data
+
+    def test_jobseeker_cannot_access_audit_logs(self, client):
+        register_jobseeker(client, "audit-js@test.com", "Audit JS")
+        resp = client.get("/admin/audit-logs", follow_redirects=False)
+        assert resp.status_code == 403
 
     def test_admin_can_access_recruiter_applicants(self, client):
         login_admin(client)

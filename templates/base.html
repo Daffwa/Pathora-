@@ -67,8 +67,10 @@
                 <a class="{% if request.endpoint and request.endpoint.startswith('recruiter_opportunities') %}active{% endif %}" href="{{ url_for('recruiter_opportunities') }}"><span class="nav-icon briefcase-icon"></span>Kelola Peluang</a>
                 <a class="{% if request.endpoint == 'chat' %}active{% endif %}" href="{{ url_for('chat') }}"><span class="nav-icon chat-icon chat-menu-icon" aria-hidden="true"><img class="chat-menu-icon-img" src="{{ url_for('static', filename='img/chat-message-icon.svg') }}" alt="" draggable="false"></span>Chat</a>
                 {% elif user_role == "admin" %}
-                <a class="{% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}" href="{{ url_for('admin_dashboard') }}"><span class="nav-icon shield-icon"></span>Admin</a>
-                <a class="{% if request.endpoint in ['opportunities', 'opportunity_detail'] %}active{% endif %}" href="{{ url_for('opportunities') }}"><span class="nav-icon briefcase-icon"></span>Peluang</a>
+                <a class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}"><span class="nav-icon shield-icon"></span>Dashboard Admin</a>
+                <a class="{% if request.endpoint in ['admin_opportunities', 'admin_create_opportunity', 'admin_edit_opportunity'] %}active{% endif %}" href="{{ url_for('admin_opportunities') }}"><span class="nav-icon briefcase-icon"></span>Kelola Peluang</a>
+                <a class="{% if request.endpoint in ['admin_recruiters', 'admin_update_recruiter_status'] %}active{% endif %}" href="{{ url_for('admin_recruiters') }}"><span class="nav-icon user-icon"></span>Kelola Recruiter</a>
+                <a class="{% if request.endpoint == 'admin_audit_logs' %}active{% endif %}" href="{{ url_for('admin_audit_logs') }}"><span class="nav-icon checklist-icon"></span>Audit Log</a>
                 {% endif %}
             </nav>
 
@@ -83,10 +85,10 @@
                 <button class="mobile-menu-button" type="button" data-mobile-menu-button aria-controls="app-sidebar" aria-expanded="false" aria-label="Buka menu navigasi">
                     <span class="mobile-menu-icon" aria-hidden="true"></span>
                 </button>
-                <form class="top-search" method="get" action="{% if user_role == 'recruiter' %}{{ url_for('recruiter_applicants') }}{% else %}{{ url_for('opportunities') }}{% endif %}">
+                <form class="top-search" method="get" action="{% if user_role == 'recruiter' %}{{ url_for('recruiter_applicants') }}{% elif user_role == 'admin' %}{{ url_for('admin_opportunities') }}{% else %}{{ url_for('opportunities') }}{% endif %}">
                     <label class="sr-only" for="global-search">Cari</label>
                     <span class="search-icon" aria-hidden="true"></span>
-                    <input id="global-search" name="q" type="search" placeholder="{% if user_role == 'recruiter' %}Cari pelamar, posisi, atau skill...{% else %}Cari peluang, perusahaan, atau dokumen...{% endif %}">
+                    <input id="global-search" name="q" type="search" placeholder="{% if user_role == 'recruiter' %}Cari pelamar, posisi, atau skill...{% elif user_role == 'admin' %}Cari peluang, perusahaan, atau recruiter...{% else %}Cari peluang, perusahaan, atau dokumen...{% endif %}">
                 </form>
                 <div class="topbar-actions">
                     <details class="topbar-popover">

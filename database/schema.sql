@@ -125,3 +125,22 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
+-- Indexes for RBAC checks, ownership filters, and audit log review.
+CREATE INDEX IF NOT EXISTS idx_users_role_account_status ON users (role, account_status);
+CREATE INDEX IF NOT EXISTS idx_users_account_status ON users (account_status);
+CREATE INDEX IF NOT EXISTS idx_opportunities_created_by_updated_at ON opportunities (created_by, updated_at);
+CREATE INDEX IF NOT EXISTS idx_opportunities_type ON opportunities (type);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user_saved_at ON bookmarks (user_id, saved_at);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_opportunity_id ON bookmarks (opportunity_id);
+CREATE INDEX IF NOT EXISTS idx_applications_user_updated_at ON applications (user_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_applications_opportunity_id ON applications (opportunity_id);
+CREATE INDEX IF NOT EXISTS idx_documents_user_uploaded ON documents (user_id, is_uploaded);
+CREATE INDEX IF NOT EXISTS idx_chat_threads_participant_one ON chat_threads (participant_one_id);
+CREATE INDEX IF NOT EXISTS idx_chat_threads_participant_two ON chat_threads (participant_two_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_thread_created_at ON chat_messages (thread_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_id ON chat_messages (sender_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created_at ON audit_logs (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at_id ON audit_logs (created_at, id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action_created_at ON audit_logs (action, created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs (target_type, target_id);

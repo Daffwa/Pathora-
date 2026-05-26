@@ -11,6 +11,28 @@ from services.constants import SQLITE_TIMEOUT_SECONDS, USER_PROFILE_COLUMN_DEFIN
 
 DEFAULT_ADMIN_PASSWORD = "admin12345"
 
+SCHEMA_INDEX_MARKER = "-- Indexes for RBAC checks, ownership filters, and audit log review."
+
+DATABASE_INDEX_STATEMENTS = (
+    "CREATE INDEX IF NOT EXISTS idx_users_role_account_status ON users (role, account_status)",
+    "CREATE INDEX IF NOT EXISTS idx_users_account_status ON users (account_status)",
+    "CREATE INDEX IF NOT EXISTS idx_opportunities_created_by_updated_at ON opportunities (created_by, updated_at)",
+    "CREATE INDEX IF NOT EXISTS idx_opportunities_type ON opportunities (type)",
+    "CREATE INDEX IF NOT EXISTS idx_bookmarks_user_saved_at ON bookmarks (user_id, saved_at)",
+    "CREATE INDEX IF NOT EXISTS idx_bookmarks_opportunity_id ON bookmarks (opportunity_id)",
+    "CREATE INDEX IF NOT EXISTS idx_applications_user_updated_at ON applications (user_id, updated_at)",
+    "CREATE INDEX IF NOT EXISTS idx_applications_opportunity_id ON applications (opportunity_id)",
+    "CREATE INDEX IF NOT EXISTS idx_documents_user_uploaded ON documents (user_id, is_uploaded)",
+    "CREATE INDEX IF NOT EXISTS idx_chat_threads_participant_one ON chat_threads (participant_one_id)",
+    "CREATE INDEX IF NOT EXISTS idx_chat_threads_participant_two ON chat_threads (participant_two_id)",
+    "CREATE INDEX IF NOT EXISTS idx_chat_messages_thread_created_at ON chat_messages (thread_id, created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_id ON chat_messages (sender_id)",
+    "CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created_at ON audit_logs (user_id, created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at_id ON audit_logs (created_at, id)",
+    "CREATE INDEX IF NOT EXISTS idx_audit_logs_action_created_at ON audit_logs (action, created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs (target_type, target_id)",
+)
+
 
 class DatabaseAccessError(RuntimeError):
     pass
@@ -145,7 +167,10 @@ def _create_storage_dirs():
 
 def _run_schema(db):
     with open(current_app.config["SCHEMA"], "r", encoding="utf-8") as schema:
-        db.executescript(schema.read())
+        schema_sql = schema.read()
+    # Indexes depend on migrated columns, so startup applies them after migrations.
+    table_schema_sql = schema_sql.split(SCHEMA_INDEX_MARKER, 1)[0]
+    db.executescript(table_schema_sql)
 
 
 def _migrate_documents(db):
@@ -277,6 +302,11 @@ def _migrate_opportunities(db):
         db.execute("ALTER TABLE opportunities ADD COLUMN company_name TEXT DEFAULT ''")
 
 
+def _ensure_database_indexes(db):
+    for statement in DATABASE_INDEX_STATEMENTS:
+        db.execute(statement)
+
+
 def _seed_admin(db):
     email, password = get_admin_seed_credentials()
     admin = db.execute(
@@ -334,6 +364,7 @@ def init_database():
         _migrate_chat_messages(db)
         _migrate_users(db)
         _migrate_opportunities(db)
+        _ensure_database_indexes(db)
         _seed_admin(db)
         _seed_sample_opportunities(db)
         db.commit()

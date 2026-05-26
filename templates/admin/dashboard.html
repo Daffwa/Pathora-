@@ -3,11 +3,11 @@
 {% block title %}Admin - Pathora{% endblock %}
 
 {% block content %}
-<section class="dashboard-page">
+<section class="dashboard-page admin-dashboard-page">
     <div class="dashboard-hero admin-hero">
         <div>
             <h1>Admin Dashboard</h1>
-            <p>Ringkasan data peluang internship dan scholarship yang tampil di aplikasi.</p>
+            <p>Pantau data peluang, recruiter, dan aktivitas penting platform dari satu layar.</p>
             <div class="hero-actions">
                 <a class="primary-button" href="{{ url_for('admin_opportunities') }}">Kelola Peluang</a>
                 <a class="secondary-button" href="{{ url_for('admin_create_opportunity') }}">Tambah Peluang</a>
@@ -17,29 +17,71 @@
     </div>
 
     <section class="summary-grid">
-        <article class="summary-card">
+        <a class="summary-card admin-stat-card" href="{{ url_for('admin_opportunities') }}">
             <span class="summary-icon grid-icon"></span>
             <span>Total Peluang</span>
             <strong>{{ total_opportunities }}</strong>
             <small>Semua data peluang</small>
-        </article>
-        <article class="summary-card">
+        </a>
+        <a class="summary-card admin-stat-card" href="{{ url_for('admin_opportunities') }}">
             <span class="summary-icon rocket-icon"></span>
             <span>Magang</span>
             <strong>{{ total_internship }}</strong>
             <small>Program magang aktif</small>
-        </article>
-        <article class="summary-card">
+        </a>
+        <a class="summary-card admin-stat-card" href="{{ url_for('admin_opportunities') }}">
             <span class="summary-icon bookmark-icon"></span>
             <span>Beasiswa</span>
             <strong>{{ total_scholarship }}</strong>
             <small>Beasiswa aktif</small>
-        </article>
-        <article class="summary-card">
+        </a>
+        <a class="summary-card admin-stat-card" href="{{ url_for('admin_recruiters') }}">
             <span class="summary-icon shield-icon"></span>
             <span>Total Recruiter</span>
             <strong>{{ total_recruiters }}</strong>
-            <small>Akun recruiter terdaftar</small>
+            <small>{{ pending_recruiters }} menunggu moderasi</small>
+        </a>
+    </section>
+
+    <section class="admin-activity-grid">
+        <article class="panel-card admin-activity-panel">
+            <div class="panel-heading">
+                <h2>Aktivitas Terbaru</h2>
+                <a class="soft-pill" href="{{ url_for('admin_audit_logs') }}">Audit Log</a>
+            </div>
+            <div class="admin-activity-list">
+                {% for activity in recent_activity %}
+                <div class="admin-activity-item">
+                    <span class="admin-activity-icon" aria-hidden="true"></span>
+                    <div>
+                        <strong>{{ activity.action_label }}</strong>
+                        <p>{{ activity.actor_name }}{% if activity.target_id %} - {{ activity.target_type }} #{{ activity.target_id }}{% else %} - {{ activity.target_type }}{% endif %}</p>
+                    </div>
+                    <time>{{ activity.created_at }}</time>
+                </div>
+                {% else %}
+                <div class="empty-inline">
+                    <strong>Belum ada aktivitas</strong>
+                    <span>Aktivitas penting akan muncul setelah user mulai memakai sistem.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel-card admin-focus-panel">
+            <h2>Fokus Admin</h2>
+            <a href="{{ url_for('admin_recruiters') }}">
+                <span>{{ pending_recruiters }}</span>
+                <strong>Recruiter menunggu moderasi</strong>
+            </a>
+            <a href="{{ url_for('admin_create_opportunity') }}">
+                <span>+</span>
+                <strong>Tambah peluang baru</strong>
+            </a>
+            <a href="{{ url_for('admin_audit_logs') }}">
+                <span>i</span>
+                <strong>Lihat audit log lengkap</strong>
+            </a>
         </article>
     </section>
 </section>
