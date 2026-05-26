@@ -29,7 +29,8 @@
                     <p><span class="profile-contact-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/profile-lokasi.png') }}" alt="" width="34" height="34" draggable="false"></span><strong>Lokasi</strong><em>{{ recruiter.domicile or "Belum diisi" }}</em></p>
                 </div>
 
-                <a class="primary-button profile-edit-main" href="{{ url_for('recruiter_opportunities') }}">Kelola Lowongan</a>
+                <a class="primary-button profile-edit-main" href="{{ url_for('recruiter_edit_profile') }}">Edit Profil</a>
+                <a class="secondary-button profile-edit-main" href="{{ url_for('recruiter_opportunities') }}">Kelola Lowongan</a>
             </article>
 
             <article class="profile-glass-card profile-detail-card">
@@ -60,6 +61,7 @@
                     <p>Informasi akun recruiter dan aktivitas lowongan yang dikelola di Pathora.</p>
                 </div>
                 <div class="profile-header-actions">
+                    <a class="secondary-button compact" href="{{ url_for('recruiter_edit_profile') }}">Edit Profil</a>
                     <a class="secondary-button compact" href="{{ url_for('recruiter_dashboard') }}">Dashboard</a>
                     <a class="primary-button compact" href="{{ url_for('recruiter_create_opportunity') }}">+ Buat Lowongan</a>
                 </div>

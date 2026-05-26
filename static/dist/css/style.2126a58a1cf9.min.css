@@ -5912,6 +5912,9 @@ object-fit:contain;
 width:100%;
 min-height:44px;
 }
+.profile-page .profile-edit-main+.profile-edit-main{
+margin-top:10px;
+}
 .profile-page .profile-detail-card{
 padding:26px;
 display:grid;
@@ -7668,4 +7671,4 @@ max-height:96px;
 width:100%;
 }
 }
-/*# sourceMappingURL=style.2383990bfe9f.min.css.map */
+/*# sourceMappingURL=style.2126a58a1cf9.min.css.map */

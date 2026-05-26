@@ -137,6 +137,10 @@
     min-height: 44px;
 }
 
+.profile-page .profile-edit-main + .profile-edit-main {
+    margin-top: 10px;
+}
+
 .profile-page .profile-detail-card {
     padding: 26px;
     display: grid;

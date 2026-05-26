@@ -109,7 +109,7 @@
                         <summary class="icon-button settings-button" aria-label="Pengaturan"><span class="settings-icon navigation-topbar-icon" aria-hidden="true"><img class="navigation-topbar-icon-img" src="{{ url_for('static', filename='img/navigation-icon.svg') }}" alt="" draggable="false"></span></summary>
                         <div class="popover-panel">
                             <strong>Pengaturan Cepat</strong>
-                            <a href="{% if user_role == 'jobseeker' %}{{ url_for('profile') }}{% elif user_role == 'recruiter' %}{{ url_for('recruiter_profile') }}{% else %}{{ url_for('admin_dashboard') }}{% endif %}">Preferensi akun</a>
+                            <a href="{% if user_role == 'jobseeker' %}{{ url_for('profile') }}{% elif user_role == 'recruiter' %}{{ url_for('recruiter_edit_profile') }}{% else %}{{ url_for('admin_dashboard') }}{% endif %}">Preferensi akun</a>
                             <a href="{{ help_url }}">Pusat bantuan</a>
                         </div>
                     </details>

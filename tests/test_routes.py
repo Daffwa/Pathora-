@@ -109,6 +109,7 @@ class TestProtectedRoutesRedirect:
         "/chat",
         "/recruiter/dashboard",
         "/recruiter/profile",
+        "/recruiter/profile/edit",
         "/recruiter/opportunities",
         "/recruiter/applicants",
         "/admin",
@@ -376,6 +377,11 @@ class TestRoleAccess:
         resp = client.get("/recruiter/profile", follow_redirects=False)
         assert resp.status_code == 403
 
+    def test_jobseeker_cannot_access_recruiter_edit_profile(self, client):
+        register_jobseeker(client, "js-edit-rec-profile@test.com", "JS Edit Profile")
+        resp = client.get("/recruiter/profile/edit", follow_redirects=False)
+        assert resp.status_code == 403
+
     def test_jobseeker_cannot_access_admin(self, client):
         register_jobseeker(client, "js2@test.com", "JS User")
         resp = client.get("/admin", follow_redirects=False)
@@ -407,7 +413,52 @@ class TestRoleAccess:
         profile_resp = client.get("/recruiter/profile")
         assert profile_resp.status_code == 200
         assert b"Profil Recruiter" in profile_resp.data
+        assert b"/recruiter/profile/edit" in profile_resp.data
         assert b"PT Test" in profile_resp.data
+
+    def test_recruiter_can_edit_profile(self, client, app):
+        register_approved_recruiter(client, app, "edit-rec@test.com", "Edit Rec")
+
+        edit_resp = client.get("/recruiter/profile/edit")
+        assert edit_resp.status_code == 200
+        assert b"Edit Profil Recruiter" in edit_resp.data
+
+        resp = post_form(
+            client,
+            "/recruiter/profile/edit",
+            data={
+                "name": "Edited Recruiter",
+                "email": "edited-rec@test.com",
+                "phone": "08123456789",
+                "domicile": "Jakarta",
+                "bio": "Recruiter aktif di Pathora.",
+                "linkedin": "linkedin.com/in/edited-rec",
+                "portfolio_url": "https://company.example.com",
+                "company_name": "PT Updated",
+                "company_position": "Other",
+                "company_position_other": "People Lead",
+            },
+            follow_redirects=False,
+        )
+        assert resp.status_code == 302
+        assert resp.headers["Location"].endswith("/recruiter/profile")
+
+        with app.app_context():
+            from services.database_service import get_db
+
+            recruiter = get_db().execute(
+                """
+                SELECT name, email, phone, domicile, company_name, company_position
+                FROM users
+                WHERE email = ?
+                """,
+                ("edited-rec@test.com",),
+            ).fetchone()
+            assert recruiter["name"] == "Edited Recruiter"
+            assert recruiter["phone"] == "08123456789"
+            assert recruiter["domicile"] == "Jakarta"
+            assert recruiter["company_name"] == "PT Updated"
+            assert recruiter["company_position"] == "People Lead"
 
     def test_new_recruiter_is_auto_approved_and_can_access_features(self, client, app):
         resp = register_recruiter(client, "auto-rec@test.com", "Auto Recruiter")

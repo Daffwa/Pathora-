@@ -1,6 +1,7 @@
 import sqlite3
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import current_app, flash, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from services.audit_service import record_audit_event
 from services.auth_service import (
@@ -9,7 +10,11 @@ from services.auth_service import (
     recruiter_or_admin_required_decorator,
     recruiter_required_decorator,
 )
-from services.constants import APPLICANT_SORT_RECENT, RECRUITER_APPLICATION_STATUSES
+from services.constants import (
+    APPLICANT_SORT_RECENT,
+    RECRUITER_APPLICATION_STATUSES,
+    RECRUITER_POSITION_OPTIONS,
+)
 from services.database_service import get_db
 from services.opportunity_service import (
     EMPTY_OPPORTUNITY_FORM,
@@ -28,6 +33,39 @@ from services.recruiter_service import (
     normalize_applicant_sort,
     parse_positive_int,
 )
+from services.storage_service import (
+    delete_file_if_exists,
+    make_avatar_filename,
+    save_uploaded_file,
+    validate_image_upload,
+)
+
+
+def _recruiter_profile_form_data(user):
+    company_position = user["company_position"] or ""
+    position_choice = (
+        company_position if company_position in RECRUITER_POSITION_OPTIONS else "Other"
+    )
+    return {
+        "name": user["name"] or "",
+        "email": user["email"] or "",
+        "phone": user["phone"] or "",
+        "domicile": user["domicile"] or "",
+        "bio": user["bio"] or "",
+        "linkedin": user["linkedin"] or "",
+        "portfolio_url": user["portfolio_url"] or "",
+        "company_name": user["company_name"] or "",
+        "company_position": position_choice if company_position else "",
+        "company_position_other": (
+            company_position if company_position and position_choice == "Other" else ""
+        ),
+    }
+
+
+def _resolve_recruiter_company_position(form_data):
+    if form_data["company_position"] == "Other":
+        return form_data["company_position_other"]
+    return form_data["company_position"]
 
 
 def _recruiter_opportunity_form(opportunity=None, form_title="", action_url=""):
@@ -108,6 +146,154 @@ def register(app):
             total_opportunities=total_opportunities,
             total_applicants=total_applicants,
             recent_opportunities=recent_opportunities,
+        )
+
+
+    @app.route("/recruiter/profile/edit", methods=["GET", "POST"])
+    @recruiter_required_decorator
+    def recruiter_edit_profile():
+        recruiter = get_current_user()
+        if request.method == "POST":
+            form_data = {
+                "name": request.form.get("name", "").strip(),
+                "email": request.form.get("email", "").strip().lower(),
+                "phone": request.form.get("phone", "").strip(),
+                "domicile": request.form.get("domicile", "").strip(),
+                "bio": request.form.get("bio", "").strip(),
+                "linkedin": request.form.get("linkedin", "").strip(),
+                "portfolio_url": request.form.get("portfolio_url", "").strip(),
+                "company_name": request.form.get("company_name", "").strip(),
+                "company_position": request.form.get("company_position", "").strip(),
+                "company_position_other": request.form.get(
+                    "company_position_other", ""
+                ).strip(),
+            }
+            old_password = request.form.get("old_password", "")
+            new_password = request.form.get("new_password", "")
+            confirm_password = request.form.get("confirm_password", "")
+            uploaded_avatar = request.files.get("avatar_file")
+            company_position = _resolve_recruiter_company_position(form_data)
+
+            validation_errors = []
+            if not form_data["name"]:
+                validation_errors.append("Nama lengkap wajib diisi.")
+            if not form_data["email"]:
+                validation_errors.append("Email wajib diisi.")
+            if not form_data["company_name"]:
+                validation_errors.append("Nama perusahaan wajib diisi.")
+            if form_data["company_position"] not in RECRUITER_POSITION_OPTIONS:
+                validation_errors.append("Pilih posisi recruiter yang valid.")
+            if not company_position:
+                validation_errors.append("Posisi recruiter wajib diisi.")
+
+            if form_data["email"]:
+                existing_user = get_db().execute(
+                    "SELECT id FROM users WHERE email = ? AND id != ?",
+                    (form_data["email"], session["user_id"]),
+                ).fetchone()
+                if existing_user is not None:
+                    validation_errors.append("Email sudah digunakan akun lain.")
+
+            wants_password_change = any([old_password, new_password, confirm_password])
+            password_hash = recruiter["password_hash"]
+            if wants_password_change:
+                if not old_password:
+                    validation_errors.append("Kata sandi lama wajib diisi.")
+                if not new_password:
+                    validation_errors.append("Kata sandi baru wajib diisi.")
+                if new_password and len(new_password) < 8:
+                    validation_errors.append("Kata sandi baru minimal 8 karakter.")
+                if new_password != confirm_password:
+                    validation_errors.append("Konfirmasi kata sandi baru belum sama.")
+                if old_password and not check_password_hash(
+                    recruiter["password_hash"], old_password
+                ):
+                    validation_errors.append("Kata sandi lama tidak sesuai.")
+                if not validation_errors:
+                    password_hash = generate_password_hash(new_password)
+
+            if uploaded_avatar and uploaded_avatar.filename:
+                if not validate_image_upload(uploaded_avatar):
+                    validation_errors.append("Foto profil harus berupa JPG, JPEG, atau PNG.")
+
+            if validation_errors:
+                for error in validation_errors:
+                    flash(error)
+                return (
+                    render_template(
+                        "recruiter/profile_edit.html",
+                        recruiter=recruiter,
+                        form_data=form_data,
+                        recruiter_position_options=RECRUITER_POSITION_OPTIONS,
+                    ),
+                    400,
+                )
+
+            avatar_path = recruiter["avatar_path"] or ""
+            if request.form.get("remove_avatar") == "1":
+                delete_file_if_exists(current_app.config["AVATAR_UPLOAD_FOLDER"], avatar_path)
+                avatar_path = ""
+
+            if uploaded_avatar and uploaded_avatar.filename:
+                avatar_filename = make_avatar_filename(
+                    session["user_id"], uploaded_avatar.filename
+                )
+                if avatar_path and avatar_path != avatar_filename:
+                    delete_file_if_exists(
+                        current_app.config["AVATAR_UPLOAD_FOLDER"], avatar_path
+                    )
+                save_uploaded_file(
+                    uploaded_avatar,
+                    current_app.config["AVATAR_UPLOAD_FOLDER"],
+                    avatar_filename,
+                )
+                avatar_path = avatar_filename
+
+            try:
+                get_db().execute(
+                    """
+                    UPDATE users
+                    SET name = ?, email = ?, phone = ?, domicile = ?, bio = ?,
+                        linkedin = ?, portfolio_url = ?, company_name = ?,
+                        company_position = ?, avatar_path = ?, password_hash = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                    """,
+                    (
+                        form_data["name"],
+                        form_data["email"],
+                        form_data["phone"],
+                        form_data["domicile"],
+                        form_data["bio"],
+                        form_data["linkedin"],
+                        form_data["portfolio_url"],
+                        form_data["company_name"],
+                        company_position,
+                        avatar_path,
+                        password_hash,
+                        session["user_id"],
+                    ),
+                )
+                get_db().commit()
+            except sqlite3.Error:
+                flash("Profil recruiter belum bisa disimpan. Silakan coba lagi.")
+                return redirect(url_for("recruiter_edit_profile"))
+
+            session["user_name"] = form_data["name"]
+            record_audit_event(
+                "recruiter.profile_update",
+                target_type="user",
+                target_id=session["user_id"],
+                metadata={"company_name": form_data["company_name"]},
+            )
+            flash("Profil recruiter berhasil diperbarui.")
+            return redirect(url_for("recruiter_profile"))
+
+        return render_template(
+            "recruiter/profile_edit.html",
+            recruiter=recruiter,
+            form_data=_recruiter_profile_form_data(recruiter),
+            recruiter_position_options=RECRUITER_POSITION_OPTIONS,
         )
 
 

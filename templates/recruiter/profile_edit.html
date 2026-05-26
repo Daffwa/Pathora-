@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profil Recruiter - Pathora{% endblock %}
+
+{% block content %}
+<form class="profile-edit-page recruiter-edit-page" method="post" action="{{ url_for('recruiter_edit_profile') }}" enctype="multipart/form-data">
+    {{ csrf_field() }}
+    <aside class="edit-profile-summary profile-glass-card">
+        <div class="profile-avatar-xl">
+            {% if recruiter.avatar_path %}
+            <img src="{{ url_for('profile_avatar', filename=recruiter.avatar_path) }}" alt="Foto profil {{ recruiter.name }}">
+            {% else %}
+            <span>{{ form_data.name[:1] if form_data.name else "R" }}</span>
+            {% endif %}
+        </div>
+        <h1>{{ form_data.name or "Recruiter" }}</h1>
+        <p>{{ form_data.company_position_other or form_data.company_position or "Recruiter" }}{% if form_data.company_name %} di {{ form_data.company_name }}{% endif %}</p>
+
+        <label class="avatar-upload-control" for="avatar-file">
+            <span class="upload-icon"></span>
+            <strong>Ganti Foto Profil</strong>
+            <small>Pilih foto baru</small>
+            <em>Format JPG/PNG, maksimal 2MB</em>
+            <input id="avatar-file" name="avatar_file" type="file" accept=".jpg,.jpeg,.png">
+        </label>
+
+        {% if recruiter.avatar_path %}
+        <label class="remove-avatar-check">
+            <input type="checkbox" name="remove_avatar" value="1">
+            Hapus foto saat ini
+        </label>
+        {% endif %}
+
+        <a class="secondary-button" href="{{ url_for('recruiter_profile') }}">Preview Profil</a>
+    </aside>
+
+    <div class="profile-form-stack">
+        <section class="profile-edit-heading">
+            <div>
+                <h1>Edit Profil Recruiter</h1>
+                <p>Perbarui informasi akun, kontak, dan identitas perusahaan yang tampil di profil recruiter.</p>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon user-icon"></span>
+                <h2>Informasi Akun</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label>
+                    Nama Lengkap
+                    <input name="name" type="text" value="{{ form_data.name }}" required>
+                </label>
+                <label>
+                    Email
+                    <input name="email" type="email" value="{{ form_data.email }}" required>
+                </label>
+                <label>
+                    Telepon
+                    <input name="phone" type="tel" value="{{ form_data.phone }}">
+                </label>
+                <label>
+                    Domisili
+                    <input name="domicile" type="text" value="{{ form_data.domicile }}">
+                </label>
+                <label class="span-2">
+                    Bio Singkat
+                    <textarea name="bio" rows="4">{{ form_data.bio }}</textarea>
+                </label>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon briefcase-icon"></span>
+                <h2>Informasi Perusahaan</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label>
+                    Nama Perusahaan
+                    <input name="company_name" type="text" value="{{ form_data.company_name }}" required>
+                </label>
+                <label>
+                    Posisi
+                    <select name="company_position" required>
+                        <option value="">Pilih posisi</option>
+                        {% for position in recruiter_position_options %}
+                        <option value="{{ position }}" {% if form_data.company_position == position %}selected{% endif %}>{{ position }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="span-2">
+                    Posisi Lainnya
+                    <input name="company_position_other" type="text" value="{{ form_data.company_position_other }}" placeholder="Isi jika memilih Other">
+                </label>
+                <label>
+                    LinkedIn
+                    <input name="linkedin" type="text" value="{{ form_data.linkedin }}" placeholder="linkedin.com/in/username">
+                </label>
+                <label>
+                    Website / Portfolio
+                    <input name="portfolio_url" type="url" value="{{ form_data.portfolio_url }}" placeholder="https://perusahaan.example.com">
+                </label>
+            </div>
+        </section>
+
+        <section class="profile-form-card">
+            <div class="form-section-title">
+                <span class="form-icon shield-icon"></span>
+                <h2>Keamanan Akun</h2>
+            </div>
+            <div class="profile-form-grid">
+                <label>
+                    Kata Sandi Lama
+                    <input name="old_password" type="password" autocomplete="current-password">
+                </label>
+                <label>
+                    Kata Sandi Baru
+                    <input name="new_password" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter">
+                </label>
+                <label>
+                    Konfirmasi Kata Sandi Baru
+                    <input name="confirm_password" type="password" autocomplete="new-password">
+                </label>
+            </div>
+        </section>
+
+        <footer class="profile-sticky-actions">
+            <a class="secondary-button subtle-danger-button" href="{{ url_for('recruiter_profile') }}">Batal</a>
+            <div>
+                <a class="secondary-button" href="{{ url_for('recruiter_profile') }}">Preview Profil</a>
+                <button type="submit" class="primary-button">Simpan Perubahan</button>
+            </div>
+        </footer>
+    </div>
+</form>
+{% endblock %}
