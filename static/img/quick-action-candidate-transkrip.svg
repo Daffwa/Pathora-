@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Transkrip">
+  <defs>
+    <radialGradient id="candidateTranscriptGradient" cx="35%" cy="24%" r="78%">
+      <stop offset="0%" stop-color="#48AEE7"/>
+      <stop offset="52%" stop-color="#0872C8"/>
+      <stop offset="100%" stop-color="#004E99"/>
+    </radialGradient>
+    <filter id="candidateTranscriptShadow" x="-20%" y="-20%" width="140%" height="145%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#003F7A" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <circle cx="48" cy="47" r="40" fill="url(#candidateTranscriptGradient)" filter="url(#candidateTranscriptShadow)"/>
+  <circle cx="48" cy="47" r="39" fill="none" stroke="#0A559E" stroke-width="2"/>
+  <path d="M28 24h29l11 11v39H28z" fill="none" stroke="#F6FBFF" stroke-width="3.8" stroke-linejoin="round"/>
+  <path d="M57 24v11h11" fill="none" stroke="#F6FBFF" stroke-width="3.8" stroke-linejoin="round"/>
+  <path d="M23 31h5v43M19 38h5v36" fill="none" stroke="#BFE4FF" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M35 42h22M35 50h24M35 58h16M35 66h18" fill="none" stroke="#EAF7FF" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M42 38h6M54 38h6" fill="none" stroke="#A9DDFB" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="61" cy="66" r="8" fill="#D7EEFF" stroke="#F6FBFF" stroke-width="2"/>
+  <path d="M57 66l3 3 5-6" fill="none" stroke="#0864B6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M58 74l-3 7 6-3 6 3-3-7" fill="#D7EEFF"/>
+</svg>

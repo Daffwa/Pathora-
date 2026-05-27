@@ -94,9 +94,9 @@
         <article class="panel-card quick-actions-card">
             <h2>Aksi Cepat</h2>
             <div class="quick-actions">
-                <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Perbarui CV</a>
-                <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Transkrip</a>
-                <a href="{{ url_for('opportunities') }}"><span class="briefcase-icon"></span>Cari Peluang</a>
+                <a href="{{ url_for('documents') }}"><span class="candidate-quick-action-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/quick-action-candidate-cv.svg') }}" alt="" width="42" height="42" draggable="false"></span>Perbarui CV</a>
+                <a href="{{ url_for('documents') }}"><span class="candidate-quick-action-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/quick-action-candidate-transkrip.svg') }}" alt="" width="42" height="42" draggable="false"></span>Transkrip</a>
+                <a href="{{ url_for('opportunities') }}"><span class="candidate-quick-action-icon" aria-hidden="true"><img src="{{ url_for('static', filename='img/quick-action-candidate-cari-peluang.svg') }}" alt="" width="42" height="42" draggable="false"></span>Cari Peluang</a>
             </div>
         </article>
 

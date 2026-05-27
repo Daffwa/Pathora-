@@ -164,6 +164,19 @@
     box-shadow: 0 12px 28px rgba(0, 59, 115, 0.26);
 }
 
+.quick-actions a > .candidate-quick-action-icon,
+.quick-actions a:hover > .candidate-quick-action-icon {
+    background: transparent;
+    box-shadow: 0 10px 22px rgba(0, 91, 170, 0.18);
+    overflow: visible;
+}
+
+.candidate-quick-action-icon img {
+    width: 42px;
+    height: 42px;
+    display: block;
+}
+
 .deadline-item small,
 .recruiter-application-item small {
     display: block;

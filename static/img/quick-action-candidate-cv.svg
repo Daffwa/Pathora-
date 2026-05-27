@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Perbarui CV">
+  <defs>
+    <radialGradient id="candidateCvGradient" cx="35%" cy="24%" r="78%">
+      <stop offset="0%" stop-color="#48AEE7"/>
+      <stop offset="52%" stop-color="#0872C8"/>
+      <stop offset="100%" stop-color="#004E99"/>
+    </radialGradient>
+    <filter id="candidateCvShadow" x="-20%" y="-20%" width="140%" height="145%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#003F7A" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <circle cx="48" cy="47" r="40" fill="url(#candidateCvGradient)" filter="url(#candidateCvShadow)"/>
+  <circle cx="48" cy="47" r="39" fill="none" stroke="#0A559E" stroke-width="2"/>
+  <path d="M25 20h26l14 14v22" fill="none" stroke="#F6FBFF" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M51 20v14h14" fill="none" stroke="#F6FBFF" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25 20v50h27" fill="none" stroke="#F6FBFF" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="31" y="42" fill="#F6FBFF" font-family="Arial, sans-serif" font-size="14" font-weight="800">CV</text>
+  <path d="M32 50h22M32 59h18" fill="none" stroke="#D7EEFF" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M68 55a14 14 0 0 0-25 5" fill="none" stroke="#D8F0FF" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M42 60l-1-9 8 4" fill="#D8F0FF"/>
+  <path d="M44 70a14 14 0 0 0 25-5" fill="none" stroke="#D8F0FF" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M70 65l1 9-8-4" fill="#D8F0FF"/>
+</svg>

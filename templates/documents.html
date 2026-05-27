@@ -3,7 +3,7 @@
 {% block title %}Kelola Dokumen - Pathora{% endblock %}
 
 {% block content %}
-{% set percent = (complete_count / total_count * 100)|round if total_count else 0 %}
+{% set percent = ((complete_count / total_count * 100)|round|int) if total_count else 0 %}
 {% set document_icon_map = {
     "CV": "document-cv.png",
     "Transkrip": "document-transkrip.png",

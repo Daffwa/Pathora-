@@ -3320,6 +3320,17 @@ box-shadow:0 10px 24px rgba(0,91,170,0.2);
 background:var(--primary-dark);
 box-shadow:0 12px 28px rgba(0,59,115,0.26);
 }
+.quick-actions a>.candidate-quick-action-icon,
+.quick-actions a:hover>.candidate-quick-action-icon{
+background:transparent;
+box-shadow:0 10px 22px rgba(0,91,170,0.18);
+overflow:visible;
+}
+.candidate-quick-action-icon img{
+width:42px;
+height:42px;
+display:block;
+}
 .deadline-item small,
 .recruiter-application-item small{
 display:block;
@@ -3805,12 +3816,27 @@ text-align:center;
 .profile-ring-large{
 width:190px;
 height:190px;
+position:relative;
+display:block;
+}
+.profile-ring-large strong{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+line-height:1;
+white-space:nowrap;
 }
 .profile-ring-large span{
-margin-top:34px;
+position:absolute;
+left:50%;
+bottom:28px;
+transform:translateX(-50%);
+margin-top:0;
 color:var(--muted);
 font-size:0.78rem;
 font-weight:900;
+line-height:1;
 text-transform:uppercase;
 }
 .document-row-list{
@@ -7894,4 +7920,4 @@ max-height:96px;
 width:100%;
 }
 }
-/*# sourceMappingURL=style.de33635edfbd.min.css.map */
+/*# sourceMappingURL=style.08b4678653c8.min.css.map */
