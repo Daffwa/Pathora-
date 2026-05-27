@@ -835,6 +835,42 @@ class TestAuthenticatedRoutes:
         assert resp.status_code == 200
 
 
+class TestHelpVisibility:
+    def test_jobseeker_help_hides_recruiter_and_admin_sections(self, client):
+        register_jobseeker(client, "help-js@test.com", "Help JS")
+
+        resp = client.get("/help?category=Recruiter&context=recruiter")
+
+        assert resp.status_code == 200
+        assert b"Recruiter melihat applicant" not in resp.data
+        assert b"Recruiter mengubah status applicant" not in resp.data
+        assert b"Admin mengelola peluang" not in resp.data
+        assert b"category=Recruiter" not in resp.data
+        assert b"category=Admin" not in resp.data
+        assert b"/recruiter/applicants" not in resp.data
+        assert b"Konteks: Recruiter" not in resp.data
+
+    def test_recruiter_help_hides_admin_sections(self, client, app):
+        register_approved_recruiter(client, app, "help-rec@test.com", "Help Rec")
+
+        resp = client.get("/help?category=Admin&context=admin")
+
+        assert resp.status_code == 200
+        assert b"Admin mengelola peluang" not in resp.data
+        assert b"category=Admin" not in resp.data
+        assert b"Konteks: Admin" not in resp.data
+        assert b"Recruiter melihat applicant" in resp.data
+
+    def test_admin_help_keeps_admin_sections(self, client):
+        login_admin(client)
+
+        resp = client.get("/help?category=Admin&context=admin")
+
+        assert resp.status_code == 200
+        assert b"Admin mengelola peluang" in resp.data
+        assert b"Konteks: Admin" in resp.data
+
+
 class TestErrorHandlers:
     def test_404(self, client):
         resp = client.get("/nonexistent-page-xyz")

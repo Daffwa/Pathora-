@@ -19,9 +19,9 @@ def register(app):
         query = request.args.get("q", "").strip()
         category = request.args.get("category", "").strip()
         context = request.args.get("context", "").strip().lower()
-        categories = get_help_categories()
-        contexts = get_help_contexts()
         role = _current_role()
+        categories = get_help_categories(role=role)
+        contexts = get_help_contexts(role=role)
 
         if category not in categories:
             category = ""

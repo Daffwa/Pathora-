@@ -43,7 +43,9 @@
     <a href="{{ url_for('opportunities') }}"><span class="briefcase-icon" aria-hidden="true"></span>Peluang</a>
     <a href="{{ url_for('applications') }}"><span class="checklist-icon" aria-hidden="true"></span>Pelacakan</a>
     <a href="{{ url_for('chat') }}"><span class="chat-icon" aria-hidden="true"></span>Chat</a>
+    {% if current_role != "jobseeker" %}
     <a href="{{ url_for('recruiter_applicants') }}"><span class="calendar-icon" aria-hidden="true"></span>Recruiter</a>
+    {% endif %}
 </section>
 
 {% if context_articles %}

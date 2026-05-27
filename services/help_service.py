@@ -22,6 +22,16 @@ HELP_CONTEXT_LABELS = {
     "admin": "Admin",
 }
 
+HIDDEN_HELP_CATEGORIES_BY_ROLE = {
+    "jobseeker": {"Recruiter", "Admin"},
+    "recruiter": {"Admin"},
+}
+
+HIDDEN_HELP_CONTEXTS_BY_ROLE = {
+    "jobseeker": {"recruiter", "admin"},
+    "recruiter": {"admin"},
+}
+
 HELP_ARTICLES = [
     {
         "id": "daftar-akun",
@@ -263,6 +273,29 @@ def _matches_category(article, category):
     return _normalize(article.get("category")) == category
 
 
+def _visible_categories_for_role(role=None):
+    hidden_categories = HIDDEN_HELP_CATEGORIES_BY_ROLE.get(_normalize(role), set())
+    return [
+        category
+        for category in HELP_CATEGORIES
+        if category not in hidden_categories
+    ]
+
+
+def _visible_contexts_for_role(role=None):
+    hidden_contexts = HIDDEN_HELP_CONTEXTS_BY_ROLE.get(_normalize(role), set())
+    return {
+        key: value
+        for key, value in HELP_CONTEXT_LABELS.items()
+        if key not in hidden_contexts
+    }
+
+
+def _matches_role_visibility(article, role=None):
+    visible_categories = set(_visible_categories_for_role(role))
+    return article.get("category") in visible_categories
+
+
 def _score_article(article, query=None, context=None, role=None):
     score = 0
     context = _normalize(context)
@@ -289,17 +322,19 @@ def _score_article(article, query=None, context=None, role=None):
     return score
 
 
-def get_help_categories():
-    return list(HELP_CATEGORIES)
+def get_help_categories(role=None):
+    return _visible_categories_for_role(role)
 
 
-def get_help_contexts():
-    return HELP_CONTEXT_LABELS.copy()
+def get_help_contexts(role=None):
+    return _visible_contexts_for_role(role)
 
 
 def search_help_articles(query=None, category=None, context=None, role=None):
     scored_articles = []
     for index, article in enumerate(HELP_ARTICLES):
+        if not _matches_role_visibility(article, role):
+            continue
         if not _matches_category(article, category):
             continue
         if not _matches_query(article, query):
@@ -318,7 +353,11 @@ def search_help_articles(query=None, category=None, context=None, role=None):
 
 
 def get_popular_articles(role=None):
-    popular_articles = [article for article in HELP_ARTICLES if article.get("popular")]
+    popular_articles = [
+        article
+        for article in HELP_ARTICLES
+        if article.get("popular") and _matches_role_visibility(article, role)
+    ]
     scored_articles = [
         (
             -_score_article(article, role=role),
