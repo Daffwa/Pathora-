@@ -3,6 +3,7 @@
 {% block title %}Pusat Bantuan - Pathora{% endblock %}
 
 {% block content %}
+<div class="help-page">
 <section class="page-heading split-heading">
     <div>
         <h1>Pusat Bantuan</h1>
@@ -35,14 +36,14 @@
 </form>
 
 <section class="help-quick-links" aria-label="Link cepat bantuan">
-    <a href="{{ url_for('register') }}"><span class="student-icon"></span>Daftar Akun</a>
-    <a href="{{ url_for('login') }}"><span class="shield-icon"></span>Login</a>
-    <a href="{{ url_for('edit_profile') }}"><span class="user-icon"></span>Edit Profil</a>
-    <a href="{{ url_for('documents') }}"><span class="doc-icon"></span>Dokumen</a>
-    <a href="{{ url_for('opportunities') }}"><span class="briefcase-icon"></span>Peluang</a>
-    <a href="{{ url_for('applications') }}"><span class="checklist-icon"></span>Pelacakan</a>
-    <a href="{{ url_for('chat') }}"><span class="chat-icon"></span>Chat</a>
-    <a href="{{ url_for('recruiter_applicants') }}"><span class="calendar-icon"></span>Recruiter</a>
+    <a href="{{ url_for('register') }}"><span class="student-icon" aria-hidden="true"></span>Daftar Akun</a>
+    <a href="{{ url_for('login') }}"><span class="shield-icon" aria-hidden="true"></span>Login</a>
+    <a href="{{ url_for('edit_profile') }}"><span class="user-icon" aria-hidden="true"></span>Edit Profil</a>
+    <a href="{{ url_for('documents') }}"><span class="doc-icon" aria-hidden="true"></span>Dokumen</a>
+    <a href="{{ url_for('opportunities') }}"><span class="briefcase-icon" aria-hidden="true"></span>Peluang</a>
+    <a href="{{ url_for('applications') }}"><span class="checklist-icon" aria-hidden="true"></span>Pelacakan</a>
+    <a href="{{ url_for('chat') }}"><span class="chat-icon" aria-hidden="true"></span>Chat</a>
+    <a href="{{ url_for('recruiter_applicants') }}"><span class="calendar-icon" aria-hidden="true"></span>Recruiter</a>
 </section>
 
 {% if context_articles %}
@@ -54,7 +55,7 @@
     <div class="context-help-grid">
         {% for article in context_articles %}
         <a class="context-help-item" href="#{{ article.id }}">
-            <span>{{ article.category }}</span>
+            <span class="help-card-kicker">{{ article.category }}</span>
             <strong>{{ article.title }}</strong>
             <small>{{ article.summary }}</small>
         </a>
@@ -65,13 +66,13 @@
 
 <section class="help-popular-section">
     <div class="section-heading">
-        <h1>Artikel Populer</h1>
+        <h2>Artikel Populer</h2>
         <p>Panduan yang paling sering dibutuhkan saat memakai Pathora.</p>
     </div>
     <div class="help-popular-grid">
         {% for article in popular_articles %}
         <a class="help-popular-card" href="#{{ article.id }}">
-            <span class="soft-pill">{{ article.category }}</span>
+            <span class="help-category-badge">{{ article.category }}</span>
             <strong>{{ article.title }}</strong>
             <small>{{ article.summary }}</small>
         </a>
@@ -99,7 +100,7 @@
         {% for article in articles %}
         <details class="help-article-card" id="{{ article.id }}" {% if loop.first %}open{% endif %}>
             <summary>
-                <span class="status-label open">{{ article.category }}</span>
+                <span class="help-category-badge">{{ article.category }}</span>
                 <strong>{{ article.title }}</strong>
                 <small>{{ article.summary }}</small>
             </summary>
@@ -123,4 +124,5 @@
         {% endfor %}
     </div>
 </section>
+</div>
 {% endblock %}

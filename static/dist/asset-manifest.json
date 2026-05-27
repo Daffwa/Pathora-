@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-05-27T06:26:32+00:00",
+  "generated_at": "2026-05-27T07:03:55+00:00",
   "assets": {
-    "css/style.css": "dist/css/style.08b4678653c8.min.css",
+    "css/style.css": "dist/css/style.19679dbffe66.min.css",
     "js/ai_assistant.js": "dist/js/ai_assistant.85c9fe7d003c.min.js",
     "js/app.js": "dist/js/app.5e55ef9672b0.min.js",
     "js/applicant_bulk.js": "dist/js/applicant_bulk.de6fbf8650e1.min.js",
@@ -11,7 +11,7 @@
     "js/topbar_popovers.js": "dist/js/topbar_popovers.06fd53f63875.min.js"
   },
   "source_maps": {
-    "css/style.css": "dist/css/style.08b4678653c8.min.css.map",
+    "css/style.css": "dist/css/style.19679dbffe66.min.css.map",
     "js/ai_assistant.js": "dist/js/ai_assistant.85c9fe7d003c.min.js.map",
     "js/app.js": "dist/js/app.5e55ef9672b0.min.js.map",
     "js/applicant_bulk.js": "dist/js/applicant_bulk.de6fbf8650e1.min.js.map",
