@@ -70,6 +70,7 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 - Dashboard personal dengan priority score
 - Chat dengan recruiter
 - AI Assistant untuk rekomendasi dan pertanyaan
+- Pusat Bantuan yang menyembunyikan kategori Recruiter dan Admin
 
 ### Recruiter
 - Dashboard rekruter dengan ringkasan pelamar
@@ -78,12 +79,14 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 - Mengubah status lamaran (Ditinjau/Diterima/Ditolak)
 - Chat dengan pelamar
 - Melihat profil dan dokumen pelamar
+- Pusat Bantuan yang menyembunyikan kategori Admin
 
 ### Admin
 - Semua akses recruiter
 - Mengelola seluruh lowongan dari semua recruiter
 - Melihat ringkasan jumlah internship/scholarship
 - Menghapus lowongan dengan cascade
+- Pusat Bantuan dengan kategori Admin dan Recruiter
 
 ## Fitur Utama
 
@@ -102,6 +105,7 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 - Dashboard ringkasan personal & recruiter
 - Chat real-time antar pengguna
 - AI Assistant (Gemini API)
+- Pusat Bantuan role-aware untuk Student, Recruiter, dan Admin
 - Frontend asset build dengan hash filename, source map, dan lint ringan
 - Admin & Recruiter CRUD opportunities
 - Error page 404, 403, 413
@@ -222,6 +226,9 @@ python -m pytest -q
 ```
 
 ## Route Penting Untuk Diuji
+
+Umum:
+- `/help`
 
 Student:
 - `/register`, `/login`, `/logout`

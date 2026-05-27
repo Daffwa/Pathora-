@@ -102,11 +102,14 @@ Cek halaman dan workflow berikut:
 /opportunities
 /documents
 /chat
+/help?context=chat
 ```
 
 Lakukan smoke test:
 - Register user baru.
 - Login.
+- Buka Pusat Bantuan sebagai jobseeker dan pastikan kategori Recruiter/Admin tidak muncul.
+- Buka Pusat Bantuan sebagai recruiter dan pastikan kategori Admin tidak muncul.
 - Upload avatar atau dokumen kecil.
 - Kirim chat dengan gambar kecil jika fitur chat dipakai.
 - Restart/redeploy service Railway.

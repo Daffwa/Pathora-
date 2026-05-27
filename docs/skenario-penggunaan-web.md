@@ -17,10 +17,11 @@ Manfaat aplikasi bagi mahasiswa adalah membuat proses pencarian peluang lebih te
 | Role | Hak akses | Batasan |
 |---|---|---|
 | Guest / pengguna belum login | Dapat membuka landing page, halaman daftar peluang, detail peluang, login, dan register. | Tidak dapat menyimpan peluang, menambahkan tracker, mengelola dokumen, membuka dashboard student, membuka profile, atau mengakses halaman admin. |
-| Student / user mahasiswa | Di kode disebut `jobseeker`. Dapat register, login, logout, membuka dashboard, mencari peluang, melihat detail peluang, bookmark peluang, track lamaran, mengubah status lamaran, mengelola dokumen, melihat priority score, dan mengelola profile. | Tidak dapat membuka halaman admin. Tidak dapat mengakses halaman recruiter. |
-| Admin | Dapat login sebagai admin, membuka dashboard admin, melihat ringkasan peluang, serta menambah, mengedit, dan menghapus opportunity. | Tidak memiliki fitur tracker personal student pada UI admin. Akses admin hanya untuk akun dengan role `admin`. |
+| Student / user mahasiswa | Di kode disebut `jobseeker`. Dapat register, login, logout, membuka dashboard, mencari peluang, melihat detail peluang, bookmark peluang, track lamaran, mengubah status lamaran, mengelola dokumen, melihat priority score, mengelola profile, dan membuka Pusat Bantuan student. | Tidak dapat membuka halaman admin atau recruiter. Pusat Bantuan untuk student menyembunyikan kategori dan artikel Recruiter serta Admin. |
+| Recruiter / HRD | Dapat register/login sebagai recruiter, membuka dashboard recruiter, membuat dan mengelola lowongan miliknya, melihat applicant, mengubah status applicant, chat dengan pelamar, dan membuka Pusat Bantuan recruiter. | Tidak dapat mengakses area admin. Pusat Bantuan untuk recruiter menyembunyikan kategori dan artikel Admin. |
+| Admin | Dapat login sebagai admin, membuka dashboard admin, melihat ringkasan peluang, menambah, mengedit, menghapus opportunity, dan membuka Pusat Bantuan termasuk kategori Admin. | Tidak memiliki fitur tracker personal student pada UI admin. Akses admin hanya untuk akun dengan role `admin`. |
 
-Catatan: kode juga memiliki role `recruiter` atau Recruiter / HRD. Role ini dapat membuat lowongan, mengelola lowongan miliknya, melihat applicant, dan mengubah status applicant. Role recruiter tidak diminta sebagai role utama pada tabel di atas, tetapi tetap dicatat pada daftar route karena memang tersedia di proyek.
+Catatan: Pusat Bantuan tetap bisa dibuka oleh guest. Saat user sudah login, daftar kategori, artikel populer, artikel konteks, dan hasil pencarian difilter sesuai role agar user tidak melihat panduan untuk area yang tidak relevan.
 
 ## 4. Daftar Halaman / Route Web
 
@@ -32,6 +33,7 @@ Catatan: kode juga memiliki role `recruiter` atau Recruiter / HRD. Role ini dapa
 | Logout | `/logout` | User login | Menghapus session dan kembali ke login. | Tersedia |
 | Avatar profile | `/uploads/avatars/<filename>` | User login | Menampilkan file avatar dari folder upload. | Tersedia |
 | AI assistant chat | `/ai-assistant/chat` | User login | API chat sederhana berbasis konteks role. | Tersedia |
+| Pusat Bantuan | `/help` | Guest, semua user | Menampilkan artikel bantuan. Untuk user login, kategori difilter sesuai role: jobseeker tidak melihat Recruiter/Admin, recruiter tidak melihat Admin, dan admin tetap melihat kategori Admin. | Tersedia |
 | Dashboard student | `/dashboard` | Student / jobseeker | Ringkasan saved, applications, documents, urgent deadlines, dan rekomendasi prioritas. | Tersedia |
 | Daftar peluang | `/opportunities` | Guest, Student, Admin, Recruiter | Menampilkan peluang dengan search, filter type/lokasi, dan sort deadline/priority. | Tersedia |
 | Detail peluang | `/opportunities/<id>` | Guest, Student, Admin, Recruiter | Menampilkan detail peluang, deadline, persyaratan, skill, link resmi, dan priority score untuk jobseeker. | Tersedia |
@@ -86,6 +88,7 @@ Catatan: filter deadline dalam bentuk rentang tanggal belum ditemukan. Yang ters
 | S-13 | Admin menambah, mengedit, dan menghapus peluang | Admin | Mengelola data opportunity yang tampil ke user. | Admin sudah login. | Buka `/admin`.<br>Masuk ke `/admin/opportunities`.<br>Klik Tambah Peluang, isi form, simpan.<br>Klik Edit untuk mengubah.<br>Klik Delete untuk menghapus. | Data peluang bertambah, berubah, atau terhapus sesuai aksi admin. | Tabel `opportunities`, serta `bookmarks` dan `applications` saat delete. | Form admin memvalidasi title, type, organizer, location, dan deadline. Jika database error, muncul pesan gagal. |
 | S-14 | Pencegahan akses admin oleh user biasa | Student / jobseeker | Memastikan halaman admin terlindungi. | Student sudah login. | Student mencoba membuka `/admin` atau `/admin/opportunities`. | Sistem menolak akses dan menampilkan halaman 403. | Flask session, role user, decorator `admin_required`. | Fungsi `role_required` melakukan abort 403 jika role tidak sesuai. |
 | S-15 | Recruiter mengelola lowongan dan applicant | Recruiter / HRD | Mengelola lowongan milik perusahaan dan melihat applicant. | Recruiter sudah login. | Buka `/recruiter/dashboard`.<br>Buka My Job Posts.<br>Tambah/edit/hapus lowongan.<br>Buka Applicants dan ubah status applicant. | Recruiter dapat mengelola lowongan miliknya dan memperbarui status applicant. | Tabel `opportunities`, `applications`, `users`, `documents`. | Recruiter hanya dapat mengedit/menghapus opportunity yang `created_by` sesuai user login. |
+| S-16 | Membuka Pusat Bantuan sesuai role | Student / Recruiter / Admin | Memastikan artikel bantuan yang tampil relevan dengan role user. | User sudah login sesuai role. | Buka `/help` atau `/help?context=chat`.<br>Coba pilih kategori yang tersedia.<br>Coba akses URL manual seperti `category=Recruiter` sebagai student atau `category=Admin` sebagai recruiter. | Student tidak melihat kategori/artikel Recruiter dan Admin. Recruiter tidak melihat kategori/artikel Admin. Admin tetap dapat melihat kategori/artikel Admin. | Flask `session`, parameter query `category` dan `context`, data artikel di `services/help_service.py`. | Filtering dilakukan di service, sehingga URL manual untuk kategori tersembunyi tidak menampilkan artikel tersembunyi. |
 
 ## 6. Alur End-to-End Pengguna
 
@@ -103,6 +106,7 @@ Seorang mahasiswa membuka web ScholarTrack, melakukan registrasi sebagai jobseek
 | Status lamaran tidak valid | Request update application mengirim status di luar daftar valid. | Sistem menampilkan pesan "Status tidak valid." dan tidak memperbarui data. | Tersedia |
 | Dokumen belum lengkap | User belum mengunggah/menandai seluruh dokumen. | Dashboard dan Document Tracker menampilkan progres dokumen, misalnya `x/6`; aplikasi belum memblokir pendaftaran jika dokumen belum lengkap. | Tersedia, validasi blokir belum tersedia |
 | User biasa mencoba membuka halaman admin | Student membuka `/admin` atau route admin lain. | Sistem melakukan abort 403 dan menampilkan halaman 403. | Tersedia |
+| Kategori bantuan tidak sesuai role | Student membuka kategori Recruiter/Admin atau recruiter membuka kategori Admin melalui URL manual. | Sistem tidak menampilkan kategori dan artikel yang disembunyikan untuk role tersebut. | Tersedia |
 | Data peluang tidak ditemukan | User membuka `/opportunities/<id>` dengan ID yang tidak ada. | Sistem melakukan abort 404 dan menampilkan halaman 404. | Tersedia |
 | Database gagal diproses | Operasi insert/update/delete terkena `sqlite3.Error`. | Beberapa route menampilkan pesan gagal seperti "Silakan coba lagi." | Tersedia |
 | File gagal diproses | Upload dokumen memakai format tidak didukung, ukuran lebih dari 5 MB, atau file dokumen hilang dari folder upload. | Sistem menampilkan pesan format file tidak didukung, ukuran file terlalu besar, atau file tidak ditemukan. | Tersedia |
@@ -120,7 +124,7 @@ Seorang mahasiswa membuka web ScholarTrack, melakukan registrasi sebagai jobseek
 
 **Readability.** Nama route, fungsi, model, dan template cukup deskriptif, misalnya `update_application`, `get_dashboard_summary`, `get_document_progress_for_user`, dan `calculate_priority_score`. Dokumentasi tambahan ini membantu pembaca laporan memahami fitur dan skenario uji tanpa harus membaca seluruh kode.
 
-**Testing.** Folder atau file automated test belum ditemukan. Namun, skenario pada dokumen ini dapat dipakai sebagai dasar pengujian black box dan end-to-end, mulai dari register, login, pencarian peluang, bookmark, tracker lamaran, dokumen, priority score, sampai pembatasan akses admin.
+**Testing.** Automated test tersedia di folder `tests`, termasuk test route, storage, dan pipeline frontend. Skenario pada dokumen ini tetap dapat dipakai sebagai dasar pengujian black box dan end-to-end, mulai dari register, login, pencarian peluang, bookmark, tracker lamaran, dokumen, priority score, pembatasan akses admin, sampai visibilitas Pusat Bantuan berdasarkan role.
 
 ## 9. Acceptance Criteria
 
@@ -131,12 +135,13 @@ Seorang mahasiswa membuka web ScholarTrack, melakukan registrasi sebagai jobseek
 - [ ] User bisa melihat dashboard.
 - [ ] Admin bisa CRUD peluang.
 - [ ] User biasa tidak bisa akses admin.
+- [ ] Pusat Bantuan menampilkan kategori sesuai role user.
 - [ ] Error input ditangani dengan pesan yang jelas.
 
 Catatan tambahan: sebagian besar acceptance criteria di atas sudah didukung oleh route dan kode yang ditemukan. Validasi format email server-side dan filter deadline berbasis rentang tanggal belum ditemukan sehingga dapat menjadi pengembangan lanjutan.
 
 ## 10. Kesimpulan
 
-Dokumentasi skenario penggunaan ini membantu menjelaskan cara kerja ScholarTrack dari sudut pandang pengguna, mulai dari guest, student/jobseeker, admin, sampai role recruiter yang memang tersedia di kode. Dengan skenario yang terstruktur, aplikasi dapat diuji berdasarkan alur nyata mahasiswa ketika mencari, menyimpan, dan melacak peluang internship maupun scholarship.
+Dokumentasi skenario penggunaan ini membantu menjelaskan cara kerja ScholarTrack dari sudut pandang pengguna, mulai dari guest, student/jobseeker, recruiter, sampai admin. Dengan skenario yang terstruktur, aplikasi dapat diuji berdasarkan alur nyata mahasiswa ketika mencari, menyimpan, dan melacak peluang internship maupun scholarship, serta berdasarkan batas visibilitas fitur yang berbeda untuk tiap role.
 
 Secara keseluruhan, skenario ini dapat digunakan sebagai bahan laporan atau presentasi kuliah karena menghubungkan fitur aplikasi dengan kebutuhan mahasiswa dan konsep PASD. Dokumen ini juga membantu menentukan bagian yang sudah tersedia serta bagian yang masih perlu dikembangkan, seperti validasi email server-side, filter deadline berbasis rentang tanggal, dan automated testing.
