@@ -28,3 +28,5 @@ static/uploads/
 *.log
 .server*.log
 flask_*.log
+
+deploy/railway.exe
