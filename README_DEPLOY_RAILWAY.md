@@ -74,7 +74,7 @@ Catatan:
 - `PASSWORD_RESET_SECRET` harus random dan berbeda dari `SECRET_KEY`.
 - `ADMIN_PASSWORD` wajib di production; jangan gunakan password demo.
 - `DATABASE_URL` mengarah ke service PostgreSQL/MySQL Railway dan wajib di production.
-- `PUBLIC_BASE_URL` dipakai untuk link reset password agar tidak mempercayai Host header request.
+- `PUBLIC_BASE_URL` dipakai untuk link reset password agar tidak mempercayai Host header request. Jika variable ini tidak terbaca di Railway, aplikasi dapat fallback ke `https://$RAILWAY_PUBLIC_DOMAIN` yang disediakan otomatis oleh Railway.
 - `TRUSTED_HOSTS` berisi hostname production yang boleh diterima aplikasi.
 - `RATE_LIMIT_BACKEND=database` memakai database sebagai penyimpanan rate limit antar worker/restart.
 - `MAIL_*` dipakai untuk mengirim email reset password. Tanpa konfigurasi SMTP lengkap, request lupa password tetap netral tetapi email reset tidak dikirim.
@@ -93,7 +93,7 @@ Railway tetap menjalankan aplikasi Flask, sedangkan database production bisa mem
 DATABASE_URL=postgresql://postgres.project_ref:<password>@aws-region.pooler.supabase.com:5432/postgres?sslmode=require
 ```
 
-Pastikan variable berikut juga ada di Railway: `APP_ENV=production`, `SECRET_KEY`, `PASSWORD_RESET_SECRET`, `ADMIN_PASSWORD`, `PUBLIC_BASE_URL`, `TRUSTED_HOSTS`, `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`, dan `RATE_LIMIT_BACKEND=database`.
+Pastikan variable berikut juga ada di Railway: `APP_ENV=production`, `SECRET_KEY`, `PASSWORD_RESET_SECRET`, `ADMIN_PASSWORD`, `PUBLIC_BASE_URL` atau domain otomatis `RAILWAY_PUBLIC_DOMAIN`, `TRUSTED_HOSTS`, `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`, dan `RATE_LIMIT_BACKEND=database`.
 
 Yang tidak berubah:
 - Aplikasi tetap memakai Flask session auth, bukan Supabase Auth.

@@ -12,8 +12,8 @@ PRODUCTION_REQUIRED_ENV_VARS = (
     "PASSWORD_RESET_SECRET",
     "ADMIN_PASSWORD",
     "DATABASE_URL",
-    "PUBLIC_BASE_URL",
 )
+PUBLIC_BASE_URL_ENV_VARS = ("PUBLIC_BASE_URL", "RAILWAY_PUBLIC_DOMAIN")
 LOCAL_TRUSTED_HOSTS = ("localhost", "127.0.0.1", "::1")
 
 
@@ -60,6 +60,8 @@ def validate_required_production_environment():
         return
 
     missing = [name for name in PRODUCTION_REQUIRED_ENV_VARS if not os.getenv(name)]
+    if not get_public_base_url_candidate():
+        missing.append("PUBLIC_BASE_URL or RAILWAY_PUBLIC_DOMAIN")
     if missing:
         raise RuntimeError(
             "Missing required production environment variables: "
@@ -112,7 +114,7 @@ def get_secret_key():
 
 
 def get_public_base_url():
-    public_base_url = (os.getenv("PUBLIC_BASE_URL") or "").strip()
+    public_base_url = get_public_base_url_candidate()
     if not public_base_url:
         return ""
 
@@ -122,6 +124,20 @@ def get_public_base_url():
     if parsed.username or parsed.password:
         raise RuntimeError("PUBLIC_BASE_URL must not contain credentials.")
     return public_base_url.rstrip("/")
+
+
+def get_public_base_url_candidate():
+    public_base_url = (os.getenv("PUBLIC_BASE_URL") or "").strip()
+    if public_base_url:
+        return public_base_url
+
+    railway_public_domain = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip()
+    if railway_public_domain:
+        if "://" not in railway_public_domain:
+            return f"https://{railway_public_domain}"
+        return railway_public_domain
+
+    return ""
 
 
 def _hostname_from_url(url):

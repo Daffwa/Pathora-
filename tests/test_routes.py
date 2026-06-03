@@ -371,9 +371,30 @@ class TestSecurityHardening:
         monkeypatch.setenv("APP_ENV", "production")
         for env_name in PRODUCTION_REQUIRED_ENV_VARS:
             monkeypatch.delenv(env_name, raising=False)
+        monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
+        monkeypatch.delenv("RAILWAY_PUBLIC_DOMAIN", raising=False)
 
         with pytest.raises(RuntimeError, match="Missing required production"):
             validate_required_production_environment()
+
+    def test_railway_public_domain_satisfies_public_base_url(self, monkeypatch):
+        from config import (
+            PRODUCTION_REQUIRED_ENV_VARS,
+            build_trusted_hosts,
+            get_public_base_url,
+            validate_required_production_environment,
+        )
+
+        monkeypatch.setenv("APP_ENV", "production")
+        for env_name in PRODUCTION_REQUIRED_ENV_VARS:
+            monkeypatch.setenv(env_name, f"test-{env_name.lower()}")
+        monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
+        monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", "pathora.up.railway.app")
+
+        validate_required_production_environment()
+        public_base_url = get_public_base_url()
+        assert public_base_url == "https://pathora.up.railway.app"
+        assert "pathora.up.railway.app" in build_trusted_hosts(public_base_url)
 
     def test_logout_get_does_not_clear_session(self, client):
         login_admin(client)

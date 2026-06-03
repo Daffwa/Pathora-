@@ -142,7 +142,7 @@ Catatan:
 - `SECRET_KEY` dan `PASSWORD_RESET_SECRET` wajib di production untuk menjaga session dan token reset tetap aman.
 - `ADMIN_PASSWORD` wajib di production; fallback `admin12345` hanya untuk development/test.
 - `DATABASE_URL` wajib di production. Jika kosong, aplikasi hanya memakai SQLite lokal saat `APP_ENV=development` atau `APP_ENV=test`.
-- `PUBLIC_BASE_URL` dipakai untuk membuat link reset password; `TRUSTED_HOSTS` membatasi Host header yang diterima.
+- `PUBLIC_BASE_URL` dipakai untuk membuat link reset password; `TRUSTED_HOSTS` membatasi Host header yang diterima. Di Railway, aplikasi juga bisa fallback ke `https://$RAILWAY_PUBLIC_DOMAIN` jika `PUBLIC_BASE_URL` tidak terbaca saat runtime.
 - `RATE_LIMIT_BACKEND=database` membuat rate limit production tersimpan di database bersama, bukan memori proses.
 - `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, dan `MAIL_DEFAULT_SENDER` wajib diisi jika fitur lupa password perlu mengirim email reset. `MAIL_USE_TLS=true` disarankan untuk SMTP port 587.
 - Isi `TRUSTED_PROXY_IPS` hanya dengan IP/CIDR proxy yang dipercaya jika aplikasi perlu membaca `X-Forwarded-For`.
@@ -163,7 +163,7 @@ Langkah minimal:
 DATABASE_URL=postgresql://postgres.project_ref:<password>@aws-region.pooler.supabase.com:5432/postgres?sslmode=require
 ```
 
-Set juga variable production berikut: `APP_ENV=production`, `SECRET_KEY`, `PASSWORD_RESET_SECRET`, `ADMIN_PASSWORD`, `PUBLIC_BASE_URL`, `TRUSTED_HOSTS`, `MAIL_*`, dan `RATE_LIMIT_BACKEND=database`.
+Set juga variable production berikut: `APP_ENV=production`, `SECRET_KEY`, `PASSWORD_RESET_SECRET`, `ADMIN_PASSWORD`, `PUBLIC_BASE_URL` atau domain otomatis `RAILWAY_PUBLIC_DOMAIN`, `TRUSTED_HOSTS`, `MAIL_*`, dan `RATE_LIMIT_BACKEND=database`.
 
 Catatan keamanan Supabase:
 - Jangan expose Supabase `service_role` key, secret key, atau database password ke frontend, `static/`, template publik, log, atau file yang dicommit.
