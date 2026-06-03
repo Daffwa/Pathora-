@@ -1,75 +1,82 @@
-from dataclasses import dataclass
+from sqlalchemy import CheckConstraint, Index, text
+
+from extensions import db
 
 
-@dataclass
-class User:
-    id: int | None
-    name: str
-    email: str
-    password_hash: str
-    role: str = "jobseeker"
-    account_status: str = "approved"
-    skills: str = ""
-    company_name: str = ""
-    company_position: str = ""
-    nickname: str = ""
-    phone: str = ""
-    birth_date: str = ""
-    gender: str = ""
-    domicile: str = ""
-    bio: str = ""
-    university: str = ""
-    faculty: str = ""
-    major: str = ""
-    degree: str = ""
-    semester: str = ""
-    gpa: str = ""
-    entry_year: str = ""
-    desired_positions: str = ""
-    preferred_program: str = ""
-    preferred_locations: str = ""
-    work_arrangement: str = ""
-    interests: str = ""
-    linkedin: str = ""
-    github: str = ""
-    portfolio_url: str = ""
-    avatar_path: str = ""
-    updated_at: str = ""
+class UserORM(db.Model):
+    __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('jobseeker', 'recruiter', 'admin')",
+            name="ck_users_role",
+        ),
+        CheckConstraint(
+            "account_status IN ('pending', 'approved', 'rejected')",
+            name="ck_users_account_status",
+        ),
+        Index("idx_users_role_account_status", "role", "account_status"),
+        Index("idx_users_account_status", "account_status"),
+    )
 
-    @classmethod
-    def from_row(cls, row):
-        row_keys = row.keys()
-        return cls(
-            id=row["id"],
-            name=row["name"],
-            email=row["email"],
-            password_hash=row["password_hash"],
-            role=row["role"],
-            account_status=row["account_status"] if "account_status" in row_keys else "approved",
-            skills=row["skills"] or "",
-            company_name=row["company_name"] if "company_name" in row_keys else "",
-            company_position=row["company_position"] if "company_position" in row_keys else "",
-            nickname=row["nickname"] if "nickname" in row_keys else "",
-            phone=row["phone"] if "phone" in row_keys else "",
-            birth_date=row["birth_date"] if "birth_date" in row_keys else "",
-            gender=row["gender"] if "gender" in row_keys else "",
-            domicile=row["domicile"] if "domicile" in row_keys else "",
-            bio=row["bio"] if "bio" in row_keys else "",
-            university=row["university"] if "university" in row_keys else "",
-            faculty=row["faculty"] if "faculty" in row_keys else "",
-            major=row["major"] if "major" in row_keys else "",
-            degree=row["degree"] if "degree" in row_keys else "",
-            semester=row["semester"] if "semester" in row_keys else "",
-            gpa=row["gpa"] if "gpa" in row_keys else "",
-            entry_year=row["entry_year"] if "entry_year" in row_keys else "",
-            desired_positions=row["desired_positions"] if "desired_positions" in row_keys else "",
-            preferred_program=row["preferred_program"] if "preferred_program" in row_keys else "",
-            preferred_locations=row["preferred_locations"] if "preferred_locations" in row_keys else "",
-            work_arrangement=row["work_arrangement"] if "work_arrangement" in row_keys else "",
-            interests=row["interests"] if "interests" in row_keys else "",
-            linkedin=row["linkedin"] if "linkedin" in row_keys else "",
-            github=row["github"] if "github" in row_keys else "",
-            portfolio_url=row["portfolio_url"] if "portfolio_url" in row_keys else "",
-            avatar_path=row["avatar_path"] if "avatar_path" in row_keys else "",
-            updated_at=row["updated_at"] if "updated_at" in row_keys else "",
-        )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.Text, nullable=False)
+    email = db.Column(db.Text, nullable=False, unique=True)
+    password_hash = db.Column(db.Text, nullable=False)
+    role = db.Column(db.Text, nullable=False, server_default=text("'jobseeker'"))
+    account_status = db.Column(db.Text, nullable=False, server_default=text("'approved'"))
+    skills = db.Column(db.Text, server_default=text("''"))
+    company_name = db.Column(db.Text, server_default=text("''"))
+    company_position = db.Column(db.Text, server_default=text("''"))
+    nickname = db.Column(db.Text, server_default=text("''"))
+    phone = db.Column(db.Text, server_default=text("''"))
+    birth_date = db.Column(db.Text, server_default=text("''"))
+    gender = db.Column(db.Text, server_default=text("''"))
+    domicile = db.Column(db.Text, server_default=text("''"))
+    bio = db.Column(db.Text, server_default=text("''"))
+    university = db.Column(db.Text, server_default=text("''"))
+    faculty = db.Column(db.Text, server_default=text("''"))
+    major = db.Column(db.Text, server_default=text("''"))
+    degree = db.Column(db.Text, server_default=text("''"))
+    semester = db.Column(db.Text, server_default=text("''"))
+    gpa = db.Column(db.Text, server_default=text("''"))
+    entry_year = db.Column(db.Text, server_default=text("''"))
+    desired_positions = db.Column(db.Text, server_default=text("''"))
+    preferred_program = db.Column(db.Text, server_default=text("''"))
+    preferred_locations = db.Column(db.Text, server_default=text("''"))
+    work_arrangement = db.Column(db.Text, server_default=text("''"))
+    interests = db.Column(db.Text, server_default=text("''"))
+    linkedin = db.Column(db.Text, server_default=text("''"))
+    github = db.Column(db.Text, server_default=text("''"))
+    portfolio_url = db.Column(db.Text, server_default=text("''"))
+    avatar_path = db.Column(db.Text, server_default=text("''"))
+    updated_at = db.Column(
+        db.Text,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    created_at = db.Column(
+        db.Text,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+    created_opportunities = db.relationship(
+        "OpportunityORM",
+        back_populates="creator",
+        foreign_keys="OpportunityORM.created_by",
+    )
+    bookmarks = db.relationship("BookmarkORM", back_populates="user")
+    applications = db.relationship("ApplicationORM", back_populates="user")
+    documents = db.relationship("DocumentORM", back_populates="user")
+    sent_chat_messages = db.relationship("ChatMessageORM", back_populates="sender")
+    audit_logs = db.relationship("AuditLogORM", back_populates="user")
+    chat_threads_as_participant_one = db.relationship(
+        "ChatThreadORM",
+        back_populates="participant_one",
+        foreign_keys="ChatThreadORM.participant_one_id",
+    )
+    chat_threads_as_participant_two = db.relationship(
+        "ChatThreadORM",
+        back_populates="participant_two",
+        foreign_keys="ChatThreadORM.participant_two_id",
+    )

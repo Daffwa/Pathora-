@@ -1,21 +1,18 @@
 from flask import abort, session
 
+from repositories import application_repository
 from services.constants import (
     APPLICATION_STATUS_APPLIED,
     APPLICATION_STATUS_BADGE_CLASSES,
     LEGACY_APPLICATION_STATUS_LABELS,
 )
-from services.database_service import get_db
 
 
 def get_application_for_user_or_404(application_id):
-    application = get_db().execute(
-        """
-        SELECT id FROM applications
-        WHERE id = ? AND user_id = ?
-        """,
-        (application_id, session["user_id"]),
-    ).fetchone()
+    application = application_repository.find_row_by_user_and_id(
+        session["user_id"],
+        application_id,
+    )
 
     if application is None:
         abort(404)

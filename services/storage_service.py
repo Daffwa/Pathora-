@@ -1,5 +1,6 @@
 import os
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -10,6 +11,20 @@ from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "png", "jpg", "jpeg"}
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
+ALLOWED_DOCUMENT_MIME_TYPES = {
+    "pdf": {"application/pdf"},
+    "doc": {"application/msword"},
+    "docx": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    },
+    "png": {"image/png"},
+    "jpg": {"image/jpeg"},
+    "jpeg": {"image/jpeg"},
+}
+ALLOWED_IMAGE_MIME_TYPES = {
+    "image/png",
+    "image/jpeg",
+}
 ALLOWED_CHAT_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
 ALLOWED_CHAT_IMAGE_MIME_TYPES = {
     "image/png",
@@ -46,21 +61,120 @@ def is_allowed_image_file(filename: str | None) -> bool:
     return allowed_file(filename, ALLOWED_IMAGE_EXTENSIONS)
 
 
+def _read_upload_header(
+    uploaded_file: FileStorage | None,
+    byte_count: int = 512,
+) -> bytes:
+    if uploaded_file is None:
+        return b""
+
+    try:
+        current_position = uploaded_file.stream.tell()
+        uploaded_file.stream.seek(0)
+        header = uploaded_file.stream.read(byte_count)
+        uploaded_file.stream.seek(current_position)
+        return header
+    except (OSError, AttributeError):
+        return b""
+
+
+def _extension_from_upload(uploaded_file: FileStorage | None) -> str:
+    if uploaded_file is None:
+        return ""
+    return _extension_from_filename(uploaded_file.filename)
+
+
+def _has_allowed_mime_type(
+    uploaded_file: FileStorage | None,
+    extension: str,
+    allowed_mime_types: dict[str, set[str]],
+) -> bool:
+    if uploaded_file is None:
+        return False
+    mimetype = (uploaded_file.mimetype or "").strip().lower()
+    return mimetype in allowed_mime_types.get(extension, set())
+
+
+def _has_docx_package(uploaded_file: FileStorage | None) -> bool:
+    if uploaded_file is None:
+        return False
+
+    try:
+        current_position = uploaded_file.stream.tell()
+        uploaded_file.stream.seek(0)
+        with zipfile.ZipFile(uploaded_file.stream) as archive:
+            names = set(archive.namelist())
+    except (OSError, AttributeError, zipfile.BadZipFile):
+        return False
+    finally:
+        try:
+            uploaded_file.stream.seek(current_position)
+        except (OSError, AttributeError, UnboundLocalError):
+            pass
+
+    return "[Content_Types].xml" in names and any(
+        name.startswith("word/") for name in names
+    )
+
+
+def _has_legacy_doc_signature(uploaded_file: FileStorage | None) -> bool:
+    header = _read_upload_header(uploaded_file)
+    return header.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1")
+
+
+def has_allowed_document_signature(
+    uploaded_file: FileStorage | None,
+    extension: str,
+) -> bool:
+    header = _read_upload_header(uploaded_file)
+    if extension == "pdf":
+        return header.startswith(b"%PDF-")
+    if extension == "doc":
+        return _has_legacy_doc_signature(uploaded_file)
+    if extension == "docx":
+        return header.startswith(
+            (b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")
+        ) and _has_docx_package(uploaded_file)
+    if extension == "png":
+        return header.startswith(b"\x89PNG\r\n\x1a\n")
+    if extension in {"jpg", "jpeg"}:
+        return header.startswith(b"\xff\xd8\xff")
+    return False
+
+
+def has_allowed_image_signature(
+    uploaded_file: FileStorage | None,
+    extension: str,
+) -> bool:
+    header = _read_upload_header(uploaded_file, 16)
+    if extension == "png":
+        return header.startswith(b"\x89PNG\r\n\x1a\n")
+    if extension in {"jpg", "jpeg"}:
+        return header.startswith(b"\xff\xd8\xff")
+    return False
+
+
 def validate_document_upload(uploaded_file: FileStorage | None) -> bool:
-    """Validate a document upload based on its filename."""
-    return bool(
-        uploaded_file
-        and uploaded_file.filename
-        and is_allowed_file(uploaded_file.filename)
+    """Validate document extension, MIME type, and binary signature."""
+    extension = _extension_from_upload(uploaded_file)
+    return (
+        extension in ALLOWED_EXTENSIONS
+        and _has_allowed_mime_type(
+            uploaded_file,
+            extension,
+            ALLOWED_DOCUMENT_MIME_TYPES,
+        )
+        and has_allowed_document_signature(uploaded_file, extension)
     )
 
 
 def validate_image_upload(uploaded_file: FileStorage | None) -> bool:
-    """Validate an avatar upload based on its filename."""
-    return bool(
-        uploaded_file
-        and uploaded_file.filename
-        and is_allowed_image_file(uploaded_file.filename)
+    """Validate avatar extension, MIME type, and binary signature."""
+    extension = _extension_from_upload(uploaded_file)
+    return (
+        extension in ALLOWED_IMAGE_EXTENSIONS
+        and (uploaded_file.mimetype or "").strip().lower() in ALLOWED_IMAGE_MIME_TYPES
+        and has_allowed_image_signature(uploaded_file, extension)
     )
 
 
@@ -169,8 +283,7 @@ def make_chat_attachment_filename(
 
 def make_avatar_filename(user_id: int | str, original_filename: str | None) -> str:
     """Generate the stored filename for a profile avatar."""
-    extension = _extension_from_filename(original_filename)
-    return f"user_{user_id}_avatar.{extension}"
+    return generate_unique_filename(user_id, original_filename, "avatar")
 
 
 def make_document_filename(

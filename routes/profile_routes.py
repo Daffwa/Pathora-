@@ -1,12 +1,17 @@
-import sqlite3
 from datetime import datetime
 
 from flask import abort, flash, redirect, render_template, request, send_from_directory, session, url_for
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from services.auth_service import jobseeker_required_decorator
+from extensions import db
+from repositories import user_repository
+from services.auth_service import (
+    get_current_user,
+    is_user_account_active,
+    jobseeker_required_decorator,
+)
 from services.constants import PROFILE_FORM_FIELDS
-from services.database_service import get_db
 from services.document_service import get_document_progress_for_user
 from services.opportunity_service import is_valid_date
 from services.profile_service import (
@@ -24,6 +29,7 @@ from services.storage_service import (
     secure_upload_filename,
     validate_image_upload,
 )
+from services.url_validation_service import normalize_profile_urls
 
 
 def register(app):
@@ -35,6 +41,13 @@ def register(app):
         if not is_safe_stored_filename(filename):
             abort(404)
         safe_filename = secure_upload_filename(filename)
+        user = get_current_user()
+        if (
+            user is None
+            or not is_user_account_active(user)
+            or (user["avatar_path"] or "") != safe_filename
+        ):
+            abort(404)
 
         return send_from_directory(app.config["AVATAR_UPLOAD_FOLDER"], safe_filename)
 
@@ -84,16 +97,12 @@ def register(app):
                 validation_errors.append("Email wajib diisi.")
 
             if form_data["email"]:
-                existing_user = get_db().execute(
-                    """
-                    SELECT id FROM users
-                    WHERE email = ? AND id != ?
-                    """,
-                    (form_data["email"].lower(), session["user_id"]),
-                ).fetchone()
-                if existing_user is not None:
-                    validation_errors.append("Email sudah digunakan akun lain.")
                 form_data["email"] = form_data["email"].lower()
+                if user_repository.email_exists(
+                    form_data["email"],
+                    exclude_user_id=session["user_id"],
+                ):
+                    validation_errors.append("Email sudah digunakan akun lain.")
 
             if form_data["birth_date"] and not is_valid_date(form_data["birth_date"]):
                 validation_errors.append("Tanggal lahir harus memakai format YYYY-MM-DD.")
@@ -128,6 +137,8 @@ def register(app):
                     if entry_year_value < 1900 or entry_year_value > current_year + 1:
                         validation_errors.append("Tahun masuk tidak valid.")
 
+            validation_errors.extend(normalize_profile_urls(form_data))
+
             wants_password_change = any([old_password, new_password, confirm_password])
             password_hash = user["password_hash"]
             if wants_password_change:
@@ -147,7 +158,9 @@ def register(app):
             uploaded_avatar = request.files.get("avatar_file")
             if uploaded_avatar and uploaded_avatar.filename:
                 if not validate_image_upload(uploaded_avatar):
-                    validation_errors.append("Foto profil harus berupa JPG, JPEG, atau PNG.")
+                    validation_errors.append(
+                        "Foto profil harus berupa gambar JPG, JPEG, atau PNG yang valid."
+                    )
 
             if validation_errors:
                 for error in validation_errors:
@@ -179,22 +192,20 @@ def register(app):
                 )
                 avatar_path = avatar_filename
 
-            update_fields = PROFILE_FORM_FIELDS + ["avatar_path", "password_hash"]
-            set_clause = ", ".join(f"{field} = ?" for field in update_fields)
-            update_values = [form_data[field] for field in PROFILE_FORM_FIELDS]
-            update_values.extend([avatar_path, password_hash, session["user_id"]])
-
             try:
-                get_db().execute(
-                    f"""
-                    UPDATE users
-                    SET {set_clause}, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                    """,
-                    update_values,
+                profile_fields = {
+                    field: form_data[field]
+                    for field in PROFILE_FORM_FIELDS
+                }
+                profile_fields.update(
+                    {
+                        "avatar_path": avatar_path,
+                        "password_hash": password_hash,
+                    }
                 )
-                get_db().commit()
-            except sqlite3.Error:
+                user_repository.update_profile(session["user_id"], profile_fields)
+            except SQLAlchemyError:
+                db.session.rollback()
                 flash("Profil belum bisa disimpan. Silakan coba lagi.")
                 return redirect(url_for("edit_profile"))
 

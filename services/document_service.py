@@ -1,28 +1,16 @@
 from flask import session
 
-from models.document import Document
+from dto.document import Document
+from repositories import document_repository
 from services.constants import DOCUMENT_TYPES
-from services.database_service import get_db
 
 
 def get_document_for_user(doc_type):
-    return get_db().execute(
-        """
-        SELECT * FROM documents
-        WHERE user_id = ? AND doc_type = ?
-        """,
-        (session["user_id"], doc_type),
-    ).fetchone()
+    return document_repository.get_row_by_user_and_type(session["user_id"], doc_type)
 
 
 def get_document_progress_for_user(user_id):
-    rows = get_db().execute(
-        """
-        SELECT * FROM documents
-        WHERE user_id = ?
-        """,
-        (user_id,),
-    ).fetchall()
+    rows = document_repository.list_rows_by_user(user_id)
     document_by_type = {row["doc_type"]: Document.from_row(row, user_id) for row in rows}
 
     documents = []

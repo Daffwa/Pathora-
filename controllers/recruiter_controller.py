@@ -1,0 +1,501 @@
+from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
+from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from extensions import db
+from services.audit_service import record_audit_event
+from services.auth_service import (
+    get_current_user,
+    recruiter_or_admin_required_decorator,
+    recruiter_required_decorator,
+)
+from services.constants import (
+    APPLICANT_SORT_RECENT,
+    RECRUITER_APPLICATION_STATUSES,
+    RECRUITER_POSITION_OPTIONS,
+)
+from services.opportunity_service import (
+    EMPTY_OPPORTUNITY_FORM,
+    create_opportunity,
+    delete_opportunity_with_cascade,
+    get_opportunity_form_data,
+    update_opportunity,
+    validate_opportunity_form,
+)
+from services.recruiter_service import (
+    bulk_update_applicant_status,
+    get_applicant_document_rows,
+    get_applicant_list_url,
+    get_recruiter_applicant_rows,
+    get_recruiter_application_or_404,
+    get_recruiter_opportunity_or_404,
+    get_recruiter_opportunity_rows,
+    get_recruiter_summary,
+    is_recruiter_email_taken,
+    make_recruiter_applicants_csv,
+    normalize_applicant_sort,
+    parse_positive_int,
+    update_applicant_status,
+    update_recruiter_profile,
+)
+from services.storage_service import (
+    delete_file_if_exists,
+    make_avatar_filename,
+    save_uploaded_file,
+    validate_image_upload,
+)
+from services.url_validation_service import normalize_profile_urls
+
+
+bp = Blueprint("recruiter", __name__)
+
+def _recruiter_profile_form_data(user):
+    company_position = user["company_position"] or ""
+    position_choice = (
+        company_position if company_position in RECRUITER_POSITION_OPTIONS else "Other"
+    )
+    return {
+        "name": user["name"] or "",
+        "email": user["email"] or "",
+        "phone": user["phone"] or "",
+        "domicile": user["domicile"] or "",
+        "bio": user["bio"] or "",
+        "linkedin": user["linkedin"] or "",
+        "portfolio_url": user["portfolio_url"] or "",
+        "company_name": user["company_name"] or "",
+        "company_position": position_choice if company_position else "",
+        "company_position_other": (
+            company_position if company_position and position_choice == "Other" else ""
+        ),
+    }
+
+
+def _resolve_recruiter_company_position(form_data):
+    if form_data["company_position"] == "Other":
+        return form_data["company_position_other"]
+    return form_data["company_position"]
+
+
+def _recruiter_opportunity_form(opportunity=None, form_title="", action_url=""):
+    recruiter = get_current_user()
+    company_name = recruiter["company_name"] or ""
+    if opportunity is None:
+        opportunity = dict(EMPTY_OPPORTUNITY_FORM)
+        opportunity["provider"] = company_name
+
+    if request.method == "POST":
+        opportunity = get_opportunity_form_data()
+        errors = validate_opportunity_form(opportunity)
+        if errors:
+            for error in errors:
+                flash(error)
+            return render_template(
+                "recruiter/opportunity_form.html",
+                opportunity=opportunity,
+                form_title=form_title,
+                action_url=action_url,
+            ), 400
+
+        try:
+            opportunity_id = create_opportunity(opportunity, session["user_id"], company_name)
+            record_audit_event(
+                "opportunity.create",
+                target_type="opportunity",
+                target_id=opportunity_id,
+                metadata={"scope": "recruiter"},
+            )
+            flash("Lowongan berhasil dibuat.")
+            return redirect(url_for("recruiter_opportunities"))
+        except SQLAlchemyError:
+            db.session.rollback()
+            flash("Lowongan belum bisa dibuat. Silakan coba lagi.")
+
+    return render_template(
+        "recruiter/opportunity_form.html",
+        opportunity=opportunity,
+        form_title=form_title,
+        action_url=action_url,
+    )
+
+
+@bp.route("/recruiter/profile", endpoint="recruiter_profile")
+@recruiter_required_decorator
+def recruiter_profile():
+    recruiter = get_current_user()
+    summary = get_recruiter_summary(session["user_id"], recent_limit=4)
+
+    return render_template(
+        "recruiter/profile.html",
+        recruiter=recruiter,
+        total_opportunities=summary["total_opportunities"],
+        total_applicants=summary["total_applicants"],
+        recent_opportunities=summary["recent_opportunities"],
+    )
+
+
+@bp.route("/recruiter/profile/edit", methods=["GET", "POST"], endpoint="recruiter_edit_profile")
+@recruiter_required_decorator
+def recruiter_edit_profile():
+    recruiter = get_current_user()
+    if request.method == "POST":
+        form_data = {
+            "name": request.form.get("name", "").strip(),
+            "email": request.form.get("email", "").strip().lower(),
+            "phone": request.form.get("phone", "").strip(),
+            "domicile": request.form.get("domicile", "").strip(),
+            "bio": request.form.get("bio", "").strip(),
+            "linkedin": request.form.get("linkedin", "").strip(),
+            "portfolio_url": request.form.get("portfolio_url", "").strip(),
+            "company_name": request.form.get("company_name", "").strip(),
+            "company_position": request.form.get("company_position", "").strip(),
+            "company_position_other": request.form.get(
+                "company_position_other", ""
+            ).strip(),
+        }
+        old_password = request.form.get("old_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+        uploaded_avatar = request.files.get("avatar_file")
+        company_position = _resolve_recruiter_company_position(form_data)
+
+        validation_errors = []
+        if not form_data["name"]:
+            validation_errors.append("Nama lengkap wajib diisi.")
+        if not form_data["email"]:
+            validation_errors.append("Email wajib diisi.")
+        if not form_data["company_name"]:
+            validation_errors.append("Nama perusahaan wajib diisi.")
+        if form_data["company_position"] not in RECRUITER_POSITION_OPTIONS:
+            validation_errors.append("Pilih posisi recruiter yang valid.")
+        if not company_position:
+            validation_errors.append("Posisi recruiter wajib diisi.")
+
+        if form_data["email"]:
+            if is_recruiter_email_taken(form_data["email"], session["user_id"]):
+                validation_errors.append("Email sudah digunakan akun lain.")
+
+        validation_errors.extend(normalize_profile_urls(form_data))
+
+        wants_password_change = any([old_password, new_password, confirm_password])
+        password_hash = recruiter["password_hash"]
+        if wants_password_change:
+            if not old_password:
+                validation_errors.append("Kata sandi lama wajib diisi.")
+            if not new_password:
+                validation_errors.append("Kata sandi baru wajib diisi.")
+            if new_password and len(new_password) < 8:
+                validation_errors.append("Kata sandi baru minimal 8 karakter.")
+            if new_password != confirm_password:
+                validation_errors.append("Konfirmasi kata sandi baru belum sama.")
+            if old_password and not check_password_hash(
+                recruiter["password_hash"], old_password
+            ):
+                validation_errors.append("Kata sandi lama tidak sesuai.")
+            if not validation_errors:
+                password_hash = generate_password_hash(new_password)
+
+        if uploaded_avatar and uploaded_avatar.filename:
+            if not validate_image_upload(uploaded_avatar):
+                validation_errors.append(
+                    "Foto profil harus berupa gambar JPG, JPEG, atau PNG yang valid."
+                )
+
+        if validation_errors:
+            for error in validation_errors:
+                flash(error)
+            return (
+                render_template(
+                    "recruiter/profile_edit.html",
+                    recruiter=recruiter,
+                    form_data=form_data,
+                    recruiter_position_options=RECRUITER_POSITION_OPTIONS,
+                ),
+                400,
+            )
+
+        avatar_path = recruiter["avatar_path"] or ""
+        if request.form.get("remove_avatar") == "1":
+            delete_file_if_exists(current_app.config["AVATAR_UPLOAD_FOLDER"], avatar_path)
+            avatar_path = ""
+
+        if uploaded_avatar and uploaded_avatar.filename:
+            avatar_filename = make_avatar_filename(
+                session["user_id"], uploaded_avatar.filename
+            )
+            if avatar_path and avatar_path != avatar_filename:
+                delete_file_if_exists(
+                    current_app.config["AVATAR_UPLOAD_FOLDER"], avatar_path
+                )
+            save_uploaded_file(
+                uploaded_avatar,
+                current_app.config["AVATAR_UPLOAD_FOLDER"],
+                avatar_filename,
+            )
+            avatar_path = avatar_filename
+
+        try:
+            update_recruiter_profile(
+                session["user_id"],
+                {
+                    "name": form_data["name"],
+                    "email": form_data["email"],
+                    "phone": form_data["phone"],
+                    "domicile": form_data["domicile"],
+                    "bio": form_data["bio"],
+                    "linkedin": form_data["linkedin"],
+                    "portfolio_url": form_data["portfolio_url"],
+                    "company_name": form_data["company_name"],
+                    "company_position": company_position,
+                    "avatar_path": avatar_path,
+                    "password_hash": password_hash,
+                },
+            )
+        except SQLAlchemyError:
+            db.session.rollback()
+            flash("Profil recruiter belum bisa disimpan. Silakan coba lagi.")
+            return redirect(url_for("recruiter_edit_profile"))
+
+        session["user_name"] = form_data["name"]
+        record_audit_event(
+            "recruiter.profile_update",
+            target_type="user",
+            target_id=session["user_id"],
+            metadata={"company_name": form_data["company_name"]},
+        )
+        flash("Profil recruiter berhasil diperbarui.")
+        return redirect(url_for("recruiter_profile"))
+
+    return render_template(
+        "recruiter/profile_edit.html",
+        recruiter=recruiter,
+        form_data=_recruiter_profile_form_data(recruiter),
+        recruiter_position_options=RECRUITER_POSITION_OPTIONS,
+    )
+
+
+@bp.route("/recruiter/dashboard", endpoint="recruiter_dashboard")
+@recruiter_required_decorator
+def recruiter_dashboard():
+    recruiter = get_current_user()
+    summary = get_recruiter_summary(session["user_id"], recent_limit=3)
+    recent_applicants = get_recruiter_applicant_rows()[:5]
+
+    return render_template(
+        "recruiter/dashboard.html",
+        recruiter=recruiter,
+        total_opportunities=summary["total_opportunities"],
+        total_applicants=summary["total_applicants"],
+        recent_opportunities=summary["recent_opportunities"],
+        recent_applicants=recent_applicants,
+    )
+
+
+@bp.route("/recruiter/opportunities", endpoint="recruiter_opportunities")
+@recruiter_required_decorator
+def recruiter_opportunities():
+    rows = get_recruiter_opportunity_rows(session["user_id"])
+
+    return render_template("recruiter/opportunities.html", opportunities=rows)
+
+
+@bp.route("/recruiter/opportunities/create", methods=["GET", "POST"], endpoint="recruiter_create_opportunity")
+@recruiter_required_decorator
+def recruiter_create_opportunity():
+    return _recruiter_opportunity_form(
+        form_title="Tambah Lowongan",
+        action_url=url_for("recruiter_create_opportunity"),
+    )
+
+
+@bp.route("/recruiter/opportunities/<int:opportunity_id>/edit", methods=["GET", "POST"], endpoint="recruiter_edit_opportunity")
+@recruiter_required_decorator
+def recruiter_edit_opportunity(opportunity_id):
+    row = get_recruiter_opportunity_or_404(opportunity_id)
+    opportunity = dict(row)
+
+    if request.method == "POST":
+        opportunity = get_opportunity_form_data()
+        errors = validate_opportunity_form(opportunity)
+        if errors:
+            for error in errors:
+                flash(error)
+            return render_template(
+                "recruiter/opportunity_form.html",
+                opportunity=opportunity,
+                form_title="Edit Lowongan",
+                action_url=url_for("recruiter_edit_opportunity", opportunity_id=opportunity_id),
+            ), 400
+
+        try:
+            update_opportunity(
+                opportunity_id, opportunity,
+                company_name=get_current_user()["company_name"] or "",
+                user_id=session["user_id"],
+            )
+            record_audit_event(
+                "opportunity.update",
+                target_type="opportunity",
+                target_id=opportunity_id,
+                metadata={"scope": "recruiter"},
+            )
+            flash("Lowongan berhasil diperbarui.")
+            return redirect(url_for("recruiter_opportunities"))
+        except SQLAlchemyError:
+            db.session.rollback()
+            flash("Lowongan belum bisa diperbarui. Silakan coba lagi.")
+
+    return render_template(
+        "recruiter/opportunity_form.html",
+        opportunity=opportunity,
+        form_title="Edit Lowongan",
+        action_url=url_for("recruiter_edit_opportunity", opportunity_id=opportunity_id),
+    )
+
+
+@bp.route("/recruiter/opportunities/<int:opportunity_id>/delete", methods=["POST"], endpoint="recruiter_delete_opportunity")
+@recruiter_required_decorator
+def recruiter_delete_opportunity(opportunity_id):
+    get_recruiter_opportunity_or_404(opportunity_id)
+
+    try:
+        delete_opportunity_with_cascade(opportunity_id, session["user_id"])
+        record_audit_event(
+            "opportunity.delete",
+            target_type="opportunity",
+            target_id=opportunity_id,
+            metadata={"scope": "recruiter"},
+        )
+        flash("Lowongan berhasil dihapus.")
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("Lowongan belum bisa dihapus. Silakan coba lagi.")
+
+    return redirect(url_for("recruiter_opportunities"))
+
+
+@bp.route("/recruiter/applicants", endpoint="recruiter_applicants")
+@recruiter_or_admin_required_decorator
+def recruiter_applicants():
+    current_sort = normalize_applicant_sort(request.args.get("sort", APPLICANT_SORT_RECENT))
+    return render_template(
+        "recruiter/applicants.html",
+        applicants=get_recruiter_applicant_rows(sort_by=current_sort),
+        opportunity=None,
+        statuses=RECRUITER_APPLICATION_STATUSES,
+        current_sort=current_sort,
+    )
+
+
+@bp.route("/recruiter/opportunities/<int:opportunity_id>/applicants", endpoint="recruiter_opportunity_applicants")
+@recruiter_or_admin_required_decorator
+def recruiter_opportunity_applicants(opportunity_id):
+    opportunity = get_recruiter_opportunity_or_404(opportunity_id)
+    current_sort = normalize_applicant_sort(request.args.get("sort", APPLICANT_SORT_RECENT))
+    return render_template(
+        "recruiter/applicants.html",
+        applicants=get_recruiter_applicant_rows(opportunity_id, current_sort),
+        opportunity=opportunity,
+        statuses=RECRUITER_APPLICATION_STATUSES,
+        current_sort=current_sort,
+    )
+
+
+@bp.route("/recruiter/applicants/export.csv", endpoint="recruiter_applicants_export")
+@recruiter_or_admin_required_decorator
+def recruiter_applicants_export():
+    opportunity_id = parse_positive_int(request.args.get("opportunity_id"))
+    opportunity = get_recruiter_opportunity_or_404(opportunity_id) if opportunity_id else None
+    current_sort = normalize_applicant_sort(request.args.get("sort", APPLICANT_SORT_RECENT))
+    applicants = get_recruiter_applicant_rows(opportunity_id, current_sort)
+    return make_recruiter_applicants_csv(applicants, opportunity)
+
+
+@bp.route("/recruiter/applicants/bulk-action", methods=["POST"], endpoint="recruiter_bulk_update_applicants")
+@recruiter_or_admin_required_decorator
+def recruiter_bulk_update_applicants():
+    opportunity_id = parse_positive_int(request.form.get("opportunity_id"))
+    if opportunity_id is not None:
+        get_recruiter_opportunity_or_404(opportunity_id)
+
+    current_sort = normalize_applicant_sort(request.form.get("sort", APPLICANT_SORT_RECENT))
+    selected_ids = []
+    for raw_application_id in request.form.getlist("application_ids"):
+        application_id = parse_positive_int(raw_application_id)
+        if application_id is not None and application_id not in selected_ids:
+            selected_ids.append(application_id)
+
+    status = request.form.get("status", "").strip()
+    return_url = get_applicant_list_url(opportunity_id, current_sort)
+
+    if not selected_ids:
+        flash("Pilih minimal satu applicant untuk aksi massal.")
+        return redirect(return_url)
+
+    if status not in RECRUITER_APPLICATION_STATUSES:
+        flash("Status applicant tidak valid.")
+        return redirect(return_url)
+
+    try:
+        updated_count = bulk_update_applicant_status(
+            selected_ids,
+            status,
+            opportunity_id=opportunity_id,
+        )
+        if updated_count:
+            record_audit_event(
+                "application_status.bulk_update",
+                target_type="application",
+                metadata={
+                    "status": status,
+                    "application_ids": selected_ids,
+                    "updated_count": updated_count,
+                },
+            )
+            flash(f"{updated_count} applicant berhasil diperbarui menjadi {status}.")
+        else:
+            flash("Tidak ada applicant yang dapat diperbarui.")
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("Aksi massal belum bisa diproses. Silakan coba lagi.")
+
+    return redirect(return_url)
+
+
+@bp.route("/recruiter/applicants/<int:application_id>", endpoint="recruiter_applicant_detail")
+@recruiter_or_admin_required_decorator
+def recruiter_applicant_detail(application_id):
+    application = get_recruiter_application_or_404(application_id)
+    documents = get_applicant_document_rows(application["applicant_user_id"])
+
+    return render_template(
+        "recruiter/applicant_detail.html",
+        application=application,
+        documents=documents,
+        statuses=RECRUITER_APPLICATION_STATUSES,
+    )
+
+
+@bp.route("/recruiter/applications/<int:application_id>/status", methods=["POST"], endpoint="recruiter_update_application_status")
+@recruiter_or_admin_required_decorator
+def recruiter_update_application_status(application_id):
+    get_recruiter_application_or_404(application_id)
+    status = request.form.get("status", "").strip()
+
+    if status not in RECRUITER_APPLICATION_STATUSES:
+        flash("Status applicant tidak valid.")
+        return redirect(url_for("recruiter_applicant_detail", application_id=application_id))
+
+    try:
+        update_applicant_status(application_id, status)
+        record_audit_event(
+            "application_status.update",
+            target_type="application",
+            target_id=application_id,
+            metadata={"status": status},
+        )
+        flash("Status applicant berhasil diperbarui.")
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("Status applicant belum bisa diperbarui. Silakan coba lagi.")
+
+    return redirect(url_for("recruiter_applicant_detail", application_id=application_id))

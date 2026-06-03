@@ -5,6 +5,7 @@ import os
 from flask import current_app
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
+from repositories import user_repository
 from services.database_service import is_production_environment
 
 
@@ -66,18 +67,18 @@ def load_password_reset_user(db, token):
     if payload is None:
         return None
 
-    user = db.execute(
-        "SELECT id, name, email, password_hash FROM users WHERE id = ? AND email = ?",
-        (payload["user_id"], payload["email"]),
-    ).fetchone()
+    user = user_repository.find_by_id_and_email(
+        payload["user_id"],
+        payload["email"],
+    )
     if user is None:
         return None
 
-    expected_fingerprint = _password_hash_fingerprint(user["password_hash"], secret)
+    expected_fingerprint = _password_hash_fingerprint(user.password_hash, secret)
     if not hmac.compare_digest(payload["password_fingerprint"], expected_fingerprint):
         return None
 
-    return user
+    return user_repository.as_user_row(user)
 
 
 def _serializer(secret):

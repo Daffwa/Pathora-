@@ -1,15 +1,16 @@
-import sqlite3
 from functools import wraps
 
 from flask import abort, flash, redirect, session, url_for
+from sqlalchemy.exc import SQLAlchemyError
 
+from repositories import user_repository
 from services.constants import (
     ACCOUNT_STATUS_APPROVED,
     ROLE_PERMISSION_MATRIX,
     VALID_ACCOUNT_STATUSES,
     VALID_ROLES,
 )
-from services.database_service import DatabaseAccessError, build_database_error_message, get_db
+from services.database_service import DatabaseAccessError, build_database_error_message
 
 
 def normalize_role(role):
@@ -53,16 +54,14 @@ def get_current_user():
         return None
 
     try:
-        user = get_db().execute(
-            "SELECT * FROM users WHERE id = ?", (session["user_id"],)
-        ).fetchone()
+        user = user_repository.find_row_by_id(session["user_id"])
         if user is None:
             session.clear()
             return None
         if _sync_session_user(user) is None:
             return None
         return user
-    except sqlite3.Error as exc:
+    except SQLAlchemyError as exc:
         raise DatabaseAccessError(
             build_database_error_message("Data user tidak bisa dibaca dari database.")
         ) from exc

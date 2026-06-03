@@ -1,15 +1,13 @@
 from flask import session
 
-from models.opportunity import Opportunity
+from dto.opportunity import Opportunity
+from repositories import opportunity_repository, user_repository
 from services.constants import PROFILE_COMPLETION_FIELDS, PROFILE_FORM_FIELDS
-from services.database_service import get_db
 from services.opportunity_service import apply_priority_score, get_user_scoring_context
 
 
 def get_current_user_profile():
-    return get_db().execute(
-        "SELECT * FROM users WHERE id = ?", (session["user_id"],)
-    ).fetchone()
+    return user_repository.find_row_by_id(session["user_id"])
 
 
 def profile_form_data_from_user(user):
@@ -25,29 +23,12 @@ def split_profile_list(value):
 
 
 def get_saved_profile_opportunities(user_id):
-    rows = get_db().execute(
-        """
-        SELECT
-            opportunities.*,
-            bookmarks.saved_at,
-            applications.status AS application_status
-        FROM bookmarks
-        JOIN opportunities ON opportunities.id = bookmarks.opportunity_id
-        LEFT JOIN applications
-            ON applications.opportunity_id = opportunities.id
-           AND applications.user_id = bookmarks.user_id
-        WHERE bookmarks.user_id = ?
-        ORDER BY bookmarks.saved_at DESC
-        """,
-        (user_id,),
-    ).fetchall()
-
     scoring_context = get_user_scoring_context()
     saved_opportunities = []
-    for row in rows:
+    for row in opportunity_repository.list_bookmarks_by_user(user_id):
         opportunity = Opportunity.from_row(row)
         opportunity.saved_at = row["saved_at"]
-        opportunity.application_status = row["application_status"] or ""
+        opportunity.application_status = row["application_status"]
         apply_priority_score(opportunity, scoring_context)
         saved_opportunities.append(opportunity)
 

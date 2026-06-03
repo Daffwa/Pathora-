@@ -1,12 +1,13 @@
 import json
-import sqlite3
 
 from flask import abort, flash, redirect, render_template, request, url_for
+from sqlalchemy.exc import SQLAlchemyError
 
+from extensions import db
+from repositories import admin_repository
 from services.audit_service import record_audit_event
 from services.auth_service import admin_required_decorator
 from services.constants import ACCOUNT_STATUS_LABELS, VALID_ACCOUNT_STATUSES
-from services.database_service import get_db
 from services.opportunity_service import (
     EMPTY_OPPORTUNITY_FORM,
     create_opportunity,
@@ -104,7 +105,8 @@ def _handle_form(submit_label, form_title, action_url, opportunity=None):
                 metadata={"scope": "admin"},
             )
             flash(f"Peluang berhasil {submit_label}.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash(f"Peluang belum bisa di-{submit_label}. Silakan coba lagi.")
         else:
             return redirect(url_for("admin_opportunities"))
@@ -121,45 +123,12 @@ def register(app):
     @app.route("/admin")
     @admin_required_decorator
     def admin_dashboard():
-        total_opportunities = get_db().execute(
-            "SELECT COUNT(*) FROM opportunities"
-        ).fetchone()[0]
-        total_internship = get_db().execute(
-            "SELECT COUNT(*) FROM opportunities WHERE type = ?", ("internship",)
-        ).fetchone()[0]
-        total_scholarship = get_db().execute(
-            "SELECT COUNT(*) FROM opportunities WHERE type = ?", ("scholarship",)
-        ).fetchone()[0]
-        total_recruiters = get_db().execute(
-            """
-            SELECT COUNT(*)
-            FROM users
-            WHERE role = ?
-            """,
-            ("recruiter",),
-        ).fetchone()[0]
-        pending_recruiters = get_db().execute(
-            """
-            SELECT COUNT(*)
-            FROM users
-            WHERE role = ? AND account_status = ?
-            """,
-            ("recruiter", "pending"),
-        ).fetchone()[0]
-        recent_activity = get_db().execute(
-            """
-            SELECT
-                audit_logs.action,
-                audit_logs.target_type,
-                audit_logs.target_id,
-                audit_logs.created_at,
-                users.name AS actor_name
-            FROM audit_logs
-            LEFT JOIN users ON users.id = audit_logs.user_id
-            ORDER BY audit_logs.created_at DESC, audit_logs.id DESC
-            LIMIT 6
-            """
-        ).fetchall()
+        total_opportunities = admin_repository.count_opportunities()
+        total_internship = admin_repository.count_opportunities("internship")
+        total_scholarship = admin_repository.count_opportunities("scholarship")
+        total_recruiters = admin_repository.count_recruiters()
+        pending_recruiters = admin_repository.count_recruiters("pending")
+        recent_activity = admin_repository.list_recent_activity(limit=6)
 
         return render_template(
             "admin/dashboard.html",
@@ -177,56 +146,16 @@ def register(app):
     def admin_audit_logs():
         selected_action = request.args.get("action", "").strip()
         query_text = request.args.get("q", "").strip()
-        where_clauses = []
-        params = []
-
-        if selected_action:
-            where_clauses.append("audit_logs.action = ?")
-            params.append(selected_action)
-
-        if query_text:
-            where_clauses.append(
-                """
-                (
-                    audit_logs.action LIKE ?
-                    OR audit_logs.target_type LIKE ?
-                    OR users.name LIKE ?
-                    OR users.email LIKE ?
-                )
-                """
-            )
-            like_query = f"%{query_text}%"
-            params.extend([like_query, like_query, like_query, like_query])
-
-        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        logs = get_db().execute(
-            f"""
-            SELECT
-                audit_logs.id,
-                audit_logs.action,
-                audit_logs.target_type,
-                audit_logs.target_id,
-                audit_logs.metadata,
-                audit_logs.ip_address,
-                audit_logs.created_at,
-                users.name AS actor_name,
-                users.email AS actor_email
-            FROM audit_logs
-            LEFT JOIN users ON users.id = audit_logs.user_id
-            {where_sql}
-            ORDER BY audit_logs.created_at DESC, audit_logs.id DESC
-            LIMIT 100
-            """,
-            params,
-        ).fetchall()
-        action_rows = get_db().execute(
-            "SELECT DISTINCT action FROM audit_logs ORDER BY action"
-        ).fetchall()
+        logs = admin_repository.list_audit_logs(
+            action=selected_action,
+            query_text=query_text,
+            limit=100,
+        )
 
         return render_template(
             "admin/audit_logs.html",
             audit_logs=[_audit_log_payload(row) for row in logs],
-            action_options=[row["action"] for row in action_rows],
+            action_options=admin_repository.list_audit_actions(),
             selected_action=selected_action,
             query_text=query_text,
         )
@@ -235,22 +164,7 @@ def register(app):
     @app.route("/admin/recruiters")
     @admin_required_decorator
     def admin_recruiters():
-        recruiters = get_db().execute(
-            """
-            SELECT id, name, email, company_name, company_position,
-                   account_status, created_at
-            FROM users
-            WHERE role = ?
-            ORDER BY
-                CASE account_status
-                    WHEN 'pending' THEN 0
-                    WHEN 'approved' THEN 1
-                    ELSE 2
-                END,
-                created_at DESC
-            """,
-            ("recruiter",),
-        ).fetchall()
+        recruiters = admin_repository.list_recruiter_rows()
         return render_template(
             "admin/recruiters.html",
             recruiters=recruiters,
@@ -266,27 +180,12 @@ def register(app):
             flash("Status akun recruiter tidak valid.")
             return redirect(url_for("admin_recruiters"))
 
-        recruiter = get_db().execute(
-            """
-            SELECT id, account_status
-            FROM users
-            WHERE id = ? AND role = ?
-            """,
-            (user_id, "recruiter"),
-        ).fetchone()
+        recruiter = admin_repository.find_recruiter_status_row(user_id)
         if recruiter is None:
             abort(404)
 
         try:
-            get_db().execute(
-                """
-                UPDATE users
-                SET account_status = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ? AND role = ?
-                """,
-                (account_status, user_id, "recruiter"),
-            )
-            get_db().commit()
+            admin_repository.update_recruiter_status(user_id, account_status)
             record_audit_event(
                 "recruiter_account.status_update",
                 target_type="user",
@@ -297,7 +196,8 @@ def register(app):
                 },
             )
             flash("Status akun recruiter berhasil diperbarui.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Status akun recruiter belum bisa diperbarui. Silakan coba lagi.")
 
         return redirect(url_for("admin_recruiters"))
@@ -345,7 +245,8 @@ def register(app):
                 )
                 flash("Peluang berhasil diperbarui.")
                 return redirect(url_for("admin_opportunities"))
-            except sqlite3.Error:
+            except SQLAlchemyError:
+                db.session.rollback()
                 flash("Peluang belum bisa diperbarui. Silakan coba lagi.")
         else:
             opportunity = dict(row)
@@ -372,7 +273,8 @@ def register(app):
                 metadata={"scope": "admin"},
             )
             flash("Peluang berhasil dihapus.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Peluang belum bisa dihapus. Silakan coba lagi.")
 
         return redirect(url_for("admin_opportunities"))

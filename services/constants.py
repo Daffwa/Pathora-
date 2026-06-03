@@ -1,7 +1,6 @@
 from zoneinfo import ZoneInfo
 
 
-SQLITE_TIMEOUT_SECONDS = 10
 JAKARTA_TZ = ZoneInfo("Asia/Jakarta")
 
 APPLICATION_STATUS_APPLIED = "Sudah Daftar"
@@ -166,32 +165,6 @@ RECRUITER_POSITION_OPTIONS = [
     "Supervisor",
     "Other",
 ]
-
-USER_PROFILE_COLUMN_DEFINITIONS = {
-    "nickname": "TEXT DEFAULT ''",
-    "phone": "TEXT DEFAULT ''",
-    "birth_date": "TEXT DEFAULT ''",
-    "gender": "TEXT DEFAULT ''",
-    "domicile": "TEXT DEFAULT ''",
-    "bio": "TEXT DEFAULT ''",
-    "university": "TEXT DEFAULT ''",
-    "faculty": "TEXT DEFAULT ''",
-    "major": "TEXT DEFAULT ''",
-    "degree": "TEXT DEFAULT ''",
-    "semester": "TEXT DEFAULT ''",
-    "gpa": "TEXT DEFAULT ''",
-    "entry_year": "TEXT DEFAULT ''",
-    "desired_positions": "TEXT DEFAULT ''",
-    "preferred_program": "TEXT DEFAULT ''",
-    "preferred_locations": "TEXT DEFAULT ''",
-    "work_arrangement": "TEXT DEFAULT ''",
-    "interests": "TEXT DEFAULT ''",
-    "linkedin": "TEXT DEFAULT ''",
-    "github": "TEXT DEFAULT ''",
-    "portfolio_url": "TEXT DEFAULT ''",
-    "avatar_path": "TEXT DEFAULT ''",
-    "updated_at": "TEXT DEFAULT ''",
-}
 
 PROFILE_FORM_FIELDS = [
     "name",

@@ -6,7 +6,8 @@ Aplikasi web Flask untuk membantu mahasiswa menemukan peluang magang/beasiswa, m
 
 - Python 3.12
 - Flask 3.0
-- SQLite
+- SQLAlchemy ORM + Flask-Migrate
+- SQLite untuk fallback lokal, PostgreSQL/MySQL via `DATABASE_URL`
 - Google Gemini API (AI Assistant)
 - Gunicorn (deploy production)
 - HTML, CSS, JavaScript
@@ -16,6 +17,7 @@ Aplikasi web Flask untuk membantu mahasiswa menemukan peluang magang/beasiswa, m
 
 ```powershell
 python -m pip install -r requirements.txt
+$env:APP_ENV="development"
 python app.py
 ```
 
@@ -25,7 +27,7 @@ Buka:
 http://127.0.0.1:5000
 ```
 
-Database SQLite dan folder `uploads/documents/` akan dibuat otomatis saat pertama kali dijalankan.
+Database, migration Alembic, dan folder upload akan disiapkan otomatis saat pertama kali dijalankan. Jika `DATABASE_URL` tidak diisi, aplikasi memakai SQLite lokal sebagai fallback development.
 
 ## Build Asset Frontend
 
@@ -57,7 +59,7 @@ tidak bergantung pada file `static/dist/` lama.
 | Student   | (register sendiri) |             |
 | Recruiter | (register sendiri) |             |
 
-Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
+Admin dibuat otomatis jika belum ada. Password `admin12345` hanya fallback untuk `APP_ENV=development` atau `APP_ENV=test`; production wajib mengisi `ADMIN_PASSWORD` yang kuat. Password disimpan dalam bentuk hash.
 
 ## Role dan Akses
 
@@ -116,38 +118,107 @@ Admin dibuat otomatis jika belum ada. Password disimpan dalam bentuk hash.
 Set environment variable berikut sebelum deploy:
 
 ```text
+APP_ENV=production
 SECRET_KEY=<random panjang>
+PASSWORD_RESET_SECRET=<random panjang berbeda dari SECRET_KEY>
 ADMIN_PASSWORD=<password admin yang kuat>
+DATABASE_URL=<postgresql://... atau mysql+pymysql://...>
+PUBLIC_BASE_URL=https://domain-produksi.example
+TRUSTED_HOSTS=domain-produksi.example
 DATA_DIR=/app/data
 USE_BUILT_ASSETS=true
+RATE_LIMIT_BACKEND=database
+MAIL_SERVER=<smtp.example.com>
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=<akun SMTP>
+MAIL_PASSWORD=<password SMTP>
+MAIL_DEFAULT_SENDER=Pathora <no-reply@example.com>
 GOOGLE_API_KEY=<isi lewat dashboard hosting>
 ```
 
 Catatan:
-- `SECRET_KEY` wajib di production untuk menjaga session tetap aman.
+- `APP_ENV` wajib jelas. Gunakan `development` atau `test` hanya untuk lokal/test; selain itu aplikasi mewajibkan konfigurasi production.
+- `SECRET_KEY` dan `PASSWORD_RESET_SECRET` wajib di production untuk menjaga session dan token reset tetap aman.
 - `ADMIN_PASSWORD` wajib di production; fallback `admin12345` hanya untuk development/test.
+- `DATABASE_URL` wajib di production. Jika kosong, aplikasi hanya memakai SQLite lokal saat `APP_ENV=development` atau `APP_ENV=test`.
+- `PUBLIC_BASE_URL` dipakai untuk membuat link reset password; `TRUSTED_HOSTS` membatasi Host header yang diterima.
+- `RATE_LIMIT_BACKEND=database` membuat rate limit production tersimpan di database bersama, bukan memori proses.
+- `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, dan `MAIL_DEFAULT_SENDER` wajib diisi jika fitur lupa password perlu mengirim email reset. `MAIL_USE_TLS=true` disarankan untuk SMTP port 587.
+- Isi `TRUSTED_PROXY_IPS` hanya dengan IP/CIDR proxy yang dipercaya jika aplikasi perlu membaca `X-Forwarded-For`.
 - `USE_BUILT_ASSETS=true` membuat template memakai file di `static/dist/`.
 - Jika memakai Railway, `Procfile` sudah menjalankan build asset sebelum Gunicorn.
+
+## Using Supabase PostgreSQL
+
+Pathora dapat memakai Supabase PostgreSQL sebagai database production cukup dengan mengisi `DATABASE_URL`. Aplikasi tetap memakai Flask session auth, SQLAlchemy ORM, repository/service/controller MVC, dan Alembic migrations. Integrasi ini tidak memindahkan auth ke Supabase Auth dan tidak memindahkan upload ke Supabase Storage.
+
+Langkah minimal:
+
+1. Buat atau pilih project Supabase.
+2. Di Supabase Dashboard, buka **Connect** dan salin connection string Postgres. Untuk backend Flask persistent, gunakan direct connection jika network mendukung IPv6/IPv4 add-on, atau session pooler jika runtime production hanya IPv4. Transaction pooler lebih cocok untuk serverless sementara dan dapat membatasi fitur prepared statement.
+3. Simpan connection string tersebut sebagai `DATABASE_URL` di environment production, misalnya:
+
+```text
+DATABASE_URL=postgresql://postgres.project_ref:<password>@aws-region.pooler.supabase.com:5432/postgres?sslmode=require
+```
+
+Set juga variable production berikut: `APP_ENV=production`, `SECRET_KEY`, `PASSWORD_RESET_SECRET`, `ADMIN_PASSWORD`, `PUBLIC_BASE_URL`, `TRUSTED_HOSTS`, `MAIL_*`, dan `RATE_LIMIT_BACKEND=database`.
+
+Catatan keamanan Supabase:
+- Jangan expose Supabase `service_role` key, secret key, atau database password ke frontend, `static/`, template publik, log, atau file yang dicommit.
+- Karena aplikasi ini mengakses database server-side melalui SQLAlchemy, tabel tidak perlu dibuka ke Supabase Data API untuk frontend. Jangan expose tabel lewat Data API kecuali RLS dan policy sudah sengaja didesain dan diuji.
+- Jalankan Alembic migration ke Supabase dari environment backend yang memakai `DATABASE_URL` production/branch yang benar. Gunakan project/branch test dulu sebelum production.
+- Supabase advisors tidak bisa dijalankan dari repo lokal tanpa akses project. Jika project tersedia, jalankan Security Advisor dan Performance Advisor setelah migration pada branch/test database, lalu perbaiki temuan sebelum production.
 
 ## Struktur Proyek
 
 ```text
 app.py                          # Entry point + factory create_app()
-config.py                       # Konfigurasi (upload folder, db path, dll)
+config.py                       # Konfigurasi env, database URL, upload folder, dll
 requirements.txt                # Dependencies Python
 
-database/
-    schema.sql                  # DDL SQLite
+extensions.py                   # Inisialisasi SQLAlchemy dan Flask-Migrate
 
-models/                         # Data classes
+models/                         # SQLAlchemy ORM per domain
+    user.py
+    opportunity.py
+    application.py
+    document.py
+    bookmark.py
+    chat.py
+    audit_log.py
+
+dto/                            # Data transfer/view models non-ORM
     user.py
     opportunity.py
     document.py
 
+repositories/                   # Query dan persistence SQLAlchemy
+    user_repository.py
+    opportunity_repository.py
+    application_repository.py
+    document_repository.py
+
+migrations/                     # Alembic migration sebagai sumber schema database
+
+controllers/                    # Route layer aktif yang diregister oleh app.py
+    auth_controller.py
+    public_controller.py
+    dashboard_controller.py
+    opportunity_controller.py
+    application_controller.py
+    document_controller.py
+    profile_controller.py
+    chat_controller.py
+    recruiter_controller.py
+    admin_controller.py
+    ai_controller.py
+
 services/                       # Business logic layer
     auth_service.py             #   Decorator guards, login/logout
     csrf_service.py             #   CSRF token dan validasi request POST
-    database_service.py         #   Init DB, migrasi, seed
+    database_service.py         #   Alembic upgrade, health check, seed
     security_headers_service.py #   Header keamanan response
     rate_limit_service.py       #   Rate limit login, AI, dan chat
     asset_service.py            #   Resolusi asset dev/production manifest
@@ -163,7 +234,7 @@ services/                       # Business logic layer
     template_context_service.py #   Global template variables
     constants.py                #   Constants
 
-routes/                         # Blueprint-style route modules
+routes/                         # Legacy/compatibility copy; runtime aktif memakai controllers/
     auth_routes.py
     public_routes.py
     dashboard_routes.py
@@ -201,6 +272,8 @@ deploy/                         # Deployment config
 ```
 
 Detail aturan akses ada di `docs/access-control.md`.
+
+Detail arsitektur layer, aturan penempatan kode, dan checklist fitur baru ada di `docs/architecture.md`.
 
 ## Refactoring Highlights
 

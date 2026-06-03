@@ -1,11 +1,18 @@
 from datetime import datetime
 
 from flask import abort, request, session
+from sqlalchemy.exc import SQLAlchemyError
 
-from models.opportunity import Opportunity
+from dto.opportunity import Opportunity
+from extensions import db
+from repositories import (
+    application_repository,
+    document_repository,
+    opportunity_repository,
+    user_repository,
+)
 from services.auth_service import get_current_role
 from services.constants import DOCUMENT_TYPES
-from services.database_service import get_db
 from services.scoring_service import (
     calculate_days_left,
     calculate_deadline_score,
@@ -14,6 +21,16 @@ from services.scoring_service import (
     calculate_skill_match_score,
     get_priority_label,
 )
+from services.url_validation_service import normalize_public_url
+
+
+def _opportunity_from_orm(opportunity):
+    return Opportunity.from_row(opportunity_repository.as_opportunity_row(opportunity))
+
+
+def _raise_sqlalchemy_error(exc):
+    db.session.rollback()
+    raise exc
 
 
 def get_deadline_info(deadline_text):
@@ -33,9 +50,7 @@ def get_deadline_info(deadline_text):
 
 
 def get_opportunity_or_404(opportunity_id):
-    row = get_db().execute(
-        "SELECT * FROM opportunities WHERE id = ?", (opportunity_id,)
-    ).fetchone()
+    row = opportunity_repository.find_row_by_id(opportunity_id)
 
     if row is None:
         abort(404)
@@ -49,19 +64,11 @@ def get_user_scoring_context():
     if get_current_role() != "jobseeker":
         return None
 
-    user = get_db().execute(
-        "SELECT skills FROM users WHERE id = ?", (session["user_id"],)
-    ).fetchone()
-    completed_documents = get_db().execute(
-        """
-        SELECT COUNT(*) FROM documents
-        WHERE user_id = ? AND is_uploaded = 1
-        """,
-        (session["user_id"],),
-    ).fetchone()[0]
+    user = user_repository.find_by_id(session["user_id"])
+    completed_documents = document_repository.count_completed_by_user(session["user_id"])
 
     return {
-        "skills": user["skills"] if user else "",
+        "skills": user.skills if user else "",
         "completed_documents": completed_documents,
         "total_documents": len(DOCUMENT_TYPES),
     }
@@ -97,19 +104,9 @@ def apply_priority_score(opportunity, scoring_context):
 
 
 def get_dashboard_summary(user_id):
-    total_saved = get_db().execute(
-        "SELECT COUNT(*) FROM bookmarks WHERE user_id = ?", (user_id,)
-    ).fetchone()[0]
-    total_applications = get_db().execute(
-        "SELECT COUNT(*) FROM applications WHERE user_id = ?", (user_id,)
-    ).fetchone()[0]
-    completed_documents = get_db().execute(
-        """
-        SELECT COUNT(*) FROM documents
-        WHERE user_id = ? AND is_uploaded = 1
-        """,
-        (user_id,),
-    ).fetchone()[0]
+    total_saved = opportunity_repository.count_bookmarks_by_user(user_id)
+    total_applications = application_repository.count_by_user(user_id)
+    completed_documents = document_repository.count_completed_by_user(user_id)
 
     return {
         "total_saved": total_saved,
@@ -120,51 +117,18 @@ def get_dashboard_summary(user_id):
 
 
 def get_recent_saved_opportunities(user_id):
-    return get_db().execute(
-        """
-        SELECT opportunities.id, opportunities.title, opportunities.provider,
-               opportunities.deadline
-        FROM bookmarks
-        JOIN opportunities ON opportunities.id = bookmarks.opportunity_id
-        WHERE bookmarks.user_id = ?
-        ORDER BY bookmarks.saved_at DESC
-        LIMIT 3
-        """,
-        (user_id,),
-    ).fetchall()
+    return opportunity_repository.list_recent_saved_rows_by_user(user_id)
 
 
 def get_recent_applications(user_id):
-    return get_db().execute(
-        """
-        SELECT applications.status, applications.notes, applications.updated_at,
-               opportunities.title
-        FROM applications
-        JOIN opportunities ON opportunities.id = applications.opportunity_id
-        WHERE applications.user_id = ?
-        ORDER BY applications.updated_at DESC
-        LIMIT 3
-        """,
-        (user_id,),
-    ).fetchall()
+    return application_repository.list_recent_with_opportunity_by_user(user_id)
 
 
 def get_urgent_deadlines(user_id):
-    rows = get_db().execute(
-        """
-        SELECT DISTINCT opportunities.*
-        FROM opportunities
-        LEFT JOIN bookmarks ON bookmarks.opportunity_id = opportunities.id
-        LEFT JOIN applications ON applications.opportunity_id = opportunities.id
-        WHERE bookmarks.user_id = ? OR applications.user_id = ?
-        """,
-        (user_id, user_id),
-    ).fetchall()
-
     urgent_opportunities = []
     scoring_context = get_user_scoring_context()
-    for row in rows:
-        opportunity = Opportunity.from_row(row)
+    for opportunity_row in opportunity_repository.list_related_to_user(user_id):
+        opportunity = _opportunity_from_orm(opportunity_row)
         apply_priority_score(opportunity, scoring_context)
         if opportunity.days_left is not None and 0 <= opportunity.days_left <= 7:
             urgent_opportunities.append(opportunity)
@@ -177,10 +141,9 @@ def get_top_priority_opportunity():
     if scoring_context is None:
         return None
 
-    rows = get_db().execute("SELECT * FROM opportunities").fetchall()
     opportunities = []
-    for row in rows:
-        opportunity = Opportunity.from_row(row)
+    for opportunity_row in opportunity_repository.list_all():
+        opportunity = _opportunity_from_orm(opportunity_row)
         apply_priority_score(opportunity, scoring_context)
         if opportunity.priority_label != "Closed":
             opportunities.append(opportunity)
@@ -210,85 +173,44 @@ EMPTY_OPPORTUNITY_FORM = {
 
 
 def list_role_opportunities(user_id=None):
-    query = "SELECT * FROM opportunities"
-    params = []
-    if user_id is not None:
-        query += " WHERE created_by = ?"
-        params.append(user_id)
-    query += " ORDER BY deadline ASC"
-    return get_db().execute(query, params).fetchall()
+    if user_id is None:
+        return opportunity_repository.list_all_rows()
+    return opportunity_repository.list_rows_by_creator(user_id)
 
 
 def create_opportunity(opportunity, user_id=None, company_name=None):
-    cursor = get_db().execute(
-        """
-        INSERT INTO opportunities
-        (title, provider, type, description, requirements, official_link,
-         required_skills, location, deadline, created_by, company_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            opportunity["title"], opportunity["provider"], opportunity["type"],
-            opportunity["description"], opportunity["requirements"],
-            opportunity["official_link"], opportunity["required_skills"],
-            opportunity["location"], opportunity["deadline"],
-            user_id, company_name or "",
-        ),
-    )
-    get_db().commit()
-    return cursor.lastrowid
+    try:
+        created_opportunity = opportunity_repository.create_opportunity(
+            opportunity,
+            created_by=user_id,
+            company_name=company_name or "",
+        )
+    except SQLAlchemyError as exc:
+        _raise_sqlalchemy_error(exc)
+    return created_opportunity.id
 
 
 def update_opportunity(opportunity_id, opportunity, company_name=None, user_id=None):
-    params = [
-        opportunity["title"], opportunity["provider"], opportunity["type"],
-        opportunity["description"], opportunity["requirements"],
-        opportunity["official_link"], opportunity["required_skills"],
-        opportunity["location"], opportunity["deadline"],
-        company_name or "", opportunity_id,
-    ]
-    owner_check = ""
-    if user_id is not None:
-        owner_check = " AND created_by = ?"
-        params.append(user_id)
-
-    cursor = get_db().execute(
-        f"""
-        UPDATE opportunities
-        SET title = ?, provider = ?, type = ?, description = ?,
-            requirements = ?, official_link = ?, required_skills = ?,
-            location = ?, deadline = ?, company_name = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-        {owner_check}
-        """,
-        params,
-    )
-    get_db().commit()
-    return cursor.rowcount
+    try:
+        updated_opportunity = opportunity_repository.update_opportunity(
+            opportunity_id,
+            opportunity,
+            creator_id=user_id,
+            company_name=company_name or "",
+        )
+    except SQLAlchemyError as exc:
+        _raise_sqlalchemy_error(exc)
+    return 1 if updated_opportunity is not None else 0
 
 
 def delete_opportunity_with_cascade(opportunity_id, user_id=None):
-    if user_id is not None:
-        owned_opportunity = get_db().execute(
-            """
-            SELECT id
-            FROM opportunities
-            WHERE id = ? AND created_by = ?
-            """,
-            (opportunity_id, user_id),
-        ).fetchone()
-        if owned_opportunity is None:
-            return 0
-
-    get_db().execute("DELETE FROM bookmarks WHERE opportunity_id = ?", (opportunity_id,))
-    get_db().execute("DELETE FROM applications WHERE opportunity_id = ?", (opportunity_id,))
-    cursor = get_db().execute(
-        "DELETE FROM opportunities WHERE id = ?",
-        (opportunity_id,),
-    )
-    get_db().commit()
-    return cursor.rowcount
+    try:
+        return opportunity_repository.delete_opportunity(
+            opportunity_id,
+            creator_id=user_id,
+        )
+    except SQLAlchemyError as exc:
+        _raise_sqlalchemy_error(exc)
 
 
 def get_opportunity_form_data():
@@ -321,5 +243,12 @@ def validate_opportunity_form(data):
         errors.append("Location wajib diisi.")
     if not data["deadline"] or not is_valid_date(data["deadline"]):
         errors.append("Deadline wajib diisi dengan format YYYY-MM-DD.")
+    normalized_link, link_error = normalize_public_url(
+        data.get("official_link", ""),
+        "Tautan resmi",
+    )
+    data["official_link"] = normalized_link
+    if link_error:
+        errors.append(link_error)
 
     return errors

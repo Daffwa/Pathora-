@@ -1,10 +1,11 @@
-import sqlite3
-
 from flask import flash, redirect, render_template, request, session, url_for
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from models.opportunity import Opportunity
+from extensions import db
+from dto.opportunity import Opportunity
+from repositories import opportunity_repository
 from services.auth_service import get_current_role, jobseeker_required_decorator
-from services.database_service import DatabaseAccessError, build_database_error_message, get_db
+from services.database_service import DatabaseAccessError, build_database_error_message
 from services.opportunity_service import (
     apply_priority_score,
     get_opportunity_or_404,
@@ -21,31 +22,15 @@ def register(app):
         location = request.args.get("location", "").strip()
         sort_by = request.args.get("sort", "deadline").strip().lower()
 
-        filters = []
-        params = []
-
-        if search_query:
-            filters.append(
-                "(title LIKE ? OR provider LIKE ? OR location LIKE ? OR description LIKE ?)"
-            )
-            keyword = f"%{search_query}%"
-            params.extend([keyword, keyword, keyword, keyword])
-
-        if opportunity_type in {"internship", "scholarship"}:
-            filters.append("type = ?")
-            params.append(opportunity_type)
-
-        if location:
-            filters.append("location LIKE ?")
-            params.append(f"%{location}%")
-
-        query = "SELECT * FROM opportunities"
-        if filters:
-            query += " WHERE " + " AND ".join(filters)
-        query += " ORDER BY deadline ASC"
-
-        rows = get_db().execute(query, params).fetchall()
-        opportunity_list = [Opportunity.from_row(row) for row in rows]
+        opportunity_rows = opportunity_repository.search_opportunities(
+            search_query=search_query,
+            opportunity_type=opportunity_type,
+            location=location,
+        )
+        opportunity_list = [
+            Opportunity.from_row(opportunity_repository.as_opportunity_row(row))
+            for row in opportunity_rows
+        ]
         current_role = get_current_role() if "user_id" in session else None
         scoring_context = get_user_scoring_context()
 
@@ -58,10 +43,7 @@ def register(app):
                 reverse=True,
             )
 
-        location_rows = get_db().execute(
-            "SELECT DISTINCT location FROM opportunities ORDER BY location ASC"
-        ).fetchall()
-        locations = [row["location"] for row in location_rows]
+        locations = opportunity_repository.list_distinct_locations()
 
         return render_template(
             "opportunities.html",
@@ -99,18 +81,13 @@ def register(app):
         get_opportunity_or_404(opportunity_id)
 
         try:
-            get_db().execute(
-                """
-                INSERT INTO bookmarks (user_id, opportunity_id)
-                VALUES (?, ?)
-                """,
-                (session["user_id"], opportunity_id),
-            )
-            get_db().commit()
+            opportunity_repository.add_bookmark(session["user_id"], opportunity_id)
             flash("Peluang berhasil disimpan.")
-        except sqlite3.IntegrityError:
+        except IntegrityError:
+            db.session.rollback()
             flash("Peluang ini sudah ada di Bookmark.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Peluang belum bisa disimpan. Silakan coba lagi.")
 
         return redirect(request.referrer or url_for("opportunities"))
@@ -120,16 +97,10 @@ def register(app):
     @jobseeker_required_decorator
     def remove_bookmark(opportunity_id):
         try:
-            get_db().execute(
-                """
-                DELETE FROM bookmarks
-                WHERE user_id = ? AND opportunity_id = ?
-                """,
-                (session["user_id"], opportunity_id),
-            )
-            get_db().commit()
+            opportunity_repository.remove_bookmark(session["user_id"], opportunity_id)
             flash("Peluang dihapus dari Bookmark.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Peluang belum bisa dihapus. Silakan coba lagi.")
 
         return redirect(request.referrer or url_for("bookmarks"))
@@ -142,7 +113,8 @@ def register(app):
             saved_opportunities = get_saved_profile_opportunities(session["user_id"])
         except DatabaseAccessError:
             raise
-        except sqlite3.Error as exc:
+        except SQLAlchemyError as exc:
+            db.session.rollback()
             raise DatabaseAccessError(
                 build_database_error_message("Halaman Bookmark tidak bisa membaca database.")
             ) from exc

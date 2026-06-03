@@ -1,12 +1,11 @@
-import sqlite3
 from datetime import datetime, timezone
 
 from flask import url_for
 
+from repositories import chat_repository
 from services.application_service import application_status_label
 from services.auth_service import normalize_role
 from services.constants import JAKARTA_TZ
-from services.database_service import get_db
 
 
 def chat_pair(user_id, contact_id):
@@ -113,35 +112,11 @@ def format_chat_time(timestamp):
 
 
 def get_chat_thread_id(user_id, contact_id):
-    participant_one_id, participant_two_id = chat_pair(user_id, contact_id)
-    row = get_db().execute(
-        """
-        SELECT id
-        FROM chat_threads
-        WHERE participant_one_id = ? AND participant_two_id = ?
-        """,
-        (participant_one_id, participant_two_id),
-    ).fetchone()
-    return row["id"] if row else None
+    return chat_repository.find_thread_id(user_id, contact_id)
 
 
 def get_or_create_chat_thread_id(user_id, contact_id):
-    thread_id = get_chat_thread_id(user_id, contact_id)
-    if thread_id is not None:
-        return thread_id
-
-    participant_one_id, participant_two_id = chat_pair(user_id, contact_id)
-    try:
-        cursor = get_db().execute(
-            """
-            INSERT INTO chat_threads (participant_one_id, participant_two_id)
-            VALUES (?, ?)
-            """,
-            (participant_one_id, participant_two_id),
-        )
-        return cursor.lastrowid
-    except sqlite3.IntegrityError:
-        return get_chat_thread_id(user_id, contact_id)
+    return chat_repository.get_or_create_thread_id(user_id, contact_id)
 
 
 def chat_message_preview(message_payload):
@@ -175,64 +150,16 @@ def chat_message_payload(message, current_user_id):
 
 
 def get_chat_messages(thread_id, current_user_id):
-    if thread_id is None:
-        return []
-
-    rows = get_db().execute(
-        """
-        SELECT
-            id,
-            sender_id,
-            body,
-            attachment_path,
-            attachment_type,
-            attachment_name,
-            created_at
-        FROM chat_messages
-        WHERE thread_id = ?
-        ORDER BY created_at ASC, id ASC
-        """,
-        (thread_id,),
-    ).fetchall()
+    rows = chat_repository.list_messages(thread_id)
     return [chat_message_payload(row, current_user_id) for row in rows]
 
 
 def get_recruiter_chat_relation(recruiter_id, applicant_id):
-    return get_db().execute(
-        """
-        SELECT
-            applications.status,
-            applications.updated_at,
-            opportunities.title AS opportunity_title,
-            opportunities.provider AS opportunity_provider
-        FROM applications
-        JOIN opportunities ON opportunities.id = applications.opportunity_id
-        WHERE applications.user_id = ?
-          AND opportunities.created_by = ?
-        ORDER BY applications.updated_at DESC, applications.id DESC
-        LIMIT 1
-        """,
-        (applicant_id, recruiter_id),
-    ).fetchone()
+    return chat_repository.find_recruiter_relation(recruiter_id, applicant_id)
 
 
 def get_jobseeker_chat_relation(jobseeker_id, recruiter_id):
-    return get_db().execute(
-        """
-        SELECT
-            applications.status,
-            applications.updated_at,
-            opportunities.title AS opportunity_title,
-            opportunities.provider AS opportunity_provider
-        FROM applications
-        JOIN opportunities ON opportunities.id = applications.opportunity_id
-        WHERE applications.user_id = ?
-          AND opportunities.created_by = ?
-        ORDER BY applications.updated_at DESC, applications.id DESC
-        LIMIT 1
-        """,
-        (jobseeker_id, recruiter_id),
-    ).fetchone()
+    return chat_repository.find_jobseeker_relation(jobseeker_id, recruiter_id)
 
 
 def build_chat_contact_payload(contact, relation, current_role, thread_id, messages):
@@ -274,14 +201,7 @@ def get_chat_contact_payload(current_user_id, current_role, contact_id):
     if contact_id == current_user_id:
         return None
 
-    contact = get_db().execute(
-        """
-        SELECT id, name, email, role, company_name, company_position
-        FROM users
-        WHERE id = ?
-        """,
-        (contact_id,),
-    ).fetchone()
+    contact = chat_repository.find_contact(contact_id)
     if contact is None:
         return None
 
@@ -306,54 +226,32 @@ def get_chat_contact_payload(current_user_id, current_role, contact_id):
 
 
 def get_chat_relation_rows(current_user_id, current_role):
-    if current_role == "recruiter":
-        return get_db().execute(
-            """
-            SELECT
-                users.id,
-                users.name,
-                users.email,
-                users.role,
-                users.company_name,
-                users.company_position,
-                applications.status,
-                applications.updated_at,
-                opportunities.title AS opportunity_title,
-                opportunities.provider AS opportunity_provider
-            FROM applications
-            JOIN opportunities ON opportunities.id = applications.opportunity_id
-            JOIN users ON users.id = applications.user_id
-            WHERE opportunities.created_by = ?
-            ORDER BY applications.updated_at DESC, applications.id DESC
-            """,
-            (current_user_id,),
-        ).fetchall()
+    return chat_repository.list_relation_rows(current_user_id, current_role)
 
-    if current_role == "jobseeker":
-        return get_db().execute(
-            """
-            SELECT
-                users.id,
-                users.name,
-                users.email,
-                users.role,
-                users.company_name,
-                users.company_position,
-                applications.status,
-                applications.updated_at,
-                opportunities.title AS opportunity_title,
-                opportunities.provider AS opportunity_provider
-            FROM applications
-            JOIN opportunities ON opportunities.id = applications.opportunity_id
-            JOIN users ON users.id = opportunities.created_by
-            WHERE applications.user_id = ?
-              AND opportunities.created_by IS NOT NULL
-            ORDER BY applications.updated_at DESC, applications.id DESC
-            """,
-            (current_user_id,),
-        ).fetchall()
 
-    return []
+def can_access_chat_attachment(attachment_path, user_id):
+    return chat_repository.attachment_exists_for_user(attachment_path, user_id)
+
+
+def create_chat_message(
+    *,
+    thread_id,
+    sender_id,
+    body,
+    attachment_path="",
+    attachment_type="",
+    attachment_name="",
+    created_at,
+):
+    return chat_repository.create_message_and_touch_thread(
+        thread_id=thread_id,
+        sender_id=sender_id,
+        body=body,
+        attachment_path=attachment_path,
+        attachment_type=attachment_type,
+        attachment_name=attachment_name,
+        created_at=created_at,
+    )
 
 
 def get_chat_conversations(current_user_id, current_role, selected_contact_id=None):

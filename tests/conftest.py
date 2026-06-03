@@ -19,8 +19,11 @@ def temp_data_dir():
 
 @pytest.fixture(scope="function")
 def app(temp_data_dir, app_root):
+    os.environ["APP_ENV"] = "test"
     os.environ["DATA_DIR"] = str(temp_data_dir)
     os.environ["SECRET_KEY"] = "test-secret-key-not-for-production"
+    os.environ["PASSWORD_RESET_SECRET"] = "test-password-reset-secret"
+    os.environ["RATE_LIMIT_BACKEND"] = "memory"
 
     sys.path.insert(0, str(app_root))
 
@@ -38,8 +41,15 @@ def app(temp_data_dir, app_root):
 
     yield application
 
-    if "DATA_DIR" in os.environ:
-        del os.environ["DATA_DIR"]
+    for env_name in (
+        "APP_ENV",
+        "DATA_DIR",
+        "SECRET_KEY",
+        "PASSWORD_RESET_SECRET",
+        "RATE_LIMIT_BACKEND",
+    ):
+        if env_name in os.environ:
+            del os.environ[env_name]
 
 
 @pytest.fixture(scope="function")

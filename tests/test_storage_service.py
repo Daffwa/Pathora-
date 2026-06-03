@@ -1,10 +1,33 @@
 import os
 import io
 import tempfile
+import zipfile
 from pathlib import Path
 
 import pytest
 from werkzeug.datastructures import FileStorage
+
+
+PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n"
+DOC_BYTES = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 32
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 20
+JPEG_BYTES = b"\xff\xd8\xff\xe0" + b"\x00" * 20
+
+
+def docx_bytes():
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr("[Content_Types].xml", "<Types></Types>")
+        archive.writestr("word/document.xml", "<w:document></w:document>")
+    return stream.getvalue()
+
+
+def upload(data, filename, content_type):
+    return FileStorage(
+        stream=io.BytesIO(data),
+        filename=filename,
+        content_type=content_type,
+    )
 
 
 @pytest.fixture(scope="function")
@@ -25,23 +48,31 @@ def storage_service(app_root):
 
 class TestDocumentUploadValidation:
     def test_accepts_pdf(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="resume.pdf")
+        f = upload(PDF_BYTES, "resume.pdf", "application/pdf")
+        assert storage_service.validate_document_upload(f) is True
+
+    def test_accepts_doc(self, storage_service):
+        f = upload(DOC_BYTES, "letter.doc", "application/msword")
         assert storage_service.validate_document_upload(f) is True
 
     def test_accepts_docx(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="letter.docx")
+        f = upload(
+            docx_bytes(),
+            "letter.docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
         assert storage_service.validate_document_upload(f) is True
 
     def test_accepts_png(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="scan.png")
+        f = upload(PNG_BYTES, "scan.png", "image/png")
         assert storage_service.validate_document_upload(f) is True
 
     def test_accepts_jpg(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="photo.jpg")
+        f = upload(JPEG_BYTES, "photo.jpg", "image/jpeg")
         assert storage_service.validate_document_upload(f) is True
 
     def test_accepts_jpeg(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="photo.jpeg")
+        f = upload(JPEG_BYTES, "photo.jpeg", "image/jpeg")
         assert storage_service.validate_document_upload(f) is True
 
     def test_rejects_exe(self, storage_service):
@@ -60,17 +91,25 @@ class TestDocumentUploadValidation:
         f = FileStorage(stream=io.BytesIO(b"dummy"), filename="")
         assert storage_service.validate_document_upload(f) is False
 
+    def test_rejects_fake_pdf_signature(self, storage_service):
+        f = upload(b"not a pdf", "resume.pdf", "application/pdf")
+        assert storage_service.validate_document_upload(f) is False
+
+    def test_rejects_wrong_document_mime_type(self, storage_service):
+        f = upload(PDF_BYTES, "resume.pdf", "text/plain")
+        assert storage_service.validate_document_upload(f) is False
+
     def test_rejects_none(self, storage_service):
         assert storage_service.validate_document_upload(None) is False
 
 
 class TestImageUploadValidation:
     def test_accepts_png(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="avatar.png")
+        f = upload(PNG_BYTES, "avatar.png", "image/png")
         assert storage_service.validate_image_upload(f) is True
 
     def test_accepts_jpg(self, storage_service):
-        f = FileStorage(stream=io.BytesIO(b"dummy"), filename="avatar.jpg")
+        f = upload(JPEG_BYTES, "avatar.jpg", "image/jpeg")
         assert storage_service.validate_image_upload(f) is True
 
     def test_rejects_gif(self, storage_service):
@@ -79,6 +118,10 @@ class TestImageUploadValidation:
 
     def test_rejects_webp(self, storage_service):
         f = FileStorage(stream=io.BytesIO(b"dummy"), filename="avatar.webp")
+        assert storage_service.validate_image_upload(f) is False
+
+    def test_rejects_fake_avatar_signature(self, storage_service):
+        f = upload(b"not an image", "avatar.png", "image/png")
         assert storage_service.validate_image_upload(f) is False
 
 
@@ -197,7 +240,8 @@ class TestUniqueFilenameGeneration:
 
     def test_make_avatar_filename(self, storage_service):
         result = storage_service.make_avatar_filename(42, "photo.jpg")
-        assert result == "user_42_avatar.jpg"
+        assert result.startswith("avatar_42_")
+        assert result.endswith(".jpg")
 
     def test_make_chat_filename(self, storage_service):
         result = storage_service.make_chat_attachment_filename(7, "image.png")

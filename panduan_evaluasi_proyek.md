@@ -12,22 +12,25 @@ Untuk memudahkan tim penguji memahami berkas kode Anda, berikut adalah struktur 
 ```text
 Project website/
 ├── app.py                          # Entry point aplikasi & inisialisasi Flask
-├── config.py                       # Pusat konfigurasi (database path, upload limit, dll)
+├── config.py                       # Pusat konfigurasi (DATABASE_URL, upload limit, dll)
 ├── requirements.txt                # Daftar dependensi modul Python
 ├── Procfile                        # Konfigurasi WSGI Gunicorn untuk deployment Railway
 │
-├── database/
-│   └── schema.sql                  # Struktur DDL SQLite untuk seluruh tabel utama
+├── migrations/                     # Alembic migration untuk schema database
 │
-├── models/                         # Representasi Data Class
+├── models/                         # SQLAlchemy ORM per domain
 │   ├── user.py
 │   ├── opportunity.py
 │   └── document.py
 │
+├── dto/                            # Data class/view model non-ORM
+│
+├── repositories/                   # Query dan persistence SQLAlchemy
+│
 ├── services/                       # Logika Bisnis & Komputasi Terpisah
 │   ├── scoring_service.py          # Perhitungan Formula Priority Score & Skill Match
 │   ├── auth_service.py             # Dekorator Auth Guards & manajemen session
-│   ├── database_service.py         # Inisialisasi DB, migrasi, dan seed data awal
+│   ├── database_service.py         # Alembic upgrade, health check, dan seed data awal
 │   ├── ai_service.py               # Integrasi Google GenAI SDK (Gemini API)
 │   └── chat_service.py             # Penanganan database chat & pesan
 │
@@ -45,6 +48,8 @@ Project website/
         ├── chat.js                 # Controller logika tampilan & validasi berkas chat
         └── ai_assistant.js         # Handler panel asisten AI drag-and-drop
 ```
+
+Aturan maintenance, pembagian layer, dan checklist penambahan fitur baru tersedia di `docs/architecture.md`.
 
 ---
 
@@ -126,6 +131,7 @@ Pastikan variabel lingkungan berikut telah terkonfigurasi dengan benar agar fitu
 FLASK_DEBUG=True
 SECRET_KEY=kunci_rahasia_untuk_keamanan_session_anda
 GOOGLE_API_KEY=isi_dengan_gemini_api_key_anda
+DATABASE_URL=postgresql://user:password@host:5432/pathora
 GOOGLE_MODEL=gemma-4-26b-a4b-it
 GOOGLE_TIMEOUT_SECONDS=120
 ```
@@ -138,5 +144,5 @@ Sebagai nilai tambah dalam laporan evaluasi, Anda dapat menyertakan beberapa poi
 
 1.  **Mekanisme Real-Time Chat:** Komunikasi chat saat ini masih menggunakan HTTP Request reguler (`fetch/AJAX`). Idealnya, untuk aplikasi berskala besar, sistem ini ditingkatkan menggunakan **WebSocket** agar pengiriman pesan terjadi seketika tanpa perlu membebani server dengan request berkala.
 2.  **Notifikasi yang Masih Hardcoded:** Komponen notifikasi cepat di *topbar* saat ini masih menggunakan representasi statis. Disarankan untuk menambahkan tabel `notifications` pada basis data untuk mendukung perekaman aktivitas penting secara dinamis.
-3.  **Skalabilitas SQLite:** Database berbasis file SQLite sangat baik untuk tahap purwarupa (prototipe). Namun, untuk evaluasi skala komersial, disarankan melakukan migrasi ke sistem database server seperti **PostgreSQL** guna mencegah kendala *database locking* pada lalu lintas pengguna yang padat.
+3.  **Operasional Database Production:** Aplikasi sudah diarahkan memakai SQLAlchemy ORM dan `DATABASE_URL` untuk PostgreSQL/MySQL. Untuk production, pastikan service database terkelola, backup, dan migration Alembic dijalankan konsisten saat deploy.
 4.  **Fitur Sosial & Autentikasi Tambahan:** Tombol masuk via *Google* & *LinkedIn* serta fitur *Lupa Password* saat ini baru berupa antarmuka statis dan memerlukan implementasi library otentikasi (OAuth2) untuk dapat berfungsi sepenuhnya di lingkungan produksi.

@@ -1,11 +1,10 @@
-import sqlite3
-
 from flask import current_app, flash, redirect, render_template, request, session, url_for
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from extensions import db
 from services.audit_service import record_audit_event
 from services.auth_service import (
-    get_current_role,
     get_current_user,
     recruiter_or_admin_required_decorator,
     recruiter_required_decorator,
@@ -15,7 +14,6 @@ from services.constants import (
     RECRUITER_APPLICATION_STATUSES,
     RECRUITER_POSITION_OPTIONS,
 )
-from services.database_service import get_db
 from services.opportunity_service import (
     EMPTY_OPPORTUNITY_FORM,
     create_opportunity,
@@ -25,13 +23,20 @@ from services.opportunity_service import (
     validate_opportunity_form,
 )
 from services.recruiter_service import (
+    bulk_update_applicant_status,
+    get_applicant_document_rows,
     get_applicant_list_url,
     get_recruiter_applicant_rows,
     get_recruiter_application_or_404,
     get_recruiter_opportunity_or_404,
+    get_recruiter_opportunity_rows,
+    get_recruiter_summary,
+    is_recruiter_email_taken,
     make_recruiter_applicants_csv,
     normalize_applicant_sort,
     parse_positive_int,
+    update_applicant_status,
+    update_recruiter_profile,
 )
 from services.storage_service import (
     delete_file_if_exists,
@@ -39,6 +44,7 @@ from services.storage_service import (
     save_uploaded_file,
     validate_image_upload,
 )
+from services.url_validation_service import normalize_profile_urls
 
 
 def _recruiter_profile_form_data(user):
@@ -98,7 +104,8 @@ def _recruiter_opportunity_form(opportunity=None, form_title="", action_url=""):
             )
             flash("Lowongan berhasil dibuat.")
             return redirect(url_for("recruiter_opportunities"))
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Lowongan belum bisa dibuat. Silakan coba lagi.")
 
     return render_template(
@@ -114,38 +121,14 @@ def register(app):
     @recruiter_required_decorator
     def recruiter_profile():
         recruiter = get_current_user()
-        total_opportunities = get_db().execute(
-            "SELECT COUNT(*) FROM opportunities WHERE created_by = ?",
-            (session["user_id"],),
-        ).fetchone()[0]
-        total_applicants = get_db().execute(
-            """
-            SELECT COUNT(*)
-            FROM applications
-            JOIN opportunities ON opportunities.id = applications.opportunity_id
-            WHERE opportunities.created_by = ?
-            """,
-            (session["user_id"],),
-        ).fetchone()[0]
-        recent_opportunities = get_db().execute(
-            """
-            SELECT opportunities.*, COUNT(applications.id) AS applicant_count
-            FROM opportunities
-            LEFT JOIN applications ON applications.opportunity_id = opportunities.id
-            WHERE opportunities.created_by = ?
-            GROUP BY opportunities.id
-            ORDER BY opportunities.updated_at DESC
-            LIMIT 4
-            """,
-            (session["user_id"],),
-        ).fetchall()
+        summary = get_recruiter_summary(session["user_id"], recent_limit=4)
 
         return render_template(
             "recruiter/profile.html",
             recruiter=recruiter,
-            total_opportunities=total_opportunities,
-            total_applicants=total_applicants,
-            recent_opportunities=recent_opportunities,
+            total_opportunities=summary["total_opportunities"],
+            total_applicants=summary["total_applicants"],
+            recent_opportunities=summary["recent_opportunities"],
         )
 
 
@@ -187,12 +170,10 @@ def register(app):
                 validation_errors.append("Posisi recruiter wajib diisi.")
 
             if form_data["email"]:
-                existing_user = get_db().execute(
-                    "SELECT id FROM users WHERE email = ? AND id != ?",
-                    (form_data["email"], session["user_id"]),
-                ).fetchone()
-                if existing_user is not None:
+                if is_recruiter_email_taken(form_data["email"], session["user_id"]):
                     validation_errors.append("Email sudah digunakan akun lain.")
+
+            validation_errors.extend(normalize_profile_urls(form_data))
 
             wants_password_change = any([old_password, new_password, confirm_password])
             password_hash = recruiter["password_hash"]
@@ -250,32 +231,24 @@ def register(app):
                 avatar_path = avatar_filename
 
             try:
-                get_db().execute(
-                    """
-                    UPDATE users
-                    SET name = ?, email = ?, phone = ?, domicile = ?, bio = ?,
-                        linkedin = ?, portfolio_url = ?, company_name = ?,
-                        company_position = ?, avatar_path = ?, password_hash = ?,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                    """,
-                    (
-                        form_data["name"],
-                        form_data["email"],
-                        form_data["phone"],
-                        form_data["domicile"],
-                        form_data["bio"],
-                        form_data["linkedin"],
-                        form_data["portfolio_url"],
-                        form_data["company_name"],
-                        company_position,
-                        avatar_path,
-                        password_hash,
-                        session["user_id"],
-                    ),
+                update_recruiter_profile(
+                    session["user_id"],
+                    {
+                        "name": form_data["name"],
+                        "email": form_data["email"],
+                        "phone": form_data["phone"],
+                        "domicile": form_data["domicile"],
+                        "bio": form_data["bio"],
+                        "linkedin": form_data["linkedin"],
+                        "portfolio_url": form_data["portfolio_url"],
+                        "company_name": form_data["company_name"],
+                        "company_position": company_position,
+                        "avatar_path": avatar_path,
+                        "password_hash": password_hash,
+                    },
                 )
-                get_db().commit()
-            except sqlite3.Error:
+            except SQLAlchemyError:
+                db.session.rollback()
                 flash("Profil recruiter belum bisa disimpan. Silakan coba lagi.")
                 return redirect(url_for("recruiter_edit_profile"))
 
@@ -301,39 +274,15 @@ def register(app):
     @recruiter_required_decorator
     def recruiter_dashboard():
         recruiter = get_current_user()
-        total_opportunities = get_db().execute(
-            "SELECT COUNT(*) FROM opportunities WHERE created_by = ?",
-            (session["user_id"],),
-        ).fetchone()[0]
-        total_applicants = get_db().execute(
-            """
-            SELECT COUNT(*)
-            FROM applications
-            JOIN opportunities ON opportunities.id = applications.opportunity_id
-            WHERE opportunities.created_by = ?
-            """,
-            (session["user_id"],),
-        ).fetchone()[0]
-        recent_opportunities = get_db().execute(
-            """
-            SELECT opportunities.*, COUNT(applications.id) AS applicant_count
-            FROM opportunities
-            LEFT JOIN applications ON applications.opportunity_id = opportunities.id
-            WHERE opportunities.created_by = ?
-            GROUP BY opportunities.id
-            ORDER BY opportunities.updated_at DESC
-            LIMIT 3
-            """,
-            (session["user_id"],),
-        ).fetchall()
+        summary = get_recruiter_summary(session["user_id"], recent_limit=3)
         recent_applicants = get_recruiter_applicant_rows()[:5]
 
         return render_template(
             "recruiter/dashboard.html",
             recruiter=recruiter,
-            total_opportunities=total_opportunities,
-            total_applicants=total_applicants,
-            recent_opportunities=recent_opportunities,
+            total_opportunities=summary["total_opportunities"],
+            total_applicants=summary["total_applicants"],
+            recent_opportunities=summary["recent_opportunities"],
             recent_applicants=recent_applicants,
         )
 
@@ -341,17 +290,7 @@ def register(app):
     @app.route("/recruiter/opportunities")
     @recruiter_required_decorator
     def recruiter_opportunities():
-        rows = get_db().execute(
-            """
-            SELECT opportunities.*, COUNT(applications.id) AS applicant_count
-            FROM opportunities
-            LEFT JOIN applications ON applications.opportunity_id = opportunities.id
-            WHERE opportunities.created_by = ?
-            GROUP BY opportunities.id
-            ORDER BY opportunities.updated_at DESC
-            """,
-            (session["user_id"],),
-        ).fetchall()
+        rows = get_recruiter_opportunity_rows(session["user_id"])
 
         return render_template("recruiter/opportunities.html", opportunities=rows)
 
@@ -398,7 +337,8 @@ def register(app):
                 )
                 flash("Lowongan berhasil diperbarui.")
                 return redirect(url_for("recruiter_opportunities"))
-            except sqlite3.Error:
+            except SQLAlchemyError:
+                db.session.rollback()
                 flash("Lowongan belum bisa diperbarui. Silakan coba lagi.")
 
         return render_template(
@@ -423,7 +363,8 @@ def register(app):
                 metadata={"scope": "recruiter"},
             )
             flash("Lowongan berhasil dihapus.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Lowongan belum bisa dihapus. Silakan coba lagi.")
 
         return redirect(url_for("recruiter_opportunities"))
@@ -491,49 +432,27 @@ def register(app):
             flash("Status applicant tidak valid.")
             return redirect(return_url)
 
-        placeholders = ", ".join("?" for _ in selected_ids)
-        owner_filter = ""
-        params = [status, *selected_ids]
-        current_role = get_current_role()
-
-        if current_role == "recruiter":
-            owner_filter += " AND opportunities.created_by = ?"
-            params.append(session["user_id"])
-
-        if opportunity_id is not None:
-            owner_filter += " AND opportunities.id = ?"
-            params.append(opportunity_id)
-
         try:
-            cursor = get_db().execute(
-                f"""
-                UPDATE applications
-                SET status = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id IN ({placeholders})
-                  AND EXISTS (
-                      SELECT 1
-                      FROM opportunities
-                      WHERE opportunities.id = applications.opportunity_id
-                      {owner_filter}
-                  )
-                """,
-                params,
+            updated_count = bulk_update_applicant_status(
+                selected_ids,
+                status,
+                opportunity_id=opportunity_id,
             )
-            get_db().commit()
-            if cursor.rowcount:
+            if updated_count:
                 record_audit_event(
                     "application_status.bulk_update",
                     target_type="application",
                     metadata={
                         "status": status,
                         "application_ids": selected_ids,
-                        "updated_count": cursor.rowcount,
+                        "updated_count": updated_count,
                     },
                 )
-                flash(f"{cursor.rowcount} applicant berhasil diperbarui menjadi {status}.")
+                flash(f"{updated_count} applicant berhasil diperbarui menjadi {status}.")
             else:
                 flash("Tidak ada applicant yang dapat diperbarui.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Aksi massal belum bisa diproses. Silakan coba lagi.")
 
         return redirect(return_url)
@@ -543,15 +462,7 @@ def register(app):
     @recruiter_or_admin_required_decorator
     def recruiter_applicant_detail(application_id):
         application = get_recruiter_application_or_404(application_id)
-        documents = get_db().execute(
-            """
-            SELECT doc_type, is_uploaded, updated_at
-            FROM documents
-            WHERE user_id = ?
-            ORDER BY doc_type ASC
-            """,
-            (application["applicant_user_id"],),
-        ).fetchall()
+        documents = get_applicant_document_rows(application["applicant_user_id"])
 
         return render_template(
             "recruiter/applicant_detail.html",
@@ -572,15 +483,7 @@ def register(app):
             return redirect(url_for("recruiter_applicant_detail", application_id=application_id))
 
         try:
-            get_db().execute(
-                """
-                UPDATE applications
-                SET status = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-                """,
-                (status, application_id),
-            )
-            get_db().commit()
+            update_applicant_status(application_id, status)
             record_audit_event(
                 "application_status.update",
                 target_type="application",
@@ -588,7 +491,8 @@ def register(app):
                 metadata={"status": status},
             )
             flash("Status applicant berhasil diperbarui.")
-        except sqlite3.Error:
+        except SQLAlchemyError:
+            db.session.rollback()
             flash("Status applicant belum bisa diperbarui. Silakan coba lagi.")
 
         return redirect(url_for("recruiter_applicant_detail", application_id=application_id))

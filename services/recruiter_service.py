@@ -4,7 +4,10 @@ import re
 from datetime import datetime
 
 from flask import Response, abort, session, url_for
+from sqlalchemy.exc import SQLAlchemyError
 
+from extensions import db
+from repositories import recruiter_repository, user_repository
 from services.application_service import application_status_label
 from services.auth_service import get_current_role
 from services.constants import (
@@ -13,26 +16,21 @@ from services.constants import (
     APPLICANT_SORT_SKILL_MATCH,
     JAKARTA_TZ,
 )
-from services.database_service import get_db
 from services.scoring_service import calculate_skill_match_score
+
+
+def _raise_sqlalchemy_error(exc):
+    db.session.rollback()
+    raise exc
 
 
 def get_recruiter_opportunity_or_404(opportunity_id):
     current_role = get_current_role()
-    params = [opportunity_id]
-    owner_filter = ""
-    if current_role == "recruiter":
-        owner_filter = "AND created_by = ?"
-        params.append(session["user_id"])
-
-    row = get_db().execute(
-        f"""
-        SELECT * FROM opportunities
-        WHERE id = ?
-        {owner_filter}
-        """,
-        params,
-    ).fetchone()
+    row = recruiter_repository.find_opportunity_row(
+        opportunity_id,
+        current_role=current_role,
+        recruiter_id=session.get("user_id"),
+    )
 
     if row is None:
         abort(404)
@@ -83,86 +81,93 @@ def enrich_recruiter_applicant_rows(rows, sort_by=APPLICANT_SORT_RECENT):
 
 def get_recruiter_applicant_rows(opportunity_id=None, sort_by=APPLICANT_SORT_RECENT):
     current_role = get_current_role()
-    filters = []
-    params = []
-
-    if current_role == "recruiter":
-        filters.append("opportunities.created_by = ?")
-        params.append(session["user_id"])
-
     if opportunity_id is not None:
         get_recruiter_opportunity_or_404(opportunity_id)
-        filters.append("opportunities.id = ?")
-        params.append(opportunity_id)
 
-    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-
-    rows = get_db().execute(
-        f"""
-        SELECT
-            applications.id AS application_id,
-            applications.status,
-            applications.notes,
-            applications.applied_at,
-            applications.updated_at,
-            users.name AS applicant_name,
-            users.email AS applicant_email,
-            users.skills AS applicant_skills,
-            opportunities.id AS opportunity_id,
-            opportunities.title AS opportunity_title,
-            opportunities.deadline AS opportunity_deadline,
-            opportunities.required_skills
-        FROM applications
-        JOIN opportunities ON opportunities.id = applications.opportunity_id
-        JOIN users ON users.id = applications.user_id
-        {where_clause}
-        ORDER BY applications.updated_at DESC
-        """,
-        params,
-    ).fetchall()
-
+    rows = recruiter_repository.list_applicant_rows(
+        current_role=current_role,
+        recruiter_id=session.get("user_id"),
+        opportunity_id=opportunity_id,
+    )
     return enrich_recruiter_applicant_rows(rows, normalize_applicant_sort(sort_by))
 
 
 def get_recruiter_application_or_404(application_id):
     current_role = get_current_role()
-    params = [application_id]
-    owner_filter = ""
-
-    if current_role == "recruiter":
-        owner_filter = "AND opportunities.created_by = ?"
-        params.append(session["user_id"])
-
-    application = get_db().execute(
-        f"""
-        SELECT
-            applications.id AS application_id,
-            applications.user_id AS applicant_user_id,
-            applications.status,
-            applications.notes,
-            applications.applied_at,
-            applications.updated_at,
-            users.name AS applicant_name,
-            users.email AS applicant_email,
-            users.skills AS applicant_skills,
-            opportunities.id AS opportunity_id,
-            opportunities.title AS opportunity_title,
-            opportunities.provider AS opportunity_provider,
-            opportunities.location AS opportunity_location,
-            opportunities.deadline AS opportunity_deadline
-        FROM applications
-        JOIN opportunities ON opportunities.id = applications.opportunity_id
-        JOIN users ON users.id = applications.user_id
-        WHERE applications.id = ?
-        {owner_filter}
-        """,
-        params,
-    ).fetchone()
+    application = recruiter_repository.find_application_detail_row(
+        application_id,
+        current_role=current_role,
+        recruiter_id=session.get("user_id"),
+    )
 
     if application is None:
         abort(404)
 
     return application
+
+
+def get_recruiter_summary(recruiter_id, recent_limit):
+    return {
+        "total_opportunities": recruiter_repository.count_opportunities_by_recruiter(
+            recruiter_id
+        ),
+        "total_applicants": recruiter_repository.count_applicants_by_recruiter(
+            recruiter_id
+        ),
+        "recent_opportunities": recruiter_repository.list_opportunity_rows_by_recruiter(
+            recruiter_id,
+            limit=recent_limit,
+        ),
+    }
+
+
+def get_recruiter_opportunity_rows(recruiter_id):
+    return recruiter_repository.list_opportunity_rows_by_recruiter(recruiter_id)
+
+
+def get_applicant_document_rows(applicant_user_id):
+    return recruiter_repository.list_document_rows_by_user(applicant_user_id)
+
+
+def is_recruiter_email_taken(email, recruiter_id):
+    return user_repository.email_exists(email, exclude_user_id=recruiter_id)
+
+
+def update_recruiter_profile(user_id, fields):
+    try:
+        return user_repository.update_profile(user_id, fields)
+    except SQLAlchemyError as exc:
+        _raise_sqlalchemy_error(exc)
+
+
+def bulk_update_applicant_status(
+    application_ids,
+    status,
+    *,
+    opportunity_id=None,
+):
+    try:
+        return recruiter_repository.bulk_update_application_status(
+            application_ids,
+            status,
+            current_role=get_current_role(),
+            recruiter_id=session.get("user_id"),
+            opportunity_id=opportunity_id,
+        )
+    except SQLAlchemyError as exc:
+        _raise_sqlalchemy_error(exc)
+
+
+def update_applicant_status(application_id, status):
+    try:
+        return recruiter_repository.update_application_status(
+            application_id,
+            status,
+            current_role=get_current_role(),
+            recruiter_id=session.get("user_id"),
+        )
+    except SQLAlchemyError as exc:
+        _raise_sqlalchemy_error(exc)
 
 
 def parse_positive_int(value):
