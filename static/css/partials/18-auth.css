@@ -154,6 +154,53 @@
     color: var(--muted);
 }
 
+.register-auth .auth-panel {
+    padding-block: clamp(24px, 3vh, 38px);
+}
+
+.register-card {
+    width: min(470px, 100%);
+}
+
+.register-card h2 {
+    font-size: 1.48rem;
+}
+
+.register-card > p {
+    margin-bottom: 18px;
+}
+
+.register-card label {
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
+.register-card input,
+.register-card select {
+    min-height: 44px;
+    padding-block: 9px;
+}
+
+.register-card .role-fieldset {
+    margin: 12px 0;
+}
+
+.register-card .role-toggle label {
+    min-height: 60px;
+}
+
+.register-card form button {
+    margin-top: 14px;
+}
+
+.register-card .auth-divider {
+    margin: 18px 0;
+}
+
+.register-card .form-switch {
+    margin-top: 10px;
+}
+
 .social-login {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -219,6 +266,25 @@
     accent-color: var(--primary);
 }
 
+.checkbox-label.terms-consent {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    margin: 16px 0 0;
+    line-height: 1.45;
+}
+
+.terms-consent span {
+    min-width: 0;
+}
+
+.terms-consent a {
+    display: inline;
+    font-weight: 800;
+    white-space: normal;
+}
+
 .role-fieldset {
     margin: 18px 0;
     padding: 0;
@@ -263,26 +329,52 @@
 }
 
 .password-strength {
-    margin: 8px 0 12px;
+    margin: 8px 0 10px;
+}
+
+.password-strength-bars {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 5px;
 }
 
-.password-strength span {
+.password-strength-bars span {
     height: 4px;
     background: #CBD5E1;
     border-radius: 999px;
+    transition: background-color 160ms ease;
 }
 
-.password-strength span:first-child,
-.password-strength span:nth-child(2) {
-    background: var(--primary);
+.password-strength[data-strength="weak"] .password-strength-bars span:first-child {
+    background: var(--danger);
+}
+
+.password-strength[data-strength="medium"] .password-strength-bars span:first-child,
+.password-strength[data-strength="medium"] .password-strength-bars span:nth-child(2) {
+    background: var(--warning);
+}
+
+.password-strength[data-strength="strong"] .password-strength-bars span {
+    background: var(--success);
 }
 
 .password-strength small {
-    grid-column: 1 / -1;
+    display: block;
+    margin-top: 7px;
     color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.password-strength[data-strength="weak"] small {
+    color: var(--danger);
+}
+
+.password-strength[data-strength="medium"] small {
+    color: #B45309;
+}
+
+.password-strength[data-strength="strong"] small {
+    color: var(--success);
 }
 
 .auth-links {

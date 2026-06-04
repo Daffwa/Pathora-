@@ -94,6 +94,16 @@ class TestPublicRoutes:
         resp = client.get("/register")
         assert resp.status_code == 200
 
+    def test_register_renders_password_strength_and_terms_consent(self, client):
+        resp = client.get("/register")
+
+        assert resp.status_code == 200
+        assert b'data-password-strength' in resp.data
+        assert b'Kekuatan: Belum diisi' in resp.data
+        assert b'terms-consent' in resp.data
+        assert b'Syarat & Ketentuan' in resp.data
+        assert b'Kebijakan Privasi' in resp.data
+
     @pytest.mark.parametrize("url", ["/login", "/register", "/forgot-password"])
     def test_auth_pages_use_auth_shell(self, client, url):
         resp = client.get(url)

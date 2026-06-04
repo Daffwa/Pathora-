@@ -70,15 +70,22 @@
                 </div>
 
                 <label for="password">Kata Sandi</label>
-                <input id="password" name="password" type="password" placeholder="Min. 8 karakter" required>
-                <div class="password-strength"><span></span><span></span><span></span><small>Kekuatan: Sedang</small></div>
+                <input id="password" name="password" type="password" placeholder="Min. 8 karakter" autocomplete="new-password" aria-describedby="password-strength-label" required>
+                <div class="password-strength" data-password-strength data-strength="empty" aria-live="polite">
+                    <div class="password-strength-bars" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <small id="password-strength-label">Kekuatan: Belum diisi</small>
+                </div>
 
                 <label for="confirm_password">Konfirmasi Kata Sandi</label>
                 <input id="confirm_password" name="confirm_password" type="password" placeholder="Ulangi kata sandi" required>
 
-                <label class="checkbox-label subtle-check">
+                <label class="checkbox-label subtle-check terms-consent">
                     <input name="terms" type="checkbox" required>
-                    Saya menyetujui <a href="#ketentuan" data-legal-open="terms">Syarat & Ketentuan</a> serta <a href="#privasi" data-legal-open="privacy">Kebijakan Privasi</a>.
+                    <span>Saya menyetujui <a href="#ketentuan" data-legal-open="terms">Syarat & Ketentuan</a> dan <a href="#privasi" data-legal-open="privacy">Kebijakan Privasi</a>.</span>
                 </label>
 
                 <button type="submit" class="primary-button full-width">Daftar</button>

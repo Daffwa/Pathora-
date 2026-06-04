@@ -8,9 +8,73 @@
     var companyPositionInput = document.getElementById("company_position");
     var otherPositionFields = document.querySelector("[data-other-position]");
     var otherPositionInput = document.getElementById("company_position_other");
+    var passwordInput = document.getElementById("password");
+    var passwordStrength = document.querySelector("[data-password-strength]");
+    var passwordStrengthLabel = passwordStrength
+        ? passwordStrength.querySelector("small")
+        : null;
 
-    if (!roleRadios.length || !jobseekerFields || !recruiterFields) {
-        return;
+    function passwordStrengthLevel(password) {
+        var score = 0;
+        var hasLetter = /[A-Za-z]/.test(password);
+        var hasMixedCase = /[a-z]/.test(password) && /[A-Z]/.test(password);
+        var hasNumber = /\d/.test(password);
+        var hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+        if (!password) {
+            return "empty";
+        }
+        if (password.length >= 8) {
+            score += 1;
+        }
+        if (password.length >= 12) {
+            score += 1;
+        }
+        if (hasLetter) {
+            score += 1;
+        }
+        if (hasMixedCase) {
+            score += 1;
+        }
+        if (hasNumber) {
+            score += 1;
+        }
+        if (hasSymbol) {
+            score += 1;
+        }
+
+        if (score <= 2) {
+            return "weak";
+        }
+        if (score <= 4) {
+            return "medium";
+        }
+        return "strong";
+    }
+
+    function passwordStrengthText(level) {
+        var labels = {
+            empty: "Kekuatan: Belum diisi",
+            weak: "Kekuatan: Lemah",
+            medium: "Kekuatan: Sedang",
+            strong: "Kekuatan: Kuat",
+        };
+
+        return labels[level] || labels.empty;
+    }
+
+    function syncPasswordStrength() {
+        var level = passwordStrengthLevel(passwordInput.value);
+        passwordStrength.dataset.strength = level;
+
+        if (passwordStrengthLabel) {
+            passwordStrengthLabel.textContent = passwordStrengthText(level);
+        }
+    }
+
+    if (passwordInput && passwordStrength) {
+        passwordInput.addEventListener("input", syncPasswordStrength);
+        syncPasswordStrength();
     }
 
     function selectedRole() {
@@ -45,13 +109,15 @@
         syncOtherPosition();
     }
 
-    roleRadios.forEach(function (radio) {
-        radio.addEventListener("change", syncRoleFields);
-    });
+    if (roleRadios.length && jobseekerFields && recruiterFields) {
+        roleRadios.forEach(function (radio) {
+            radio.addEventListener("change", syncRoleFields);
+        });
 
-    if (companyPositionInput) {
-        companyPositionInput.addEventListener("change", syncOtherPosition);
+        if (companyPositionInput) {
+            companyPositionInput.addEventListener("change", syncOtherPosition);
+        }
+
+        syncRoleFields();
     }
-
-    syncRoleFields();
 })();
