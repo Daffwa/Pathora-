@@ -94,6 +94,15 @@ class TestPublicRoutes:
         resp = client.get("/register")
         assert resp.status_code == 200
 
+    @pytest.mark.parametrize("url", ["/login", "/register", "/forgot-password"])
+    def test_auth_pages_use_auth_shell(self, client, url):
+        resp = client.get(url)
+
+        assert resp.status_code == 200
+        assert b'class="auth-shell"' in resp.data
+        assert b'class="site-header"' not in resp.data
+        assert b'class="site-footer"' not in resp.data
+
     def test_opportunities_200(self, client):
         resp = client.get("/opportunities")
         assert resp.status_code == 200
